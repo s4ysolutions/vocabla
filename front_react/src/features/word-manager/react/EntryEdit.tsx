@@ -1,13 +1,14 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState } from 'react'
 import PrimaryButton from '../../../react/widgets/buttons/PrimaryButton'
 import Entry from '../domain/models/entry'
-import DefinitionEdit from './DefinitionEdit'
-import Definition, { emptyDefinition } from '../domain/models/definition'
-import Lang from '../domain/models/lang'
+import InputText from '../../../react/widgets/inputs/InputText'
+import CancelButton from '../../../react/widgets/buttons/CancelButton copy'
+import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect'
+import useLearningLanguages from './hooks/useLearningLanguages'
 
 // Holders used to store the valus entered by the user
 // They will be stored in underlyng models on save
-
+/*
 class DefintionHolder {
   readonly origin: Definition
   readonly id: number
@@ -46,57 +47,50 @@ class EntryHolder {
     this.definitions = this.definitions.filter(d => d.id !== def.id)
   }
 }
+*/
 
 interface Props {
   entry: Entry
-  understandLanguage: Lang
-  onSave: (updatedEntry: Entry) => void
-  onCancel: () => void
+  onComplete: () => void
 }
 
-const EntryEdit: React.FC<Props> = ({ entry, onSave, onCancel, understandLanguage }): ReactElement => {
+const EntryEdit: React.FC<Props> = ({ entry, onComplete }): ReactElement => {
 
+  const { languages: learningLanguages, loading: lll } = useLearningLanguages()
+  const [learningLanguage, setLearningLanguage] = useState(entry.lang)
+  const [word, setWord] = useState<string>(entry.word)
+
+  // const [definition, setDefinition] = useState<string>(e)
 
   const handleSave = () => {
-    // For now, just call onSave with the current entry
-    onSave({
-      ...entry,
-      /*
-      learningLanguage: selectedLL,
-      understandLanguage: selectedUL,
-      */
+    console.log({
+      word,
+      learningLanguage,
+      // definition: definition,
+      // learningLanguage,
+      // understandLanguage,
     })
+    onComplete()
   }
-  const entryHolder = new EntryHolder(entry, understandLanguage)
-
-  // const [word, setWord] = React.useState(entry.word)
-  // const [wordLanguage, setWordLanguage] = React.useState(entry.lang)
-  // const [definitions, setDefinitions] = React.useState(EntryHolder.definitions)
-
-  // const { learningLanguages: ll, loading: lll } = useLearningLanguages()
-  // const learningLanguages = lll ? [] : ll.map(e => ({ id: e.id, value: e.flag + " " + e.name }))
 
   return (
     <div className="space-y-4">
       {/* Language Selector and Word Input */}
       <div className="flex items-center space-x-4">
-        {/* Word Input */}
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700">Word</label>
-          <input
-            type="text"
-            defaultValue={entryHolder.word}
-            className="w-full border border-gray-300 rounded px-2 py-1"
-          />
-        </div>
-
-        {/* Language Selector */}
-        <div className="flex-1">
-          {/* <Selector values={learningLanguages} defaultValue={entryHolder.learningLanguage.id} /> */}
-        </div>
+        <LanguageSelect
+          languages={learningLanguages}
+          initialLanguage={entry.lang}
+          loading={lll}
+          onChange={(lang) => setLearningLanguage(lang)}
+        />
+        <InputText
+          id="word"
+          defaultValue={word}
+          onChange={(e) => setWord(e.target.value)}
+        />
       </div>
 
-      {/* Definitions */}
+      {/* Definitions 
       <div>
         <label className="block text-sm font-medium text-gray-700">Definitions</label>
         <ul className="space-y-2">
@@ -110,21 +104,14 @@ const EntryEdit: React.FC<Props> = ({ entry, onSave, onCancel, understandLanguag
               }} />
           ))}
         </ul>
-      </div>
+      </div> */}
 
       {/* Action Buttons */}
       <div className="flex justify-end space-x-2">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-        >
-          Cancel
-        </button>
-        <PrimaryButton onClick={handleSave}>
-          Save
-        </PrimaryButton>
+        <CancelButton onClick={onComplete} title='Cancel' />
+        <PrimaryButton onClick={handleSave} title='Save' />
       </div>
-    </div>
+    </div >
   )
 }
 

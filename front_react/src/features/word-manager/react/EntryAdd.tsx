@@ -1,54 +1,72 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState } from 'react'
 import PrimaryButton from '../../../react/widgets/buttons/PrimaryButton'
 import useLearningLanguages from './hooks/useLearningLanguages'
 import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect'
-import ProgressInfinity from '../../../react/widgets/progress-infinity'
-
+import useIUnderstandLanguages from './hooks/useIUnderstandLanguages'
+import InputText from '../../../react/widgets/inputs/InputText'
+import Textarea from '../../../react/widgets/textarea/Textarea'
 
 const EntryAdd: React.FC = (): ReactElement => {
-    const { learningLanguages, loading: lll } = useLearningLanguages()
-    // const learningLanguages = lll ? [] : ll.map(e => ({ id: e.id, value: e.flag + " " + e.name }))
-    // const selectedLL = learningLanguages.length > 0 ? learningLanguages[0].id : ''
+    const { languages: learningLanguages, loading: lll } = useLearningLanguages()
+    const { languages: understandLanguages, loading: lul } = useIUnderstandLanguages()
+    const [word, setWord] = useState<string>('')
+    const [definition, setDescription] = useState<string>('')
+    const [learningLanguage, setLearningLanguage] = useState(learningLanguages[0])
+    const [understandLanguage, setUnderstandLanguage] = useState(understandLanguages[0])
 
-    // const { languages: ul, loading: ull } = useIUnderstandLanguages()
-    // const understandLanguages = ull ? [] : ul.map(e => ({ id: e.id, value: e.flag + " " + e.name }))
-    // const selectedUL = understandLanguages.length > 0 ? learningLanguages[0].id : ''
+    // ugly hack to set the initial languages
+    if (!learningLanguage && learningLanguages[0] !== undefined) {
+        setLearningLanguage(learningLanguages[0])
+    }
+    if (!understandLanguage && understandLanguages[0] !== undefined) {
+        setUnderstandLanguage(understandLanguages[0])
+    }
 
-    return <React.Fragment>
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        console.log({
+            word,
+            definition: definition,
+            learningLanguage,
+            understandLanguage,
+        })
+        // Add logic to handle form submission
+    }
+
+    return <form onSubmit={handleSubmit}>
         <div className="flex items-center space-x-4">
             <LanguageSelect
                 languages={learningLanguages}
                 initialLanguage={learningLanguages[0]}
-                loading={lll} />
+                loading={lll}
+                onChange={(lang) => setLearningLanguage(lang)}
+            />
 
-            <input
+            <InputText
+                defaultValue={word}
+                onChange={(e) => setWord(e.target.value)}
                 type="text"
-                className="border border-gray-300 rounded px-2 py-1"
                 autoFocus
             />
-            {/* <ul className="mt-2 space-y-1"> </ul>*/}
             {/* Spacer */}
             <div className="flex-1" />
-            <div className="ml-auto">
-                <PrimaryButton>
-                    Add New Entry
-                </PrimaryButton>
-            </div>
+            <PrimaryButton type="submit" title='Add New Entry'/>
         </div>
         <br />
         <div className="flex items-center space-x-4">
-            {/*
-            <LanguageSelect languages={} selectedId={selectedUL} >
-                <span className="block text-sm font-medium text-gray-700">Language</span>
-            </LanguageSelect>
-            */}
-            <textarea
-                className="flex-1 border border-gray-300 rounded px-2 py-1 resize-none"
+            <LanguageSelect
+                languages={understandLanguages}
+                initialLanguage={learningLanguages[0]}
+                loading={lul}
+                onChange={(s) => setUnderstandLanguage(s)} />
+            <Textarea
                 placeholder="Enter a description"
+                defaultValue={definition}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={3}
             />
         </div>
-    </React.Fragment>
+    </form>
 }
 
 export default EntryAdd

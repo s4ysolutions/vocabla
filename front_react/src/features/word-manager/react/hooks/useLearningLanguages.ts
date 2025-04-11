@@ -15,7 +15,7 @@ const mockLanguages: Array<Lang> = [
     { id: id("ar"), name: "Arabic", flag: "🇸🇦" },
 ];
 
-const useLearningLanguages = (): { learningLanguages: Array<Lang>, loading: boolean } => {
+const useLearningLanguages = (): { languages: Array<Lang>, loading: boolean } => {
     const [languages, setEntries] = useState<Array<Lang>>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -30,7 +30,7 @@ const useLearningLanguages = (): { learningLanguages: Array<Lang>, loading: bool
         fetchEntries();
     }, []);
 
-    return { learningLanguages: languages, loading };
+    return { languages, loading };
 };
 
 export default useLearningLanguages;

@@ -5,7 +5,8 @@ import ProgressInfinity from "../progress-infinity";
 
 interface props {
     loading?: boolean
-    initialLanguage: Lang
+    initialLanguage?: Lang
+    language?: Lang
     languages: Array<Lang>
     onChange?: (lang: Lang) => void
 }
@@ -13,12 +14,12 @@ interface props {
 const langById = (languages: Array<Lang>, id: string | undefined) => id && languages.find(lang => lang.id === id) || undefined;
 const langFormatted = (lang: Lang | undefined) => <span className="block text-sm font-medium text-gray-700">{lang?.flag || ' '}{lang?.name}</span>;
 
-const LanguageSelect: React.FC<props> = ({ initialLanguage, languages, onChange, loading }) =>
+const LanguageSelect: React.FC<props> = ({ initialLanguage, languages, language, onChange, loading }) =>
     (loading || !languages || languages.length === 0)
         ? <ProgressInfinity />
         : (languages.length === 1)
             ? <LanguageSelect1 language={languages[0]} />
-            : <LanguageSelectMany initialLanguage={initialLanguage} languages={languages} onChange={onChange} />
+            : <LanguageSelectMany initialLanguage={initialLanguage} languages={languages} language={language} onChange={onChange} />
 
 
 const LanguageSelect1: React.FC<{ language: Lang }> = ({ language }) => <React.Fragment>
@@ -31,13 +32,14 @@ const LanguageSelect1: React.FC<{ language: Lang }> = ({ language }) => <React.F
 </React.Fragment>
 
 
-const LanguageSelectMany: React.FC<props> = ({ initialLanguage, languages, onChange }) => {
+const LanguageSelectMany: React.FC<props> = ({ initialLanguage, languages, language, onChange }) => {
 
-    const [selectedId, setSelectedId] = React.useState(initialLanguage?.id || languages[0]?.id);
+    const [selectedId, setSelectedId] = React.useState(language?.id);
 
     return <Select
         values={languages.map((lang) => ({ id: lang.id, value: lang.name }))}
-        selectedId={selectedId}
+        value={selectedId}
+        defaultValue={initialLanguage?.id}
         onChange={(e) => {
             const selectedLang = langById(languages, e.target.value);
             if (selectedLang) {

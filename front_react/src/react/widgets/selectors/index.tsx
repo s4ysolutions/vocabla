@@ -2,7 +2,7 @@ import React, { ChangeEventHandler, ReactElement, ReactNode } from 'react'
 
 interface Props {
     values: Array<{ id: string; value: string }>
-    selectedId?: string
+    value?: string
     defaultValue?: string
     onChange?: ChangeEventHandler<HTMLSelectElement>
     children?: ReactNode
@@ -10,7 +10,7 @@ interface Props {
 
 const Selector: React.FC<Props> = ({
     values,
-    selectedId,
+    value,
     defaultValue,
     children,
     onChange, }): ReactElement =>
@@ -18,7 +18,7 @@ const Selector: React.FC<Props> = ({
         {children}
         <select
             defaultValue={defaultValue}
-            value={selectedId}
+            value={value}
             onChange={onChange}
             className={children
                 ? "absolute inset-0 w-full h-full opacity-0 cursor-pointer"

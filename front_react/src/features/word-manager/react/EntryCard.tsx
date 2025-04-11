@@ -4,6 +4,7 @@ import Card from '../../../react/widgets/cards/Card'
 import PrimaryButton from '../../../react/widgets/buttons/PrimaryButton'
 import DangerButton from '../../../react/widgets/buttons/DangerButton'
 import Modal from '../../../react/widgets/modal'
+import EntryEdit from './EntryEdit'
 
 interface Props {
     entry: Entry
@@ -17,6 +18,7 @@ const EntryCard: React.FC<Props> = ({ entry }): ReactElement => {
     }
 
     const handleCloseModal = () => {
+        console.log('Modal closed')
         setIsModalOpen(false)
     }
     return (
@@ -53,13 +55,7 @@ const EntryCard: React.FC<Props> = ({ entry }): ReactElement => {
 
                 {isModalOpen && (
                     <Modal onClose={handleCloseModal}>
-                        aaa
-                        {/*
-                        <EntryEdit entry={entry} onSave={(updatedEntry) => {
-                            console.log('Updated Entry:', updatedEntry)
-                            handleCloseModal()
-                        }} onCancel={handleCloseModal} />
-                         */}
+                        <EntryEdit entry={entry} onComplete={handleCloseModal} />
                     </Modal>
                 )}
             </Card>

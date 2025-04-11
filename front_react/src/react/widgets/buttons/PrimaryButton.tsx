@@ -1,15 +1,15 @@
-import React, { ReactElement, ReactNode } from 'react'
+import React from 'react'
+import Button from './Button'
 
-interface Props {
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     title?: string
-    children?: ReactNode
-    onClick?: () => void
 }
 
-const PrimaryButton: React.FC<Props> = ({ children, title, onClick }): ReactElement =>
-    <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={onClick}>
+const PrimaryButton: React.FC<Props> = ({ children, title, className, ...rest }) => (
+    <Button className={`bg-blue-500 text-white hover:bg-blue-600 ${className || ''}`} {...rest}>
         {title}
         {children}
-    </button>
+    </Button>
+)
 
 export default PrimaryButton
