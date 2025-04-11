@@ -5,4 +5,5 @@ interface Localized {
     readonly s: string
 }
 
+
 export default Localized

@@ -3,4 +3,9 @@ interface Source {
     readonly url?: string,
 }
 
+export const defaultSource: Source = {
+    title: '',
+    url: undefined,
+}
+
 export default Source

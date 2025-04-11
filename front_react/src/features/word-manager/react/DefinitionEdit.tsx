@@ -45,7 +45,7 @@ const DefinitionEdit: React.FC<Props> = ({ definition/*, onUpdate*/ }): ReactEle
         values={languageOptions}
         selectedId={selectedLangId}
         onChange={(selected) => {
-          setSelectedLangId(id(selected))
+          setSelectedLangId(id(selected.target.value))
           handleUpdate() // Update immediately when language changes
         }}
       />
