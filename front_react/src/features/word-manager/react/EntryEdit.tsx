@@ -5,49 +5,39 @@ import InputText from '../../../react/widgets/inputs/InputText'
 import CancelButton from '../../../react/widgets/buttons/CancelButton copy'
 import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect'
 import useLearningLanguages from './hooks/useLearningLanguages'
+import useIUnderstandLanguages from './hooks/useIUnderstandLanguages'
+import Lang from '../domain/models/lang'
+import DefinitionEdit from './DefinitionEdit'
 
-// Holders used to store the valus entered by the user
-// They will be stored in underlyng models on save
-/*
-class DefintionHolder {
-  readonly origin: Definition
+interface DefintionHolder {
   readonly id: number
   language: Lang
   s: string
-
-  constructor(origin: Definition) {
-    this.id = Math.random()
-    this.origin = origin
-    this.language = origin.localized.lang
-    this.s = origin.localized.s
-  }
 }
 
-class EntryHolder {
-  readonly origin: Entry
-  word: string
-  learningLanguage: Lang
-  definitions: DefintionHolder[]
-  understandLanguage: Lang
-  constructor(origin: Entry, understandLanguage: Lang) {
-    this.origin = origin
-    this.word = origin.word
-    this.learningLanguage = origin.lang
-    this.understandLanguage = understandLanguage
-    this.definitions = origin.definitions.map(def => new DefintionHolder(def))
-    this.addDefinition()
+const createDefinitionHolder = (language: Lang, s: string): DefintionHolder => ({
+  id: Math.floor(Math.random() * 32000),
+  language,
+  s,
+})
+
+const arrangeDefinitionHolders = (language: Lang, defintionHolders: DefintionHolder[]): DefintionHolder[] => {
+  if (defintionHolders.length === 0) {
+    return [createDefinitionHolder(language, '')]
   }
 
-  addDefinition() {
-    // can be only one empty definition
-    const nonEmpty = this.definitions.filter(def => def.s !== '')
-    this.definitions = [...nonEmpty, new DefintionHolder(emptyDefinition(this.understandLanguage))]
+  const hole = defintionHolders.findIndex((d) => d.s.trim() === '')
+
+  if (hole === defintionHolders.length - 1) {
+    return defintionHolders
   }
-  removeDefinition(def: DefintionHolder) {
-    this.definitions = this.definitions.filter(d => d.id !== def.id)
+
+  if (hole === -1) {
+    return defintionHolders.concat(createDefinitionHolder(language, ''))
   }
+
+  return defintionHolders.filter((d) => d.s.trim() !== '').concat(createDefinitionHolder(language, ''))
 }
-*/
 
 interface Props {
   entry: Entry
@@ -60,7 +50,20 @@ const EntryEdit: React.FC<Props> = ({ entry, onComplete }): ReactElement => {
   const [learningLanguage, setLearningLanguage] = useState(entry.lang)
   const [word, setWord] = useState<string>(entry.word)
 
-  // const [definition, setDefinition] = useState<string>(e)
+  const { languages: languagesIUnderstand } = useIUnderstandLanguages()
+  const languageIUnderstand = languagesIUnderstand ? languagesIUnderstand[0] : undefined
+
+  const [definitions, setDefinitions] =
+    useState<DefintionHolder[]>(
+      languageIUnderstand
+        ? arrangeDefinitionHolders(languageIUnderstand, entry.definitions
+          .map((d) => createDefinitionHolder(d.localized.lang, d.localized.s)))
+        : [])
+
+  // derty hack to init the definition holders after the languageIUnderstand is loaded
+  if (languageIUnderstand !== undefined && definitions.length === 0) {
+    setDefinitions(arrangeDefinitionHolders(languageIUnderstand, []))
+  }
 
   const handleSave = () => {
     console.log({
@@ -74,12 +77,12 @@ const EntryEdit: React.FC<Props> = ({ entry, onComplete }): ReactElement => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="entry-edit">
       {/* Language Selector and Word Input */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4" id="word-input">
         <LanguageSelect
           languages={learningLanguages}
-          initialLanguage={entry.lang}
+          defaultLanguage={entry.lang}
           loading={lll}
           onChange={(lang) => setLearningLanguage(lang)}
         />
@@ -90,24 +93,26 @@ const EntryEdit: React.FC<Props> = ({ entry, onComplete }): ReactElement => {
         />
       </div>
 
-      {/* Definitions 
-      <div>
+      <div className="overflow-y-auto  max-h-full" id="definition-edit">
         <label className="block text-sm font-medium text-gray-700">Definitions</label>
         <ul className="space-y-2">
-          {entry.definitions.map((def, i) => (
-            <DefinitionEdit
-              key={i}
-              definition={def}
-              onUpdate={(updatedDefinition) => {
-                // Handle the updated definition here
-                console.log('Updated Definition:', updatedDefinition)
-              }} />
-          ))}
+          {languageIUnderstand === undefined
+            ? <p>Loading...</p>
+            : definitions.map((def) =>
+              <DefinitionEdit
+                key={def.id}
+                languagesIUnderstand={languagesIUnderstand}
+                defaultDefinition={def.s}
+                onChangeDefinition={s => { def.s = s; setDefinitions(arrangeDefinitionHolders(languageIUnderstand, definitions)) }}
+                defaultLanguage={def.language}
+                onChangeLanguage={(lang) => def.language = lang}
+              />
+            )}
         </ul>
-      </div> */}
+      </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end space-x-2">
+      <div className="flex justify-end space-x-2" id="action-buttons">
         <CancelButton onClick={onComplete} title='Cancel' />
         <PrimaryButton onClick={handleSave} title='Save' />
       </div>

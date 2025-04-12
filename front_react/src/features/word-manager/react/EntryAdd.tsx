@@ -37,7 +37,7 @@ const EntryAdd: React.FC = (): ReactElement => {
         <div className="flex items-center space-x-4">
             <LanguageSelect
                 languages={learningLanguages}
-                initialLanguage={learningLanguages[0]}
+                defaultLanguage={learningLanguages[0]}
                 loading={lll}
                 onChange={(lang) => setLearningLanguage(lang)}
             />
@@ -56,7 +56,7 @@ const EntryAdd: React.FC = (): ReactElement => {
         <div className="flex items-center space-x-4">
             <LanguageSelect
                 languages={understandLanguages}
-                initialLanguage={learningLanguages[0]}
+                defaultLanguage={learningLanguages[0]}
                 loading={lul}
                 onChange={(s) => setUnderstandLanguage(s)} />
             <Textarea

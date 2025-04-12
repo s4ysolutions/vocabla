@@ -11,11 +11,11 @@ const Modal: React.FC<ModalProps> = ({ children, onClose }) => {
     if (!modalContainer) {
         console.error("Modal container not found!")
         return null
-      }
+    }
 
     return ReactDOM.createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded shadow-lg w-1/3 relative">
+            <div className="bg-white p-6 rounded shadow-lg w-1/3 relative max-h-[80vh]">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -23,7 +23,9 @@ const Modal: React.FC<ModalProps> = ({ children, onClose }) => {
                 >
                     ✕
                 </button>
-                {children}
+                <div className="overflow-y-auto  max-h-[70vh]">
+                    {children}
+                </div>
             </div>
         </div>,
         modalContainer
