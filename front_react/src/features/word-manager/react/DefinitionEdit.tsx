@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, ReactElement } from 'react'
+import React, { ReactElement } from 'react'
 import Lang from '../domain/models/lang.ts'
 import Textarea from '../../../react/widgets/textarea/Textarea.tsx'
 import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect.tsx'
