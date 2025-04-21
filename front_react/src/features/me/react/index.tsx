@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
-import MeAppMenu from './app-menu'
+import MeAppMenu, { MenuItem, menuItems } from './app-menu'
+import WordManager from '../../word-manager/react'
+import WordManagerControlPanel from '../../word-manager/react/ControlPanel'
 // TODO: imrove having 2 menus
 const Me: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
-  const [selectedMenu, setSelectedMenu] = useState<string>('Menu 1')
+  const [selectedMenu, setSelectedMenu] = useState<MenuItem>(menuItems[0])
 
 
   return (
     <div className="h-full w-full flex flex-col md:flex-row">
       {/* Menu Column for big screens*/}
-      <div className="bg-gray-200 w-full hidden md:block md:w-1/4 lg:w-1/5 xl:w-1/6 p-4">
+      <div className="bg-gray-200 w-full hidden md:block md:w-1/4 lg:w-1/5 xl:w-1/6 p-4 border-r border-gray-300">
         <h2 className="text-lg font-bold mb-4">{/*Menu*/}</h2>
         <MeAppMenu
           selectedMenu={selectedMenu}
@@ -45,18 +47,59 @@ const Me: React.FC = () => {
         />
       </div>
       {/* Content Column */}
-      <div className="flex-1 bg-white p-4">
-        <h1 className="text-xl font-bold mb-4">
+      <div className="flex-1 bg-white p-0 h-full flex flex-col">
+        {/* Header Panel */}
+        <div className="p-4 bg-gray-200 mb-2 border-b border-gray-300 flex items-center justify-between">
+          {/* Open Menu Button */}
+          <button
+            aria-label="Open Menu"
+            aria-expanded={isMenuOpen}
+            className="text-blue-500 md:hidden w-12 h-12 rounded-full hover:bg-gray-200 text-4xl flex justify-center"
+            onClick={() => setIsMenuOpen(true)}
+          >
+            ☰
+          </button>
+
+          {/* Title */}
+          <h1 className="text-xl font-bold flex-1"
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >{selectedMenu.title}</h1>
+          {/* Control Panel */}
+          <div className="ml-4">
+            {
+              {
+                'word-manager': <WordManagerControlPanel onFilterChange={() => { }} />,
+              }[selectedMenu.id] || <p>Some control</p>
+            }
+          </div>
+        </div>
+        {/* Header 
+        <h1 className="text-xl font-bold p-4 bg-gray-200 mb-2 border-b border-gray-300">
           <button
             aria-label="Open Menu"
             aria-expanded={isMenuOpen}
             className="text-blue-500 md:hidden w-12 h-full rounded-full hover:bg-gray-200"
             onClick={() => setIsMenuOpen(true)}
           > ☰ </button>
-          {selectedMenu}</h1>
-        <p>
-          This is the content for <strong>{selectedMenu}</strong>. Change the menu item to see different content.
-        </p>
+          {selectedMenu.title}
+          {
+            {
+              'word-manager': <WordManagerControlPanel onFilterChange={()=>{}}/>,
+            }[selectedMenu.id] || <p>Some control</p>
+          }
+          </h1>*/}
+        {/* Content Container */}
+        <div className="flex-1 overflow-y-hidden">
+          {
+            {
+              'word-manager': <WordManager />,
+            }[selectedMenu.id] || <p>Selected a menu item <strong>{selectedMenu.id}</strong>.</p>
+          }
+        </div>
       </div>
     </div >
   )
