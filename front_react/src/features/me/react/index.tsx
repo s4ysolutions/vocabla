@@ -3,6 +3,7 @@ import MeAppMenu, { MenuItem, menuItems } from './app-menu'
 import WordManager from '../../word-manager/react'
 import WordManagerControlPanel from '../../word-manager/react/ControlPanel'
 import LearningSettings from '../../learning-settings'
+import Panel from '../../../react/widgets/panels/Panel'
 // TODO: imrove having 2 menus
 const Me: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
@@ -12,14 +13,14 @@ const Me: React.FC = () => {
   return (
     <div className="h-full w-full flex flex-col md:flex-row">
       {/* Menu Column for big screens*/}
-      <div className="bg-gray-200 w-full hidden md:block md:w-1/4 lg:w-1/5 xl:w-1/6 p-4 border-r border-gray-300">
+      <Panel className="w-full hidden md:block md:w-1/4 lg:w-1/5 xl:w-1/6 border-r">
         <h2 className="text-lg font-bold mb-4">{/*Menu*/}</h2>
         <MeAppMenu
           selectedMenu={selectedMenu}
           setSelectedMenu={setSelectedMenu}
           setIsMenuOpen={setIsMenuOpen}
         />
-      </div>
+      </Panel>
       {/* Menu Column for small screens */}
       {isMenuOpen && (
         <div
@@ -27,11 +28,11 @@ const Me: React.FC = () => {
           onClick={() => setIsMenuOpen(false)} // Close menu when clicking the backdrop
         />
       )}
-      <div
-        className={`fixed inset-y-0 left-0 max-w-max min-w-1/3 bg-gray-200 z-50 p-4 overflow-y-auto transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      <Panel
+        className={`flex-col items-start justify-start fixed inset-y-0 left-0 max-w-max min-w-1/3 z-50 p-4 overflow-y-auto transform transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <h2 className="text-lg font-bold mb-4 flex justify-between items-center">
-          {/*Menu*/}
+        <h2 className="text-lg font-bold mb-4 flex justify-between items-center flex-row w-full">
+          <span/>
           <button
             className="text-gray-500 hover:text-gray-700 md:hidden"
             onClick={() => setIsMenuOpen(false)}
@@ -46,11 +47,11 @@ const Me: React.FC = () => {
           setSelectedMenu={setSelectedMenu}
           setIsMenuOpen={setIsMenuOpen}
         />
-      </div>
+      </Panel>
       {/* Content Column */}
       <div className="flex-1 bg-white p-0 h-full flex flex-col">
         {/* Header Panel */}
-        <div className="p-4 bg-gray-200 mb-2 border-b border-gray-300 flex items-center justify-between">
+        <Panel className="border-b">
           {/* Open Menu Button */}
           <button
             aria-label="Open Menu"
@@ -77,7 +78,7 @@ const Me: React.FC = () => {
               }[selectedMenu.id] || null
             }
           </div>
-        </div>
+        </Panel>
         {/* Content Container */}
         <div className="flex-1 overflow-y-hidden">
           {

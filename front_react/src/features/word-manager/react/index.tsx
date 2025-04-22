@@ -3,6 +3,7 @@ import useEntries from './hooks/useEntries'
 import EntryCard from './EntryCard'
 import ProgressInfinity from '../../../react/widgets/progress-infinity'
 import EntryAdd from './EntryAdd'
+import Panel from '../../../react/widgets/panels/Panel'
 
 const WordManager: React.FC = () => {
   const { entries, loading } = useEntries()
@@ -19,9 +20,9 @@ const WordManager: React.FC = () => {
       }
     </div>
     {/* Footer */}
-    <div className="p-4 bg-gray-200 border-t border-gray-300">
+    <Panel  className="bg-gray-200 border-t border-gray-300">
       <EntryAdd />
-    </div>
+    </Panel>
   </div>
 }
 
