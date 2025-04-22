@@ -6,4 +6,6 @@ interface Lang {
     readonly flag?: string
 }
 
+
+
 export default Lang

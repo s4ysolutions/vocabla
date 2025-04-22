@@ -1,4 +1,4 @@
-import Lang from "./lang";
+import Lang from "../../../../domain/lang";
 import Localized from "./localized";
 import Source from "./source";
 

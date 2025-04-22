@@ -1,6 +1,6 @@
 import React from "react";
 import Select from ".";
-import Lang from "../../../features/word-manager/domain/models/lang";
+import Lang from "../../../domain/lang";
 import ProgressInfinity from "../progress-infinity";
 
 interface props {

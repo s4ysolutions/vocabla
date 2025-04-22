@@ -1,61 +1,31 @@
 import React from 'react';
+import T from '../../l10n';
+import LanguagesSelector from './LanguagesSelector';
+import TagsManager from './TagsManager';
 
 const LearningSettings: React.FC = () => {
   return (
-    <div className="h-full w-full flex flex-col overflow-auto md:overflow-hidden">
+    <div className="h-full w-full flex flex-col overflow-auto sm:overflow-hidden">
       {/* Top Section */}
-      <div className="flex-1 md:overflow-y-auto">
-        <h2 className="text-lg font-bold mb-2">Top Section</h2>
-        <p>Content for the top section</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...</p>
-        <p>Additional content for the top sectionn...1</p>
-        <p>Additional content for the top sectionn...0</p>
+
+      <div className='flex sm:flex-1 flex-col sm:flex-row sm:overflow-y-hidden'>
+        <div className='h-full flex flex-col w-full sm:w-1/2 p-2'>
+          <h2 className="text-lg font-bold mb-2">{T`Languages I want to learn`}</h2>
+          <div className="sm:overflow-y-auto flex-1">
+            <LanguagesSelector selected={new Set()} toggle={() => { }} />
+          </div>
+        </div>
+        <div className='h-full flex flex-col w-full sm:w-1/2 p-2'>
+          <h2 className="text-lg font-bold mb-2">{T`Languages I understand`}</h2>
+          <div className="sm:overflow-y-auto flex-1">
+            <LanguagesSelector selected={new Set()} toggle={() => { }} />
+          </div>
+        </div>
       </div>
 
-      <div className='flex md:flex-1 flex-col md:flex-row md:overflow-y-hidden'>
-        {/* Bottom Section */}
-        <div className='md:overflow-y-auto h-full flex flex-col w-full md:w-1/2 '>
-          <h2 className="text-lg font-bold mb-2">Bottom Left</h2>
-          <p>Content for the bottom left section</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...</p>
-          <p>Additional content for the bottom left section...0</p>
-        </div>
-        <div className='md:overflow-y-auto h-full flex flex-col w-full md:w-1/2 '>
-          <h2 className="text-lg font-bold mb-2">Bottom Right</h2>
-          <p>Content for the bottom right section</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-          <p>Additional content for the bottom right section...</p>
-        </div>
+      {/* Bottom Section */}
+      <div className="flex-1 flex flex-col p-2 sm:overflow-y-hidden">
+          <TagsManager />
       </div>
     </div >
   );

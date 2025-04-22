@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Entry from "../../domain/models/entry";
-import { id } from "../../domain/models/id";
-import Lang from "../../domain/models/lang";
+import { id } from "../../../../domain/id";
+import Lang from "../../../../domain/lang";
 import Source from "../../domain/models/source";
 
 const en: Lang = {

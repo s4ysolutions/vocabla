@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react'
-import Lang from '../domain/models/lang.ts'
+import Lang from '../../../domain/lang.ts'
 import Textarea from '../../../react/widgets/textarea/Textarea.tsx'
 import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect.tsx'
 

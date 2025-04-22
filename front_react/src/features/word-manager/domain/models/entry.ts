@@ -1,5 +1,5 @@
 import Definition from "./definition"
-import Lang from "./lang"
+import Lang from "../../../../domain/lang"
 
 interface Entry {
     readonly word: string

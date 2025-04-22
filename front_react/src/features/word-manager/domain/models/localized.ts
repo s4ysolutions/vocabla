@@ -1,4 +1,4 @@
-import Lang from "./lang";
+import Lang from "../../../../domain/lang";
 
 interface Localized {
     readonly lang: Lang

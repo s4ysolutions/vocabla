@@ -6,7 +6,7 @@ import CancelButton from '../../../react/widgets/buttons/CancelButton copy'
 import LanguageSelect from '../../../react/widgets/selectors/LanguageSelect'
 import useLearningLanguages from './hooks/useLearningLanguages'
 import useIUnderstandLanguages from './hooks/useIUnderstandLanguages'
-import Lang from '../domain/models/lang'
+import Lang from '../../../domain/lang'
 import DefinitionEdit from './DefinitionEdit'
 
 interface DefintionHolder {

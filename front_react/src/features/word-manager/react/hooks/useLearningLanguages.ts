@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Lang from "../../domain/models/lang";
-import { id } from "../../domain/models/id";
+import Lang from "../../../../domain/lang";
+import { id } from "../../../../domain/id";
 
 const mockLanguages: Array<Lang> = [
     { id: id("en"), name: "English", flag: "🇬🇧" },
