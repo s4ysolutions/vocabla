@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import MeAppMenu, { MenuItem, menuItems } from './app-menu'
 import WordManager from '../../word-manager/react'
 import WordManagerControlPanel from '../../word-manager/react/ControlPanel'
+import LearningSettings from '../../learning-settings'
 // TODO: imrove having 2 menus
 const Me: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
@@ -73,30 +74,16 @@ const Me: React.FC = () => {
             {
               {
                 'word-manager': <WordManagerControlPanel onFilterChange={() => { }} />,
-              }[selectedMenu.id] || <p>Some control</p>
+              }[selectedMenu.id] || null
             }
           </div>
         </div>
-        {/* Header 
-        <h1 className="text-xl font-bold p-4 bg-gray-200 mb-2 border-b border-gray-300">
-          <button
-            aria-label="Open Menu"
-            aria-expanded={isMenuOpen}
-            className="text-blue-500 md:hidden w-12 h-full rounded-full hover:bg-gray-200"
-            onClick={() => setIsMenuOpen(true)}
-          > ☰ </button>
-          {selectedMenu.title}
-          {
-            {
-              'word-manager': <WordManagerControlPanel onFilterChange={()=>{}}/>,
-            }[selectedMenu.id] || <p>Some control</p>
-          }
-          </h1>*/}
         {/* Content Container */}
         <div className="flex-1 overflow-y-hidden">
           {
             {
               'word-manager': <WordManager />,
+              'learning-settings': <LearningSettings />,
             }[selectedMenu.id] || <p>Selected a menu item <strong>{selectedMenu.id}</strong>.</p>
           }
         </div>

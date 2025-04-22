@@ -7,7 +7,7 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
     { id: 'word-manager', title: 'Words Manager' },
-    { id: 'menu1', title: 'Menu 1' },
+    { id: 'learning-settings', title: 'Learning Settings' },
     { id: 'menu2', title: 'Menu 2' },
     { id: 'menu3', title: 'Menu 3' },
 ]
