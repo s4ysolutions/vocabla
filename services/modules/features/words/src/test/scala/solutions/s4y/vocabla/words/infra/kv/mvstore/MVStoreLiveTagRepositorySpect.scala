@@ -11,6 +11,7 @@ import zio.{Tag, UIO, ZIO, ZLayer}
 import scala.language.postfixOps
 
 object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
+
   // Simple ID factory for testing that generates sequential IDs
   class TestIdFactory extends IdFactory[MVStoreLive.TagID] {
     private var currentId = 10
@@ -20,7 +21,7 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
     }
   }
 
-  def spec = suite("MVStoreRepositories")(
+  def spec: Spec[Any, Serializable] = suite("MVStoreRepositories")(
     suite("TagRepository")(
       test("addTag should create a new tag") {
         for {
@@ -86,10 +87,10 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
           entry.head.definitions.head.definition == "definition",
           entry.head.definitions.head.lang == "es",
           entry.head.tags.size == 2,
-          entry.head.tags(0).long == 12L,
+          entry.head.tags.head.long == 12L,
           entry.head.tags(1).long == 13L,
           tags.size == 3,
-          tags(0) == TagDTO(11L, "C"),
+          tags.head == TagDTO(11L, "C"),
           tags(1) == TagDTO(12L, "A"),
           tags(2) == TagDTO(13L, "B")
         )
@@ -103,16 +104,34 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
       test("getEntriesForOwner should return all entries for specific owner") {
         for {
           repository <- ZIO.service[MVStoreLive.EntryRepository]
-          entryId1 <- repository.addEntry(1L, "word1", "en", "def1", "es", Seq.empty)
-          entryId2 <- repository.addEntry(1L, "word2", "en", "def2", "es", Seq.empty)
+          entryId1 <- repository.addEntry(
+            1L,
+            "word1",
+            "en",
+            "def1",
+            "es",
+            Seq.empty
+          )
+          entryId2 <- repository.addEntry(
+            1L,
+            "word2",
+            "en",
+            "def2",
+            "es",
+            Seq.empty
+          )
           _ <- repository.addEntry(2L, "word3", "en", "def3", "es", Seq.empty)
           entries <- repository.getEntriesForOwner(1L)
         } yield assertTrue(
           entries.size == 2,
           entries.exists(e => e.id == entryId1 && e.word == "word1"),
           entries.exists(e => e.id == entryId2 && e.word == "word2"),
-          entries.exists(e => e.definitions.head.definition == "def1" && e.lang == "en"),
-          entries.exists(e => e.definitions.head.definition == "def2" && e.lang == "en")
+          entries.exists(e =>
+            e.definitions.head.definition == "def1" && e.lang == "en"
+          ),
+          entries.exists(e =>
+            e.definitions.head.definition == "def2" && e.lang == "en"
+          )
         )
       }
     )

@@ -5,6 +5,9 @@ import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner, Tag}
 import zio.{ZIO, ZLayer}
 
+/** Terminates polymorphism by providing the concrete implementation and define
+  * non-parameterized type
+  */
 object MVStoreLive:
   type EntryID = Entry.Id
   type OwnerID = Owner.Id
@@ -30,7 +33,8 @@ object MVStoreLive:
   private val tagsLive: ZIO[
     MVStore & IdFactory[TagID],
     String,
-    MVStoreTagRepository[OwnerID, TagID]
+    TagRepository
+    // MVStoreTagRepository[OwnerID, TagID]
   ] = for {
     mvStore <- ZIO.service[MVStore]
     tagIdFactory <- ZIO.service[IdFactory[TagID]]
@@ -38,41 +42,35 @@ object MVStoreLive:
   } yield repository
 
   private val entriesLive: ZIO[
-    MVStoreTagRepository[OwnerID, TagID] & MVStore & IdFactory[EntryID],
+    TagRepository & MVStore & IdFactory[EntryID],
     String,
-    MVStoreEntryRepository[OwnerID, EntryID, TagID]
+    EntryRepository
   ] =
     for {
       mvStore <- ZIO.service[MVStore]
-      // tagRepository <- ZIO.service[MVStoreTagRepository[OwnerID, TagID]]
-      // tagRepository <- ZIO.service[TagRepository]
-      tagRepository <- tagsLive
+      tagRepository <- ZIO.service[TagRepository]
       entryIdFactory <- ZIO.service[IdFactory[EntryID]]
       entryRepository <- MVStoreEntryRepository(
         mvStore,
         entryIdFactory,
-        tagRepository
+        // hack!
+        tagRepository.asInstanceOf[MVStoreTagRepository[OwnerID, TagID]]
       )
     } yield entryRepository
 
   val layers: ZLayer[
-    MVStore,
+    MVStore & IdFactory[TagID] & IdFactory[EntryID],
     String,
     TagRepository & EntryRepository
   ] = {
-    val tagsLayer = ZLayer.fromZIO(
-      tagsLive
-        .asInstanceOf[
-          ZIO[MVStore, String, TagRepository]
-        ]
-    )
+    val tagsLayer: ZLayer[MVStore & IdFactory[TagID], String, TagRepository] =
+      ZLayer.fromZIO(tagsLive)
 
-    val entriesLayer = ZLayer.fromZIO(
-      entriesLive
-        .asInstanceOf[
-          ZIO[MVStore, String, EntryRepository]
-        ]
-    )
+    val entriesLayer: ZLayer[
+      TagRepository & MVStore & IdFactory[EntryID],
+      String,
+      EntryRepository
+    ] = ZLayer.fromZIO(entriesLive)
 
-    tagsLayer ++ entriesLayer
+    tagsLayer ++ (tagsLayer >>> entriesLayer)
   }

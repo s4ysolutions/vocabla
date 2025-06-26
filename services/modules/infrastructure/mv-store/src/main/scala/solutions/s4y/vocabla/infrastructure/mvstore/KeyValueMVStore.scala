@@ -31,7 +31,7 @@ class KeyValueMVStore[Key, E](map: MVMap[Key, E]) extends KeyValue[Key, E] {
 }
 
 object KeyValueMVStore {
-  def makeMvStore(file: Option[String]): ZIO[Scope, Throwable, MVStore] =
+  private def makeMvStore(file: Option[String]): ZIO[Scope, Throwable, MVStore] =
     ZIO.acquireRelease(
       ZIO.blocking {
         ZIO
