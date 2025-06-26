@@ -9,14 +9,14 @@ import zio.{ZIO, ZLayer}
   * non-parameterized type
   */
 object MVStoreLive:
-  type EntryID = Entry.Id
-  type OwnerID = Owner.Id
-  type TagID = Tag.Id
-  type EntryDTO = MVStoreEntryRepository.EntryDTO[EntryID, TagID]
-  type TagDTO = MVStoreTagRepository.TagDTO[TagID]
-  type TagRepository =
+  private type EntryID = Entry.Id
+  private type OwnerID = Owner.Id
+  private type TagID = Tag.Id
+  private type EntryDTO = MVStoreEntryRepository.EntryDTO[EntryID, TagID]
+  private type TagDTO = MVStoreTagRepository.TagDTO[TagID]
+  private[mvstore] type TagRepository =
     solutions.s4y.vocabla.words.app.repo.TagRepository[OwnerID, TagID, TagDTO]
-  type EntryRepository =
+  private[mvstore] type EntryRepository =
     solutions.s4y.vocabla.words.app.repo.EntryRepository[
       OwnerID,
       EntryID,

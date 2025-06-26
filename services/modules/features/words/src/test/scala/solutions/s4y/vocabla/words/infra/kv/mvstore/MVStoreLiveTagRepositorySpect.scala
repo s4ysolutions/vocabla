@@ -13,11 +13,11 @@ import scala.language.postfixOps
 object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
 
   // Simple ID factory for testing that generates sequential IDs
-  class TestIdFactory extends IdFactory[MVStoreLive.TagID] {
+  class TestIdFactory extends IdFactory[Entity.Id] {
     private var currentId = 10
-    override def next: UIO[MVStoreLive.TagID] = ZIO.succeed {
+    override def next: UIO[Entity.Id] = ZIO.succeed {
       currentId += 1
-      currentId.asInstanceOf[MVStoreLive.TagID]
+      currentId.asInstanceOf[Entity.Id]
     }
   }
 
