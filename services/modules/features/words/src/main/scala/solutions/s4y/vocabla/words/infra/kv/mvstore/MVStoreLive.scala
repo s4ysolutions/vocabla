@@ -2,6 +2,7 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.MVStore
 import solutions.s4y.vocabla.id.IdFactory
+import solutions.s4y.vocabla.words.app.repo.dto
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner, Tag}
 import zio.{ZIO, ZLayer}
 
@@ -12,8 +13,8 @@ object MVStoreLive:
   private type EntryID = Entry.Id
   private type OwnerID = Owner.Id
   private type TagID = Tag.Id
-  private type EntryDTO = MVStoreEntryRepository.EntryDTO[EntryID, TagID]
-  private type TagDTO = MVStoreTagRepository.TagDTO[TagID]
+  private type EntryDTO = dto.EntryDTO[EntryID, TagID]
+  private type TagDTO = dto.TagDTO[TagID]
   private[mvstore] type TagRepository =
     solutions.s4y.vocabla.words.app.repo.TagRepository[OwnerID, TagID, TagDTO]
   private[mvstore] type EntryRepository =

@@ -2,8 +2,8 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.id.IdFactory
-import solutions.s4y.vocabla.words.app.repo.TagRepository
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreTagRepository.TagDTO
+import solutions.s4y.vocabla.words.app.repo.{TagRepository}
+import solutions.s4y.vocabla.words.app.repo.dto.TagDTO
 import zio.{IO, ZIO}
 
 class MVStoreTagRepository[OwnerID, TagID](
@@ -54,7 +54,6 @@ class MVStoreTagRepository[OwnerID, TagID](
       )
 
 object MVStoreTagRepository:
-  case class TagDTO[TagID](id: TagID, label: String)
   def apply[OwnerID, TagID](
       mvStore: MVStore,
       idFactory: IdFactory[TagID]

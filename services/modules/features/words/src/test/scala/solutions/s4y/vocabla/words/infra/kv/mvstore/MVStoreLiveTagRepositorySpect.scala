@@ -2,11 +2,11 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
+import solutions.s4y.vocabla.words.app.repo.dto.TagDTO
 import solutions.s4y.vocabla.words.domain.model.Entity
 import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreLive.TagRepository
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreTagRepository.TagDTO
 import zio.test.*
-import zio.{Tag, UIO, ZIO, ZLayer}
+import zio.{Scope, Tag, UIO, ZIO, ZLayer}
 
 import scala.language.postfixOps
 
@@ -21,7 +21,7 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
     }
   }
 
-  def spec: Spec[Any, Serializable] = suite("MVStoreRepositories")(
+  def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreRepositories")(
     suite("TagRepository")(
       test("addTag should create a new tag") {
         for {

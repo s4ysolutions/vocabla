@@ -3,12 +3,9 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
+import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO}
 import solutions.s4y.vocabla.words.domain.model.Lang
 import solutions.s4y.vocabla.words.domain.model.Lang.Code
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{
-  DefinitionDTO,
-  EntryDTO
-}
 import zio.{IO, ZIO}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
@@ -56,14 +53,6 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
 
 
 object MVStoreEntryRepository:
-  case class DefinitionDTO(definition: String, lang: Lang.Code)
-  case class EntryDTO[EntryID, TagID](
-      id: EntryID,
-      word: String,
-      lang: Lang.Code,
-      definitions: Seq[DefinitionDTO],
-      tags: Seq[TagID]
-  )
   def apply[OwnerID, EntryID, TagID](
       mvStore: MVStore,
       idFactory: IdFactory[EntryID],

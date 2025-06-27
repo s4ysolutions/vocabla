@@ -1,8 +1,7 @@
 package solutions.s4y.vocabla.words.app.repo
 
-import solutions.s4y.vocabla.words.domain.model.{Lang, Owner, Tag}
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.EntryDTO
-import zio.{IO, Task}
+import solutions.s4y.vocabla.words.domain.model.Lang
+import zio.IO
 
 trait EntryRepository[OwnerID, EntryID, EntryDTO]:
   def getEntriesForOwner(ownerId: OwnerID): IO[String, Seq[EntryDTO]]
