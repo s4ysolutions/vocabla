@@ -2,7 +2,7 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.id.IdFactory
-import solutions.s4y.vocabla.words.app.repo.{TagRepository}
+import solutions.s4y.vocabla.words.app.repo.TagRepository
 import solutions.s4y.vocabla.words.app.repo.dto.TagDTO
 import zio.{IO, ZIO}
 

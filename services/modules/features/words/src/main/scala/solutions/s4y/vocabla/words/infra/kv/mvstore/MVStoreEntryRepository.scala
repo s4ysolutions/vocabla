@@ -5,7 +5,6 @@ import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO}
 import solutions.s4y.vocabla.words.domain.model.Lang
-import solutions.s4y.vocabla.words.domain.model.Lang.Code
 import zio.{IO, ZIO}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
