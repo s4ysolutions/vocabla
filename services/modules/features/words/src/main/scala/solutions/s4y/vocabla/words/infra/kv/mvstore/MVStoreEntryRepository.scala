@@ -5,7 +5,7 @@ import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO}
 import solutions.s4y.vocabla.words.domain.model.Lang
-import zio.{IO, ZIO}
+import zio.{IO, Tag, ZIO, ZLayer}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
     map: MVMap[OwnerID, Seq[EntryDTO[EntryID, TagID]]],
@@ -22,7 +22,9 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       tagLabels: Seq[String]
   ): IO[String, EntryID] = for {
     tags <- tagRepository.getTagsForOwner(ownerId)
-    tagIds <- ZIO.foreach(tagLabels)(label => tagRepository.addTag(ownerId, label))
+    tagIds <- ZIO.foreach(tagLabels)(label =>
+      tagRepository.addTag(ownerId, label)
+    )
     entryId <- idFactory.next
     entry = EntryDTO(
       entryId,
@@ -50,22 +52,53 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
         s"Error getting entries for owner $ownerId: ${th.getMessage}"
       )
 
-
 object MVStoreEntryRepository:
   def apply[OwnerID, EntryID, TagID](
       mvStore: MVStore,
       idFactory: IdFactory[EntryID],
       tagRepository: MVStoreTagRepository[OwnerID, TagID]
-  ): IO[String, MVStoreEntryRepository[OwnerID, EntryID, TagID]] =
-    ZIO
-      .attempt {
-        val map =
-          mvStore.openMap[OwnerID, Seq[EntryDTO[EntryID, TagID]]]("entries")
-        new MVStoreEntryRepository[OwnerID, EntryID, TagID](
-          map,
-          idFactory,
-          tagRepository
-        )
-      }
-      .tapErrorCause(ZIO.logWarningCause("Error opening MVStoreLive", _))
-      .mapError(th => s"Error opening MVStoreLive: ${th.getMessage}")
+  ): MVStoreEntryRepository[OwnerID, EntryID, TagID] =
+    val map =
+      mvStore.openMap[OwnerID, Seq[EntryDTO[EntryID, TagID]]]("entries")
+    new MVStoreEntryRepository[OwnerID, EntryID, TagID](
+      map,
+      idFactory,
+      tagRepository
+    )
+
+  def makeMvStoreLayer[OwnerID: Tag, EntryID: Tag, TagID: Tag]: ZLayer[
+    MVStore & MVStoreTagRepository[OwnerID, TagID] & IdFactory[EntryID],
+    String,
+    MVStoreEntryRepository[OwnerID, EntryID, TagID]
+  ] =
+    ZLayer.fromZIO {
+      for {
+        mvStore <- ZIO.service[MVStore]
+        idFactory <- ZIO.service[IdFactory[EntryID]]
+        tagRepository <- ZIO.service[MVStoreTagRepository[OwnerID, TagID]]
+        entryRepository <- ZIO
+          .attempt(
+            MVStoreEntryRepository(mvStore, idFactory, tagRepository)
+          )
+          .tapError(th =>
+            ZIO.logError(
+              s"Error creating MVStoreEntryRepository: ${th.getMessage}"
+            )
+          )
+          .mapError(th =>
+            s"Error creating MVStoreEntryRepository: ${th.getMessage}"
+          )
+      } yield entryRepository
+    }
+
+  def makeLayer[OwnerID: Tag, EntryID: Tag, TagID: Tag]: ZLayer[
+    MVStore & MVStoreEntryRepository[OwnerID, EntryID, TagID] &
+      IdFactory[EntryID],
+    String,
+    EntryRepository[OwnerID, EntryID, EntryDTO[EntryID, TagID]]
+  ] = ZLayer.fromFunction(
+    (repo: MVStoreEntryRepository[OwnerID, EntryID, TagID]) =>
+      repo.asInstanceOf[
+        EntryRepository[OwnerID, EntryID, EntryDTO[EntryID, TagID]]
+      ]
+  )

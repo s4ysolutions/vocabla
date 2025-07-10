@@ -1,15 +1,14 @@
 package solutions.s4y.vocabla.words.app.repo
 
 import solutions.s4y.vocabla.words.domain.model.Lang
-import zio.IO
+import zio.{IO, Tag}
 
 /** @tparam OwnerID
   *   type of ID for the owner's ID
   * @tparam EntryID
   *   type of ID for the entry's ID
   * @tparam EntryDTO
-  *   a controversial type of DTO used by get*, probably the DTO should be stuck
-  *   to EntryDTO[EntryID, TagID]
+  *   a type of DTO used by get*
   */
 trait EntryRepository[OwnerID, EntryID, EntryDTO]:
   def getEntriesForOwner(ownerId: OwnerID): IO[String, Seq[EntryDTO]]

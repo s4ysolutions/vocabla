@@ -1,14 +1,11 @@
 package solutions.s4y.vocabla.words.domain.model
 
-case class Entry(
-    id: Entry.Id,
-    word: Word.Id,
+case class Entry[ID](
+    override val id: ID,
+    word: ID,
     definitions: Seq[Definition],
-    tags: Seq[Tag.Id],
-    ownerId: Owner.Id
-):
+    tags: Seq[ID],
+    ownerId: ID
+) extends Model[ID]:
   override def toString: String =
     s"Entry: $word, Definitions: ${definitions.mkString(", ")}, Tags: ${tags.mkString(", ")}"
-
-object Entry:
-  type Id = Entity.Id

@@ -4,7 +4,7 @@ import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.TagRepository
 import solutions.s4y.vocabla.words.app.repo.dto.TagDTO
-import zio.{IO, ZIO}
+import zio.{IO, Tag, ZIO, ZLayer}
 
 class MVStoreTagRepository[OwnerID, TagID](
     map: MVMap[OwnerID, Seq[TagDTO[TagID]]],
@@ -54,14 +54,40 @@ class MVStoreTagRepository[OwnerID, TagID](
       )
 
 object MVStoreTagRepository:
-  def apply[OwnerID, TagID](
+  def apply[OwnerID, TagID: Tag](
       mvStore: MVStore,
       idFactory: IdFactory[TagID]
-  ): IO[String, MVStoreTagRepository[OwnerID, TagID]] =
-    ZIO
-      .attempt {
-        val map = mvStore.openMap[OwnerID, Seq[TagDTO[TagID]]]("tags")
-        new MVStoreTagRepository[OwnerID, TagID](map, idFactory)
-      }
-      .tapErrorCause(ZIO.logWarningCause("Error opening MVStoreLive", _))
-      .mapError(th => s"Error opening MVStoreLive: ${th.getMessage}")
+  ): MVStoreTagRepository[OwnerID, TagID] =
+    val map = mvStore.openMap[OwnerID, Seq[TagDTO[TagID]]]("tags")
+    new MVStoreTagRepository[OwnerID, TagID](map, idFactory)
+
+  def makeMVstoreLayer[OwnerID: Tag, TagID: Tag]: ZLayer[
+    MVStore & IdFactory[TagID],
+    String,
+    MVStoreTagRepository[OwnerID, TagID]
+  ] =
+    ZLayer.fromZIO {
+      for {
+        mvStore <- ZIO.service[MVStore]
+        idFactory <- ZIO.service[IdFactory[TagID]]
+        repo <- ZIO
+          .attempt(MVStoreTagRepository[OwnerID, TagID](mvStore, idFactory))
+          .tapErrorCause(cause =>
+            ZIO.logErrorCause("Error creating MVStoreTagRepository", cause)
+          )
+          .mapError(th =>
+            s"Error creating MVStoreTagRepository: ${th.getMessage}"
+          )
+      } yield repo
+    }
+
+  def makeLayer[OwnerID: Tag, TagID: Tag]: ZLayer[
+    MVStore & IdFactory[TagID] & MVStoreTagRepository[OwnerID, TagID],
+    String,
+    TagRepository[OwnerID, TagID, TagDTO[TagID]]
+  ] =
+    ZLayer.fromFunction(
+      (mvStoreTagRepo: MVStoreTagRepository[OwnerID, TagID]) =>
+        mvStoreTagRepo
+          .asInstanceOf[TagRepository[OwnerID, TagID, TagDTO[TagID]]]
+    ) >>> makeMVstoreLayer[OwnerID, TagID]
