@@ -19,12 +19,12 @@ class RESTServer[
     TagID: Tag
 ] {
 
-  private val endpoits = Seq(pingEndpoint, newEntryEndpoint)
+  private val endpoints = Seq(pingEndpoint, newEntryEndpoint)
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
     title = "Vocabla API",
     version = "1.0.0",
-    endpoits
+    endpoints
   )
 
   private val restRoutes =
