@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@effect/vitest";
-import rest from "../../src/infra/rest";
+import restAdapter from "../../src/infra/rest-adapter";
 import { Effect, Exit } from "effect"
 
 describe("rest.addEntry", () => {
@@ -11,7 +11,7 @@ describe("rest.addEntry", () => {
   );
   it.effect("creates a new entry and returns an ID failed", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.exit(rest.addEntry(
+      const result = yield* Effect.exit(restAdapter.addEntry(
         "test-owner-id",
         "word",
         "en",
@@ -24,7 +24,7 @@ describe("rest.addEntry", () => {
   );
   it.effect("creates a new entry and returns an ID success", () =>
     Effect.gen(function* () {
-      const result = yield* rest.addEntry(
+      const result = yield* restAdapter.addEntry(
         "0",
         "word",
         "en",
@@ -37,16 +37,3 @@ describe("rest.addEntry", () => {
     })
   );
 });
-
-/*
-    const response =  yield* _(rest.addEntry(
-      "test-owner-id",
-      "word",
-      "en",
-      "definition",
-      "en",
-      ["tag1", "tag2"]
-    ));
-
-    expect(response.length).toBeGreaterThan(0);
-    */

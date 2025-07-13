@@ -1,3 +1,4 @@
+import { Context } from "effect";
 import { Effect } from "effect/Effect";
 
 export type DTOID = string;
@@ -37,5 +38,10 @@ interface WordsRepository {
   ): Effect<DTOID, string, never>;
   entriesByOwner(ownerID: DTOID): Effect<Array<EntryDTO>, string, never>;
 }
+
+export class WordsRepositoryTag extends Context.Tag("WordsAdapter")<
+  WordsRepositoryTag,
+  WordsRepository
+>() {}
 
 export default WordsRepository;
