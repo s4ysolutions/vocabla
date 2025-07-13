@@ -10,6 +10,8 @@ import solutions.s4y.vocabla.endpoint.http.rest.words.{
 import solutions.s4y.vocabla.endpoint.http.rest.{pingEndpoint, pingRoute}
 import solutions.s4y.vocabla.words.app.usecase.WordsService
 import zio.http.*
+import zio.http.Header.AccessControlAllowOrigin
+import zio.http.Middleware.CorsConfig
 import zio.http.codec.PathCodec
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}
 import zio.{LogLevel, Promise, Tag, Task, ULayer, ZIO, ZLayer, http}
@@ -32,8 +34,19 @@ class RESTService[
   private val restRoutes =
     Seq(pingRoute, newEntryRoute[DomainID, OwnerID, EntryID], entriesRoute)
 
+  private val corsConfig: CorsConfig = CorsConfig(
+    // allowedMethods = Acc
+    // Some(Set(Method.GET, Method.POST, Method.PUT, Method.DELETE)),
+    // allowedOrigin = _ => Some(AccessControlAllowOrigin.All)
+    // allowedHeaders = Some(Set("Content-Type", "Authorization")),
+    // exposedHeaders = Some(Set("Content-Type", "Authorization")),
+    // allowCredentials = true,
+    // maxAge = Some(3600)
+  )
   private val routes =
-    (Routes.fromIterable(restRoutes) ++ SwaggerUI.routes(
+    ((Routes.fromIterable(restRoutes) @@ Middleware.cors(
+      corsConfig
+    )) ++ SwaggerUI.routes(
       "/openapi",
       openAPI
     )) @@ Middleware

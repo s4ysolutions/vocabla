@@ -1,6 +1,9 @@
 package solutions.s4y.vocabla.endpoint.http.rest.words
 
-import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{ErrorParseID, ErrorService}
+import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
+  ErrorParseID,
+  ErrorService
+}
 import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO}
 import zio.ZIO
 import zio.http.Method.{GET, POST}
@@ -8,20 +11,20 @@ import zio.http.{Status, string}
 import zio.http.endpoint.Endpoint
 import zio.schema.Schema.list
 import zio.schema.{DeriveSchema, Schema}
-
+/*
 private case class EntriesRequest(
     ownerId: String
 )
 
 private given Schema[EntriesRequest] = DeriveSchema.gen[EntriesRequest]
-
+ */
 private case class EntriesResponse(
     entries: List[EntryDTO[String, String]]
 )
 private given Schema[EntriesResponse] = DeriveSchema.gen[EntriesResponse]
 
-val entriesEndpoint = Endpoint(GET / prefix / "entries" / string("owner"))
-  .in[EntriesRequest]
+val entriesEndpoint = Endpoint(GET / prefix / "entries" / string("ownerId"))
+  // .in[EntriesRequest]
   .out[EntriesResponse]
   .outError[ErrorService](Status.InternalServerError)
   .outError[ErrorParseID](Status.BadRequest)
