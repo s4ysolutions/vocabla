@@ -1,12 +1,13 @@
 import React from 'react'
-import useEntries from './hooks/useEntries'
+import useEntries from './hooks/useEntriesEffect'
 import EntryCard from './EntryCard'
 import ProgressInfinity from '../../../react/widgets/progress-infinity'
 import EntryAdd from './EntryAdd'
 import Panel from '../../../react/widgets/panels/Panel'
 
 const WordManager: React.FC = () => {
-  const { entries, loading } = useEntries()
+  console.log("WordManager rendered");
+  const { entries, loading } = useEntries("0")
 
   return <div className="h-full w-full flex flex-col">
     {/* Scrollable List */}

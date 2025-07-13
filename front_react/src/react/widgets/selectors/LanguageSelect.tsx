@@ -11,7 +11,7 @@ interface props {
     onChange?: (lang: Lang) => void
 }
 
-const langById = (languages: Array<Lang>, id: string | undefined) => id && languages.find(lang => lang.id === id) || undefined;
+const langByCode = (languages: Array<Lang>, code: string | undefined) => code && languages.find(lang => lang.code === code) || undefined;
 const langFormatted = (lang: Lang | undefined) => <span className="block text-sm font-medium text-gray-700">{lang?.flag || ' '}{lang?.name}</span>;
 
 const LanguageSelect: React.FC<props> = ({ defaultLanguage: initialLanguage, languages, language, onChange, loading }) =>
@@ -28,21 +28,21 @@ const LanguageSelect1: React.FC<{ language: Lang }> = ({ language }) =>
 
 const LanguageSelectMany: React.FC<props> = ({ defaultLanguage: initialLanguage, languages, language, onChange }) => {
 
-    const [selectedId, setSelectedId] = React.useState(language?.id);
+    const [selectedId, setSelectedId] = React.useState(language?.code);
 
     return <Select
-        values={languages.map((lang) => ({ id: lang.id, value: lang.name }))}
+        values={languages.map((lang) => ({ id: lang.code, value: lang.name }))}
         value={selectedId}
-        defaultValue={initialLanguage?.id}
+        defaultValue={initialLanguage?.code}
         onChange={(e) => {
-            const selectedLang = langById(languages, e.target.value);
+            const selectedLang = langByCode(languages, e.target.value);
             if (selectedLang) {
-                setSelectedId(selectedLang.id);
+                setSelectedId(selectedLang.code);
                 onChange?.(selectedLang);
             }
         }}
     >
-        <LanguageSelect1 language={langById(languages, selectedId) || languages[0]} />
+        <LanguageSelect1 language={langByCode(languages, selectedId) || languages[0]} />
     </Select>
 }
 

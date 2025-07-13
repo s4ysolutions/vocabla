@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import Lang from "../../../../domain/lang";
-import { id } from "../../../../domain/id";
 
 const mockLanguages: Array<Lang> = [
-    { id: id("en"), name: "English", flag: "🇬🇧" },
-    { id: id("es"), name: "Spanish", flag: "🇪🇸" },
-    { id: id("fr"), name: "French", flag: "🇫🇷" },
-    { id: id("de"), name: "German", flag: "🇩🇪" },
-    { id: id("it"), name: "Italian", flag: "🇮🇹" },
-    { id: id("pt"), name: "Portuguese", flag: "🇧🇷" },
-    { id: id("zh"), name: "Chinese", flag: "🇨🇳" },
-    { id: id("ja"), name: "Japanese", flag: "🇯🇵" },
-    { id: id("ru"), name: "Russian", flag: "🇷🇺" },
-    { id: id("ar"), name: "Arabic", flag: "🇸🇦" },
+    { code: "en",  name: "English", flag: "🇬🇧" },
+    { code: "es",  name: "Spanish", flag: "🇪🇸" },
+    { code: "fr",  name: "French", flag: "🇫🇷" },
+    { code: "de",  name: "German", flag: "🇩🇪" },
+    { code: "it",  name: "Italian", flag: "🇮🇹" },
+    { code: "pt",  name: "Portuguese", flag: "🇧🇷" },
+    { code: "zh",  name: "Chinese", flag: "🇨🇳" },
+    { code: "ja",  name: "Japanese", flag: "🇯🇵" },
+    { code: "ru",  name: "Russian", flag: "🇷🇺" },
+    { code: "ar",  name: "Arabic", flag: "🇸🇦" },
 ];
 
 const useLearningLanguages = (): { languages: Array<Lang>, loading: boolean } => {
