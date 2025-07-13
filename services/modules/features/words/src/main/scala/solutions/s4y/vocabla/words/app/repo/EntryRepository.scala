@@ -11,12 +11,12 @@ import zio.{IO, Tag}
   *   a type of DTO used by get*
   */
 trait EntryRepository[OwnerID, EntryID, EntryDTO]:
-  def getEntriesForOwner(ownerId: OwnerID): IO[String, Seq[EntryDTO]]
+  def getEntriesForOwner(ownerId: OwnerID): IO[String, List[EntryDTO]]
   def addEntry(
       ownerId: OwnerID,
       word: String,
       wordLang: Lang.Code,
       definition: String,
       definitionLang: Lang.Code,
-      tagLabels: Seq[String]
+      tagLabels: List[String]
   ): IO[String, EntryID]

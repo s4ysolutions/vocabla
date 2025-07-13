@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.endpoint
 
 import org.h2.mvstore.MVStore
-import solutions.s4y.vocabla.endpoint.http.RESTServer
+import solutions.s4y.vocabla.endpoint.http.RESTService
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
 import solutions.s4y.vocabla.words.app.repo.DtoIdToDomainId
@@ -9,6 +9,7 @@ import solutions.s4y.vocabla.words.app.usecase.{
   WordsService,
   WordsServiceMVStore
 }
+import zio.http.Server
 import zio.logging.LogFilter.LogLevelByNameConfig
 import zio.logging.{ConsoleLoggerConfig, LogFormat, consoleLogger, logMetrics}
 import zio.{
@@ -53,13 +54,13 @@ object Main extends ZIOAppDefault:
     (layerIdFactory ++ layerMVStore) >>> WordsServiceMVStore.makeLayer[ID]
 
   private val program: ZIO[
-    Scope & WordsService[ID, ID, ID] & RESTServer[ID, ID, ID, ID],
+    Scope & WordsService[ID, ID, ID] & RESTService[ID, ID, ID, ID] & Server,
     String,
     Unit
   ] = {
     for {
       _ <- ZIO.logDebug("Starting app")
-      restService <- ZIO.service[RESTServer[ID, ID, ID, ID]]
+      restService <- ZIO.service[RESTService[ID, ID, ID, ID]]
       startedPromise <- restService.start()
       _ <- startedPromise.await
       _ <- ZIO.logInfo("Press Ctrl-C to stop the server")
@@ -70,5 +71,9 @@ object Main extends ZIOAppDefault:
 
   override def run: ZIO[Scope, String, Unit] =
     program.provideSome[Scope](
-      RESTServer.layer[ID, ID, ID, ID]() ++ wordsServiceLayer
+      // TODO: should go into RESTService layer
+      Server.default.mapError(th => th.toString) ++
+        RESTService.layer[ID, ID, ID, ID]() ++ wordsServiceLayer
     )
+
+  // Server.default.mapError(th => th.toString)

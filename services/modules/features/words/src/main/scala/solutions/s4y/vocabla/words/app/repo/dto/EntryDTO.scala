@@ -6,6 +6,6 @@ case class EntryDTO[EntryID, TagID](
     id: EntryID,
     word: String,
     lang: Lang.Code,
-    definitions: Seq[DefinitionDTO],
-    tags: Seq[TagID]
+    definitions: List[DefinitionDTO],
+    tags: List[TagID]
 )

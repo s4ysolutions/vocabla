@@ -3,8 +3,8 @@ package solutions.s4y.vocabla.words.domain.model
 case class Entry[ID](
     override val id: ID,
     word: ID,
-    definitions: Seq[Definition],
-    tags: Seq[ID],
+    definitions: List[Definition],
+    tags: List[ID],
     ownerId: ID
 ) extends Model[ID]:
   override def toString: String =

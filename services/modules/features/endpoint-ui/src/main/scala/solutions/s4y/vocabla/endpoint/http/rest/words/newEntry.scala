@@ -28,7 +28,7 @@ private case class NewEntryResponse(entryId: String)
 
 private given Schema[NewEntryResponse] = DeriveSchema.gen[NewEntryResponse]
 
-val newEntryEndpoint = Endpoint(POST / prefix / "entry")
+val newEntryEndpoint = Endpoint(POST / prefix / "entries")
   .in[NewEntryRequest]
   .out[NewEntryResponse]
   .outError[ErrorService](Status.InternalServerError)

@@ -8,7 +8,7 @@ import solutions.s4y.vocabla.words.domain.model.Lang
 import zio.{IO, Tag, ZIO, ZLayer}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
-    map: MVMap[OwnerID, Seq[EntryDTO[EntryID, TagID]]],
+    map: MVMap[OwnerID, List[EntryDTO[EntryID, TagID]]],
     idFactory: IdFactory[EntryID],
     tagRepository: MVStoreTagRepository[OwnerID, TagID]
 ) extends EntryRepository[OwnerID, EntryID, EntryDTO[EntryID, TagID]]:
@@ -19,7 +19,7 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       wordLang: Lang.Code,
       definition: String,
       definitionLang: Lang.Code,
-      tagLabels: Seq[String]
+      tagLabels: List[String]
   ): IO[String, EntryID] = for {
     tags <- tagRepository.getTagsForOwner(ownerId)
     tagIds <- ZIO.foreach(tagLabels)(label =>
@@ -30,7 +30,7 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       entryId,
       word,
       wordLang,
-      Seq(DefinitionDTO(definition, definitionLang)),
+      List(DefinitionDTO(definition, definitionLang)),
       tagIds
     )
     entries <- getEntriesForOwner(ownerId)
@@ -42,9 +42,9 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
 
   override def getEntriesForOwner(
       ownerId: OwnerID
-  ): IO[String, Seq[EntryDTO[EntryID, TagID]]] =
+  ): IO[String, List[EntryDTO[EntryID, TagID]]] =
     ZIO
-      .attempt(Option(map.get(ownerId)).getOrElse(Seq.empty))
+      .attempt(Option(map.get(ownerId)).getOrElse(List.empty))
       .tapErrorCause(cause =>
         ZIO.logWarningCause(s"Error getting entries for owner $ownerId", cause)
       )
@@ -59,7 +59,7 @@ object MVStoreEntryRepository:
       tagRepository: MVStoreTagRepository[OwnerID, TagID]
   ): MVStoreEntryRepository[OwnerID, EntryID, TagID] =
     val map =
-      mvStore.openMap[OwnerID, Seq[EntryDTO[EntryID, TagID]]]("entries")
+      mvStore.openMap[OwnerID, List[EntryDTO[EntryID, TagID]]]("entries")
     new MVStoreEntryRepository[OwnerID, EntryID, TagID](
       map,
       idFactory,

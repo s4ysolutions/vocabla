@@ -2,6 +2,8 @@ package solutions.s4y.vocabla.endpoint.http
 
 import solutions.s4y.vocabla.endpoint.http.codecs.IdCodec
 import solutions.s4y.vocabla.endpoint.http.rest.words.{
+  entriesEndpoint,
+  entriesRoute,
   newEntryEndpoint,
   newEntryRoute
 }
@@ -12,14 +14,14 @@ import zio.http.codec.PathCodec
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}
 import zio.{LogLevel, Promise, Tag, Task, ULayer, ZIO, ZLayer, http}
 
-class RESTServer[
+class RESTService[
     DomainID: Tag,
     OwnerID: {IdCodec, Tag},
     EntryID: Tag,
     TagID: Tag
 ] {
 
-  private val endpoints = Seq(pingEndpoint, newEntryEndpoint)
+  private val endpoints = Seq(pingEndpoint, newEntryEndpoint, entriesEndpoint)
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
     title = "Vocabla API",
@@ -28,7 +30,7 @@ class RESTServer[
   )
 
   private val restRoutes =
-    Seq(pingRoute, newEntryRoute[DomainID, OwnerID, EntryID])
+    Seq(pingRoute, newEntryRoute[DomainID, OwnerID, EntryID], entriesRoute)
 
   private val routes =
     (Routes.fromIterable(restRoutes) ++ SwaggerUI.routes(
@@ -45,7 +47,7 @@ class RESTServer[
       )
 
   def start(): ZIO[
-    WordsService[DomainID, OwnerID, EntryID],
+    WordsService[DomainID, OwnerID, EntryID] & Server,
     String,
     Promise[Nothing, Unit]
   ] = {
@@ -56,20 +58,20 @@ class RESTServer[
           promise <- Promise.make[Nothing, Unit]
           _ <- ZIO.log(s"Server started on http://localhost:$port") //  ZIO.never
           _ <- promise.succeed(())
-          _ <- ZIO.never.fork
+          fiber <- ZIO.never.fork
         } yield promise
-      )
+      ) /*
       .provideSome[WordsService[DomainID, OwnerID, EntryID]](
         Server.default.mapError(th => th.toString)
-      )
+      )*/
   }
 }
 
-object RESTServer:
+object RESTService:
   def layer[
       DomainID: Tag,
       OwnerID: {IdCodec, Tag},
       EntryID: Tag,
       TagID: Tag
-  ](): ULayer[RESTServer[DomainID, OwnerID, EntryID, TagID]] =
-    ZLayer.succeed(new RESTServer[DomainID, OwnerID, EntryID, TagID])
+  ](): ULayer[RESTService[DomainID, OwnerID, EntryID, TagID]] =
+    ZLayer.succeed(new RESTService[DomainID, OwnerID, EntryID, TagID])
