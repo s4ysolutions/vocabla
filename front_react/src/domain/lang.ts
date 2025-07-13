@@ -1,7 +1,5 @@
-import { Id } from "./id"
-
 interface Lang {
-    readonly id: Id
+    readonly code: string
     readonly name: string
     readonly flag?: string
 }

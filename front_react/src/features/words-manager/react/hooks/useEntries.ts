@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import Entry from "../../domain/models/entry";
-import { id } from "../../../../domain/id";
 import Lang from "../../../../domain/lang";
 import Source from "../../domain/models/source";
 
 const en: Lang = {
-    id: id("en"),
+    code: "en",
     name: "English",
 }
 

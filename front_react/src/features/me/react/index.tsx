@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import MeAppMenu, { MenuItem, menuItems } from './app-menu'
-import WordManager from '../../word-manager/react'
-import WordManagerControlPanel from '../../word-manager/react/ControlPanel'
+import WordManager from '../../words-manager/react'
+import WordManagerControlPanel from '../../words-manager/react/ControlPanel'
 import LearningSettings from '../../learning-settings'
 import Panel from '../../../react/widgets/panels/Panel'
 // TODO: imrove having 2 menus
