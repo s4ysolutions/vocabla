@@ -1,18 +1,17 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.MVStore
-import solutions.s4y.vocabla.domain.model.Identity
+import solutions.s4y.vocabla.domain.model.Identifier
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.words.app.repo.{EntryRepository, TagRepository}
-import Identity.IdConverter
-import zio.{Tag, ZLayer}
+import zio.ZLayer
 
 import java.util.UUID
 
 object MVStoreRepository {
 
-  def makeLayer[ID: {Tag, IdConverter}](using
+  def makeLayer[ID: zio.Tag](using
       LangRepository
   ): ZLayer[
     MVStore & IdFactory[ID],

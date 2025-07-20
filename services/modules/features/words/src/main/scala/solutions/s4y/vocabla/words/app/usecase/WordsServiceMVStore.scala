@@ -5,12 +5,11 @@ import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.app.usecase.WordsServiceLive
-import solutions.s4y.vocabla.domain.model.Identity.IdConverter
 import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreRepository
-import zio.{Tag, ZLayer}
+import zio.ZLayer
 
 object WordsServiceMVStore:
-  def makeLayer[ID: {zio.Tag, IdConverter}](using
+  def makeLayer[ID: zio.Tag](using
       LangRepository
   ): ZLayer[
     MVStore & IdFactory[ID],

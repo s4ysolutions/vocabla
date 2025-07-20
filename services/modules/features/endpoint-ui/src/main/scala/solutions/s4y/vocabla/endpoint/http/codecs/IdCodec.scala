@@ -1,5 +1,5 @@
 package solutions.s4y.vocabla.endpoint.http.codecs
-
+/*
 trait IdCodec[ID] {
   def string2id(string: String): Either[String, ID]
 }
@@ -19,3 +19,4 @@ object IdCodec {
     def toID[ID](using codec: IdCodec[ID]): Either[String, ID] =
       codec.string2id(string)
 }
+ */

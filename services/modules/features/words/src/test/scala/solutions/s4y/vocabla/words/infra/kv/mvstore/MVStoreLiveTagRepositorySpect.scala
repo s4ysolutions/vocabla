@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
-import solutions.s4y.vocabla.domain.model.Identity
-import solutions.s4y.vocabla.domain.model.Identity.identity
+import solutions.s4y.vocabla.domain.model.Identifier
+import solutions.s4y.vocabla.domain.model.Identifier.identity
 import solutions.s4y.vocabla.words.app.repo.{EntryRepository, TagRepository}
 import solutions.s4y.vocabla.words.domain.model.{Owner, Tag}
 import solutions.s4y.vocabla.words.infra.kv.mvstore.Fixture.{
@@ -26,8 +26,8 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
         } yield assertTrue(
           tagId == 11.identity[Tag],
           tags.size == 1,
-          tags.head.entity.label == "test-tag",
-          tags.head.identity == 11.identity[Tag]
+          tags.head.e.label == "test-tag",
+          tags.head.id == 11.identity[Tag]
         )
       },
       test("getTagsForOwner should return all tags for specific owner") {
@@ -40,15 +40,15 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
         } yield assertTrue(
           tags.size == 2,
           tags.exists(t =>
-            t.identity == 11
+            t.id == 11
               .identity[
                 Tag
-              ] && t.identity == tagId1 && t.entity.label == "tag1"
+              ] && t.id == tagId1 && t.e.label == "tag1"
           ),
           tags.exists(t =>
-            t.identity == 12.identity && t.identity == tagId2 && t.entity.label == "tag2"
+            t.id == 12.identity && t.id == tagId2 && t.e.label == "tag2"
           ),
-          !tags.exists(t => t.identity == tagId3)
+          !tags.exists(t => t.id == tagId3)
         )
       },
       test("getTagsForOwner should return empty chunk when owner has no tags") {
@@ -81,21 +81,21 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
           tags <- tagRepository.getTagsForOwner(1.identity[Owner])
         } yield assertTrue(
           entryId == 14.identity, // ID generation may vary
-          entry.exists(_.entity.headword.word == "headword"),
-          entry.exists(_.entity.headword.lang.code == "en"),
-          entry.head.entity.definitions.size == 1,
-          entry.head.entity.definitions.head.definition == "definition",
-          entry.head.entity.definitions.head.lang.code == "es",
-          entry.head.entity.tags.size == 2,
-          entry.head.entity.tags.head == 12.identity[Tag],
-          entry.head.entity.tags(1) == 13.identity[Tag],
+          entry.exists(_.e.headword.word == "headword"),
+          entry.exists(_.e.headword.lang.code == "en"),
+          entry.head.e.definitions.size == 1,
+          entry.head.e.definitions.head.definition == "definition",
+          entry.head.e.definitions.head.lang.code == "es",
+          entry.head.e.tags.size == 2,
+          entry.head.e.tags.head == 12.identity[Tag],
+          entry.head.e.tags(1) == 13.identity[Tag],
           tags.size == 3,
-          tags.head.identity == 11.identity[Tag],
-          tags.head.entity == Tag("C", 1.identity[Owner]),
-          tags(1).identity == 12.identity[Tag],
-          tags(1).entity == Tag("A", 1.identity[Owner]),
-          tags(2).identity == 13.identity[Tag],
-          tags(2).entity == Tag("B", 1.identity[Owner])
+          tags.head.id == 11.identity[Tag],
+          tags.head.e == Tag("C", 1.identity[Owner]),
+          tags(1).id == 12.identity[Tag],
+          tags(1).e == Tag("A", 1.identity[Owner]),
+          tags(2).id == 13.identity[Tag],
+          tags(2).e == Tag("B", 1.identity[Owner])
         )
       }.provide(layerTestRepository),
       test("getEntry should return None for non-existent entry") {
@@ -135,16 +135,16 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
         } yield assertTrue(
           entries.size == 2,
           entries.exists(e =>
-            e.identity == entryId1 && e.entity.headword.word == "word1"
+            e.id == entryId1 && e.e.headword.word == "word1"
           ),
           entries.exists(e =>
-            e.identity == entryId2 && e.entity.headword.word == "word2"
+            e.id == entryId2 && e.e.headword.word == "word2"
           ),
           entries.exists(e =>
-            e.entity.definitions.head.definition == "def1" && e.entity.headword.lang.code == "en"
+            e.e.definitions.head.definition == "def1" && e.e.headword.lang.code == "en"
           ),
           entries.exists(e =>
-            e.entity.definitions.head.definition == "def2" && e.entity.headword.lang.code == "en"
+            e.e.definitions.head.definition == "def2" && e.e.headword.lang.code == "en"
           )
         )
       }.provide(layerTestRepository)

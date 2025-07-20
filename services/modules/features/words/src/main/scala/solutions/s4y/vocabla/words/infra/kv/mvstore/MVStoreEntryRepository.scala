@@ -1,32 +1,36 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
-import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identity}
+import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identifier}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.lang.domain.model.Lang
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.domain.model.*
-import solutions.s4y.vocabla.domain.model.Identity.IdConverter
 import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{MVStoreDefinition, MVStoreEntry}
-import zio.{IO, Tag, ZIO, ZLayer}
+import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{
+  MVStoreDefinition,
+  MVStoreEntry
+}
+import zio.prelude.*
+import zio.prelude.Equivalence.*
+import zio.{IO, ZIO, ZLayer}
 
-class MVStoreEntryRepository[OwnerID: IdConverter, EntryID, TagID: IdConverter](
+class MVStoreEntryRepository[OwnerID, EntryID, TagID](
     map: MVMap[OwnerID, Seq[MVStoreEntry[EntryID, TagID]]],
     idFactory: IdFactory[EntryID],
     tagRepository: MVStoreTagRepository[OwnerID, TagID]
-)(using langRepository: LangRepository)
+)(using langRepository: LangRepository, e1: Equivalence[Identifier[Tag], TagID])
     extends EntryRepository:
 
   override def addEntry(
-      owner: Identity[Owner],
+      owner: Identifier[Owner],
       word: String,
       wordLang: Lang.Code,
       definition: String,
       definitionLang: Lang.Code,
       tagLabels: Seq[String]
-  ): IO[String, Identity[Entry]] = for {
+  ): IO[String, Identifier[Entry]] = for {
     tags <- tagRepository.getTagsForOwner(owner)
     tagIds <- ZIO.foreachPar(tagLabels)(label =>
       tagRepository.addTag(owner, label)
@@ -37,21 +41,21 @@ class MVStoreEntryRepository[OwnerID: IdConverter, EntryID, TagID: IdConverter](
       word,
       wordLang,
       List(MVStoreDefinition(definition, definitionLang)),
-      tagIds.map(identity => identity.toId[TagID])
+      tagIds.map(identity => identity.as[TagID])
     )
-    ownerId = owner.toId[OwnerID]
+    ownerId = owner.as[OwnerID]
     mvsEntries <- getMVStoreEntriesForOwner(ownerId)
     _ <- ZIO
       .attempt(map.put(ownerId, mvsEntries :+ mvsEntry))
       .tapErrorCause(ZIO.logWarningCause(s"Error adding mvsEntry $mvsEntry", _))
       .mapError(th => s"Error adding mvsEntry $mvsEntry: ${th.getMessage}")
-  } yield Identity(entryId)
+  } yield Identifier(entryId)
 
   override def getEntriesForOwner(
-      owner: Identity[Owner]
+      owner: Identifier[Owner]
   ): IO[String, Seq[IdentifiedEntity[Entry]]] =
     ZIO
-      .attempt(Option(map.get(owner.toId[OwnerID])).getOrElse(List.empty))
+      .attempt(Option(map.get(owner.as[OwnerID])).getOrElse(List.empty))
       .tapErrorCause(cause =>
         ZIO.logWarningCause(s"Error getting entries for owner $owner", cause)
       )
@@ -62,7 +66,7 @@ class MVStoreEntryRepository[OwnerID: IdConverter, EntryID, TagID: IdConverter](
         { mvsEntries =>
           mvsEntries.map { entry =>
             IdentifiedEntity(
-              Identity(entry.id),
+              Identifier(entry.id),
               Entry(
                 Headword(entry.word, langRepository.getLang(entry.wordLang)),
                 entry.definitions
@@ -72,7 +76,7 @@ class MVStoreEntryRepository[OwnerID: IdConverter, EntryID, TagID: IdConverter](
                       langRepository.getLang(mvsDefn.lang)
                     )
                   ),
-                entry.tags.map(tagId => Identity(tagId)),
+                entry.tags.map(tagId => Identifier(tagId)),
                 owner
               )
             )
@@ -106,7 +110,7 @@ object MVStoreEntryRepository:
       tags: Seq[TagID]
   )
 
-  def apply[OwnerID: IdConverter, EntryID, TagID: IdConverter](
+  def apply[OwnerID, EntryID, TagID](
       mvStore: MVStore,
       idFactory: IdFactory[EntryID],
       tagRepository: MVStoreTagRepository[OwnerID, TagID]
@@ -120,9 +124,9 @@ object MVStoreEntryRepository:
     )
 
   def makeMvStoreLayer[
-      OwnerID: {Tag, IdConverter},
-      EntryID: Tag,
-      TagID: {Tag, IdConverter}
+      OwnerID: zio.Tag,
+      EntryID: zio.Tag,
+      TagID: zio.Tag
   ](using
       LangRepository
   ): ZLayer[
@@ -150,7 +154,7 @@ object MVStoreEntryRepository:
       } yield entryRepository
     }
 
-  def makeLayer[OwnerID: Tag, EntryID: Tag, TagID: Tag]: ZLayer[
+  def makeLayer[OwnerID: zio.Tag, EntryID: zio.Tag, TagID: zio.Tag]: ZLayer[
     MVStore & MVStoreEntryRepository[OwnerID, EntryID, TagID] &
       IdFactory[EntryID],
     String,

@@ -15,7 +15,9 @@ Test / testOptions += Tests.Argument("-v")
 lazy val identity = (project in file("modules/domain/identity"))
   .settings(
     name := "identity",
-    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion
+    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion
   )
 
 lazy val id = (project in file("modules/infrastructure/id"))
@@ -45,6 +47,7 @@ lazy val words = (project in file("modules/features/words"))
   .settings(
     name := "words",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
+    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
     libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,

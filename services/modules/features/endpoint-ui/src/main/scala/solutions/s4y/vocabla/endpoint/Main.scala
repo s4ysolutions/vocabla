@@ -24,6 +24,8 @@ import zio.{
   ZLayer
 }
 
+import java.util.UUID
+
 object Main extends ZIOAppDefault:
   override val bootstrap: ZLayer[ZIOAppArgs, Config.Error, Unit] =
     // Replace the default logger with the custom one
@@ -35,13 +37,11 @@ object Main extends ZIOAppDefault:
         )
       )
 
-  // setup the MVStore to be used by the services
-  type ID = Long // use for domain id and mv store long ids
-  given DtoIdToDomainId[ID, ID] with
-    override def toDomain(dtoId: ID): ID = dtoId
+  type ID = UUID // use for mv store ids
   // id generator
   private def layerIdFactory: ULayer[IdFactory[ID]] =
-    ZLayer.succeed(IdFactory.long.map(identity))
+    ZLayer.succeed(IdFactory.uuid)
+
   // create in-memory MV Store
   private def layerMVStore: ZLayer[Any, String, MVStore] =
     ZLayer.scoped(
@@ -49,12 +49,16 @@ object Main extends ZIOAppDefault:
         s"Failed to create MVStore: ${th.getMessage}"
       )
     )
+
+  import solutions.s4y.vocabla.domain.model.Identifier.uuidConvertor
+  import solutions.s4y.vocabla.lang.infra.langRoRepository
+  
   // finally end up with WordsService implementation
-  private val wordsServiceLayer: ZLayer[Any, String, WordsService[ID, ID, ID]] =
+  private val wordsServiceLayer: ZLayer[Any, String, WordsService] =
     (layerIdFactory ++ layerMVStore) >>> WordsServiceMVStore.makeLayer[ID]
 
   private val program: ZIO[
-    Scope & WordsService[ID, ID, ID] & RESTService[ID, ID, ID, ID] & Server,
+    Scope & WordsService & RESTService[ID, ID, ID, ID] & Server,
     String,
     Unit
   ] = {

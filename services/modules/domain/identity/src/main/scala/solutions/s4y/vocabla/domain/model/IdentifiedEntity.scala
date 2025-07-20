@@ -2,14 +2,12 @@ package solutions.s4y.vocabla.domain.model
 
 import zio.prelude.Equal
 
-case class IdentifiedEntity[E](identity: Identity[E], entity: E)
+case class IdentifiedEntity[E](id: Identifier[E], e: E)
 
 object IdentifiedEntity:
   given [E](using
-      eqId: Equal[Identity[E]],
-      eqE: Equal[E]
+            eqId: Equal[Identifier[E]],
+            eqE: Equal[E]
   ): Equal[IdentifiedEntity[E]] =
-    Equal.make { (a, b) =>
-      eqId.equal(a.identity, b.identity) &&
-      eqE.equal(a.entity, b.entity)
-    }
+    (a, b) =>
+      eqId.equal(a.id, b.id) && eqE.equal(a.e, b.e)
