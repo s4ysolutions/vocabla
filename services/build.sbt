@@ -10,6 +10,8 @@ val zioHttpVersion = "3.3.3"
 val zioSchemaVersion = "1.7.3"
 val zioPreludeVersion = "1.0.0-RC41"
 
+Test / testOptions += Tests.Argument("-v")
+
 lazy val identity = (project in file("modules/domain/identity"))
   .settings(
     name := "identity",
@@ -45,7 +47,8 @@ lazy val words = (project in file("modules/features/words"))
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
     libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
 lazy val profiles = (project in file("modules/features/profiles"))
