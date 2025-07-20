@@ -4,23 +4,19 @@ import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
   ErrorParseID,
   ErrorService
 }
-import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO}
+import solutions.s4y.vocabla.endpoint.http.schema.given
+import solutions.s4y.vocabla.words.app.repo.dto.{DefinitionDTO, EntryDTO, given}
 import zio.ZIO
-import zio.http.Method.{GET, POST}
-import zio.http.{Status, string}
+import zio.http.Method.GET
 import zio.http.endpoint.Endpoint
+import zio.http.{Status, string}
 import zio.schema.Schema.list
 import zio.schema.{DeriveSchema, Schema}
-/*
-private case class EntriesRequest(
-    ownerId: String
-)
 
-private given Schema[EntriesRequest] = DeriveSchema.gen[EntriesRequest]
- */
 private case class EntriesResponse(
     entries: List[EntryDTO[String, String]]
 )
+
 private given Schema[EntriesResponse] = DeriveSchema.gen[EntriesResponse]
 
 val entriesEndpoint = Endpoint(GET / prefix / "entries" / string("ownerId"))

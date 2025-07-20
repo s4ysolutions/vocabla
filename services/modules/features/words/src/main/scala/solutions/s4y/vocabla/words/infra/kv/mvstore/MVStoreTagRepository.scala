@@ -1,67 +1,81 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
+import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identity}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.TagRepository
-import solutions.s4y.vocabla.words.app.repo.dto.TagDTO
-import zio.{IO, Tag, ZIO, ZLayer}
+import solutions.s4y.vocabla.domain.model.Identity.IdConverter
+import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
+import solutions.s4y.vocabla.words.domain.model.{
+  Owner,
+  Tag
+}
+import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreTagRepository.MVStoreTag
+import zio.{IO, ZIO, ZLayer}
 
-class MVStoreTagRepository[OwnerID, TagID](
-    map: MVMap[OwnerID, Seq[TagDTO[TagID]]],
+final class MVStoreTagRepository[OwnerID: IdConverter, TagID](
+    map: MVMap[OwnerID, Seq[MVStoreTag[TagID]]],
     idFactory: IdFactory[TagID]
-) extends TagRepository[OwnerID, TagID, TagDTO[TagID]]:
-
-  @Override
-  def addTag(
-      ownerId: OwnerID,
+) extends TagRepository {
+  override def addTag(
+      owner: Identity[Owner],
       label: String
-  ): IO[String, TagID] = for {
-    tags <-
-      ZIO
-        .attempt(Option(map.get(ownerId)).getOrElse(Seq.empty))
-        .tapErrorCause(cause =>
-          ZIO.logWarningCause(s"Error getting tags for owner $ownerId", cause)
-        )
-        .mapError(th =>
-          s"Error getting tags for owner $ownerId: ${th.getMessage}"
-        )
-    existingTagOpt = tags.find(_.label == label)
-    id <- existingTagOpt match {
-      case Some(existingTag) => ZIO.succeed(existingTag.id)
-      case None =>
-        for {
-          newId <- idFactory.next
-          newTag = TagDTO(newId, label)
-          _ <- ZIO
-            .attempt(map.put(ownerId, tags :+ newTag))
-            .tapErrorCause(cause =>
-              ZIO.logWarningCause(s"Error adding tag $newTag", cause)
-            )
-            .mapError(th => s"Error adding tag $newTag: ${th.getMessage}")
-        } yield newId
-    }
-  } yield id
+  ): IO[String, Identity[Tag]] = {
+    val ownerId: OwnerID = owner.toId[OwnerID]
+    for {
+      tags <-
+        ZIO
+          .attempt(Option(map.get(ownerId)).getOrElse(Seq.empty))
+          .tapErrorCause(cause =>
+            ZIO.logWarningCause(s"Error getting tags for owner $ownerId", cause)
+          )
+          .mapError(th =>
+            s"Error getting tags for owner $ownerId: ${th.getMessage}"
+          )
+      existingTagOpt = tags.find(_.label == label)
+      id <- existingTagOpt match {
+        case Some(existingTag) => ZIO.succeed(existingTag.id)
+        case None =>
+          for {
+            newId <- idFactory.next
+            newTag = MVStoreTag(newId, label)
+            _ <- ZIO
+              .attempt(map.put(ownerId, tags :+ newTag))
+              .tapErrorCause(cause =>
+                ZIO.logWarningCause(s"Error adding tag $newTag", cause)
+              )
+              .mapError(th => s"Error adding tag $newTag: ${th.getMessage}")
+          } yield newId
+      }
+    } yield Identity(id)
+  }
 
-  @Override
-  def getTagsForOwner(ownerId: OwnerID): IO[String, Seq[TagDTO[TagID]]] =
+  override def getTagsForOwner(
+      owner: Identity[Owner]
+  ): IO[String, Seq[IdentifiedEntity[Tag]]] = {
     ZIO
-      .attempt(Option(map.get(ownerId)).getOrElse(Seq.empty))
+      .attempt(Option(map.get(owner.toId[OwnerID])).getOrElse(Seq.empty))
       .tapErrorCause(
-        ZIO.logWarningCause(s"Error getting tags for owner $ownerId", _)
+        ZIO.logWarningCause(s"Error getting tags for owner $owner", _)
       )
-      .mapError(th =>
-        s"Error getting tags for owner $ownerId: ${th.getMessage}"
+      .mapBoth(
+        th => s"Error getting tags for owner $owner: ${th.getMessage}",
+        _.map(tag => IdentifiedEntity(Identity(tag.id), Tag(tag.label, owner)))
       )
+  }
+}
 
 object MVStoreTagRepository:
-  def apply[OwnerID, TagID: Tag](
+  case class MVStoreTag[TagID](id: TagID, label: String)
+
+  def apply[OwnerID: IdConverter, TagID: zio.Tag](
       mvStore: MVStore,
       idFactory: IdFactory[TagID]
   ): MVStoreTagRepository[OwnerID, TagID] =
-    val map = mvStore.openMap[OwnerID, Seq[TagDTO[TagID]]]("tags")
+    val map = mvStore.openMap[OwnerID, Seq[MVStoreTag[TagID]]]("tags")
     new MVStoreTagRepository[OwnerID, TagID](map, idFactory)
 
-  def makeMVstoreLayer[OwnerID: Tag, TagID: Tag]: ZLayer[
+  def makeMVstoreLayer[OwnerID: {zio.Tag, IdConverter}, TagID: zio.Tag]: ZLayer[
     MVStore & IdFactory[TagID],
     String,
     MVStoreTagRepository[OwnerID, TagID]
@@ -81,13 +95,13 @@ object MVStoreTagRepository:
       } yield repo
     }
 
-  def makeLayer[OwnerID: Tag, TagID: Tag]: ZLayer[
+  def makeLayer[OwnerID: {zio.Tag, IdConverter}, TagID: zio.Tag]: ZLayer[
     MVStore & IdFactory[TagID] & MVStoreTagRepository[OwnerID, TagID],
     String,
-    TagRepository[OwnerID, TagID, TagDTO[TagID]]
+    TagRepository
   ] =
     ZLayer.fromFunction(
       (mvStoreTagRepo: MVStoreTagRepository[OwnerID, TagID]) =>
         mvStoreTagRepo
-          .asInstanceOf[TagRepository[OwnerID, TagID, TagDTO[TagID]]]
+          .asInstanceOf[TagRepository]
     ) >>> makeMVstoreLayer[OwnerID, TagID]

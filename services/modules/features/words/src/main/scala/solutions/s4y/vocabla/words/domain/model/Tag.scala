@@ -1,18 +1,16 @@
 package solutions.s4y.vocabla.words.domain.model
 
+import solutions.s4y.vocabla.domain.model.Identity
 import solutions.s4y.vocabla.id.IdFactory
 import zio.UIO
+import zio.prelude.Equal
 
-case class Tag[ID](
-    override val id: ID,
+case class Tag(
     label: String,
-    ownerId: ID
-) extends Model[ID]:
+    ownerId: Identity[Owner]
+):
   override def toString: String = s"Tag: $label"
-/*
-object Tag:
-  type Id = Model.Id
-  def Id(value: Model.Id): Id = Entry.Id(value)
 
-  given IdFactory[Id] = summon[IdFactory[Model.Id]].map(id => Id(id))
- */
+object Tag:
+  given equalTag: Equal[Tag] =
+    Equal.make((a, b) => a.label == b.label && a.ownerId == b.ownerId)

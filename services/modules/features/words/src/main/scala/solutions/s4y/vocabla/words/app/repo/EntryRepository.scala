@@ -1,22 +1,19 @@
 package solutions.s4y.vocabla.words.app.repo
 
-import solutions.s4y.vocabla.words.domain.model.Lang
+import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identity}
+import solutions.s4y.vocabla.lang.domain.model.Lang
+import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.{IO, Tag}
 
-/** @tparam OwnerID
-  *   type of ID for the owner's ID
-  * @tparam EntryID
-  *   type of ID for the entry's ID
-  * @tparam EntryDTO
-  *   a type of DTO used by get*
-  */
-trait EntryRepository[OwnerID, EntryID, EntryDTO]:
-  def getEntriesForOwner(ownerId: OwnerID): IO[String, List[EntryDTO]]
+trait EntryRepository:
+  def getEntriesForOwner(
+      owner: Identity[Owner]
+  ): IO[String, Seq[IdentifiedEntity[Entry]]]
   def addEntry(
-      ownerId: OwnerID,
+      ownerId: Identity[Owner],
       word: String,
       wordLang: Lang.Code,
       definition: String,
       definitionLang: Lang.Code,
-      tagLabels: List[String]
-  ): IO[String, EntryID]
+      tagLabels: Seq[String]
+  ): IO[String, Identity[Entry]]

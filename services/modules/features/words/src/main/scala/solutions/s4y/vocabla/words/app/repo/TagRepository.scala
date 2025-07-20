@@ -1,21 +1,15 @@
 package solutions.s4y.vocabla.words.app.repo
 
+import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identity}
+import solutions.s4y.vocabla.words.domain.model.{
+  Owner,
+  Tag
+}
 import zio.IO
 
-/** A repository interface for managing tags associated with a specific owner.
-  *
-  * @tparam OwnerID
-  *   Type of the owning entity's ID.
-  * @tparam TagID
-  *   Type of the tag's ID.
-  * @tparam TagDTO
-  *   Data Transfer Object (DTO) representing a tag. It is a controversial type,
-  *   probably TagDTO[TagID] should be used instead
-  */
-trait TagRepository[OwnerID, TagID, TagDTO]:
-  def addTag(
-      ownerId: OwnerID,
-      label: String
-  ): IO[String, TagID]
+trait TagRepository:
+  def addTag(owner: Identity[Owner], label: String): IO[String, Identity[Tag]]
 
-  def getTagsForOwner(ownerId: OwnerID): IO[String, Seq[TagDTO]]
+  def getTagsForOwner(
+      owner: Identity[Owner]
+  ): IO[String, Seq[IdentifiedEntity[Tag]]]

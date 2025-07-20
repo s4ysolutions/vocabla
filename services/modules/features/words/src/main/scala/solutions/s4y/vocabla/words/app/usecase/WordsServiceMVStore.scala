@@ -2,61 +2,26 @@ package solutions.s4y.vocabla.words.app.usecase
 
 import org.h2.mvstore.MVStore
 import solutions.s4y.vocabla.id.IdFactory
-import solutions.s4y.vocabla.words.app.repo.{
-  DtoIdToDomainId,
-  EntryRepository,
-  TagRepository
-}
-import solutions.s4y.vocabla.words.app.repo.dto.{EntryDTO, TagDTO}
+import solutions.s4y.vocabla.lang.app.repo.LangRepository
+import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.app.usecase.WordsServiceLive
-import solutions.s4y.vocabla.words.infra.kv.mvstore.{
-  MVStoreEntryRepository,
-  MVStoreTagRepository
-}
+import solutions.s4y.vocabla.domain.model.Identity.IdConverter
+import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreRepository
 import zio.{Tag, ZLayer}
 
 object WordsServiceMVStore:
-  def makeLayer[ID: Tag](using
-      DtoIdToDomainId[ID, ID]
+  def makeLayer[ID: {zio.Tag, IdConverter}](using
+      LangRepository
   ): ZLayer[
     MVStore & IdFactory[ID],
     String,
-    WordsService[ID, ID, ID]
+    WordsService
   ] =
-    val mvStoreTagRepositoryLayer: ZLayer[
-      MVStore & IdFactory[ID],
-      String,
-      MVStoreTagRepository[ID, ID]
-    ] = MVStoreTagRepository.makeMVstoreLayer[ID, ID]
-
-    val mvStoreEntryRepositoryLayer: ZLayer[
-      MVStore & IdFactory[ID],
-      String,
-      MVStoreEntryRepository[ID, ID, ID]
-    ] =
-      mvStoreTagRepositoryLayer >>> MVStoreEntryRepository
-        .makeMvStoreLayer[ID, ID, ID]
-
-    val tagRepositoryLayer: ZLayer[
-      MVStore & IdFactory[ID],
-      String,
-      TagRepository[ID, ID, TagDTO[ID]]
-    ] = mvStoreTagRepositoryLayer >>> MVStoreTagRepository.makeLayer[ID, ID]
-
-    val entryRepositoryLayer: ZLayer[
-      MVStore & IdFactory[ID],
-      String,
-      EntryRepository[ID, ID, EntryDTO[ID, ID]]
-    ] = mvStoreEntryRepositoryLayer >>> MVStoreEntryRepository
-      .makeLayer[ID, ID, ID]
-
     val wordsServiceLayer: ZLayer[
-      EntryRepository[ID, ID, EntryDTO[ID, ID]],
+      EntryRepository,
       String,
-      WordsServiceLive[ID, ID, ID]
+      WordsServiceLive
     ] =
-      ZLayer.fromFunction((repo: EntryRepository[ID, ID, EntryDTO[ID, ID]]) =>
-        new WordsServiceLive[ID, ID, ID](repo)
-      )
+      ZLayer.fromFunction((repo: EntryRepository) => new WordsServiceLive(repo))
 
-    entryRepositoryLayer >>> wordsServiceLayer
+    MVStoreRepository.makeLayer[ID] >>> wordsServiceLayer
