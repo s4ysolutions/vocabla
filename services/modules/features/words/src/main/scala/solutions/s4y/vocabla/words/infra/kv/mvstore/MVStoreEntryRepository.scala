@@ -3,52 +3,35 @@ package solutions.s4y.vocabla.words.infra.kv.mvstore
 import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.id.IdFactory
-import solutions.s4y.vocabla.lang.app.repo.LangRepository
-import solutions.s4y.vocabla.lang.domain.model.Lang
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.domain.model.*
-import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{MVStoreDefinition, MVStoreEntry}
+import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.MVStoreEntry
 import zio.prelude.*
-import zio.prelude.Equivalence.*
 import zio.{Chunk, IO, ZIO, ZLayer}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
     map: MVMap[OwnerID, Chunk[MVStoreEntry[EntryID, TagID]]],
     idFactory: IdFactory[EntryID],
     tagRepository: MVStoreTagRepository[OwnerID, TagID]
-)(using langRepository: LangRepository, e1: Equivalence[Identifier[Tag], TagID])
+)(using e1: Equivalence[Identifier[Tag], TagID])
     extends EntryRepository:
+  override def add(entry: Entry): IO[String, Identifier[Entry]] =
+    for {
+      entryId <- idFactory.next
+      mvsEntry = MVStoreEntry(entryId, entry)
+      mvsOwnerID = entry.owner.as[OwnerID]
+      mvsEntries <- getMVStoreEntriesForOwner(mvsOwnerID)
+      _ <- ZIO
+        .attempt(
+          map.put(mvsOwnerID, mvsEntries :+ MVStoreEntry(entryId, entry))
+        )
+        .tapErrorCause(
+          ZIO.logWarningCause(s"Error adding mvsEntry $mvsEntry", _)
+        )
+        .mapError(th => s"Error adding mvsEntry $mvsEntry: ${th.getMessage}")
+    } yield Identifier(entryId)
 
-  override def addEntry(
-      owner: Identifier[Owner],
-      word: String,
-      wordLang: Lang.Code,
-      definition: String,
-      definitionLang: Lang.Code,
-      tagLabels: Chunk[String]
-  ): IO[String, Identifier[Entry]] = for {
-    tags <- tagRepository.getTagsForOwner(owner)
-    tagIds <- ZIO.foreachPar(tagLabels)(label =>
-      tagRepository.addTag(owner, label)
-    )
-    entryId <- idFactory.next
-    mvsEntry = MVStoreEntry(
-      entryId,
-      word,
-      wordLang,
-      Chunk(MVStoreDefinition(definition, definitionLang)),
-      tagIds.map(identity => identity.as[TagID])
-    )
-    ownerId = owner.as[OwnerID]
-    mvsEntries <- getMVStoreEntriesForOwner(ownerId)
-    _ <- ZIO
-      .attempt(map.put(ownerId, mvsEntries :+ mvsEntry))
-      .tapErrorCause(ZIO.logWarningCause(s"Error adding mvsEntry $mvsEntry", _))
-      .mapError(th => s"Error adding mvsEntry $mvsEntry: ${th.getMessage}")
-  } yield Identifier(entryId)
-
-  override def getEntriesForOwner(
+  override def get(
       owner: Identifier[Owner]
   ): IO[String, Chunk[Identified[Entry]]] =
     ZIO
@@ -61,19 +44,22 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
           s"Error getting entries for owner $owner: ${th.getMessage}"
         },
         { mvsEntries =>
-          mvsEntries.map { entry =>
+          mvsEntries.map { mvsEntry =>
             Identified(
-              Identifier(entry.id),
+              Identifier(mvsEntry.id),
               Entry(
-                Headword(entry.word, langRepository.getLang(entry.wordLang)),
-                entry.definitions
+                Headword(
+                  mvsEntry.headword,
+                  mvsEntry.wordLang
+                ),
+                mvsEntry.definitions
                   .map(mvsDefn =>
                     Definition(
                       mvsDefn.definition,
-                      langRepository.getLang(mvsDefn.lang)
+                      mvsDefn.lang
                     )
                   ),
-                entry.tags.map(tagId => Identifier(tagId)),
+                mvsEntry.tags.map(tagId => Identifier(tagId)),
                 owner
               )
             )
@@ -96,22 +82,34 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
 object MVStoreEntryRepository:
   case class MVStoreDefinition(
       definition: String,
-      lang: Lang.Code
+      lang: String
   )
 
   case class MVStoreEntry[EntryID, TagID](
       id: EntryID,
-      word: String,
-      wordLang: Lang.Code,
+      headword: String,
+      wordLang: String,
       definitions: Chunk[MVStoreDefinition],
       tags: Chunk[TagID]
   )
+
+  object MVStoreEntry:
+    def apply[EntryID, TagID](id: EntryID, entry: Entry) =
+      new MVStoreEntry[EntryID, TagID](
+        id,
+        entry.headword.word,
+        entry.headword.langCode,
+        entry.definitions.map(defn =>
+          MVStoreDefinition(defn.definition, defn.langCode)
+        ),
+        entry.tags.map(tagId => tagId.as[TagID])
+      )
 
   def apply[OwnerID, EntryID, TagID](
       mvStore: MVStore,
       idFactory: IdFactory[EntryID],
       tagRepository: MVStoreTagRepository[OwnerID, TagID]
-  )(using LangRepository): MVStoreEntryRepository[OwnerID, EntryID, TagID] =
+  ): MVStoreEntryRepository[OwnerID, EntryID, TagID] =
     val map =
       mvStore.openMap[OwnerID, Chunk[MVStoreEntry[EntryID, TagID]]]("entries")
     new MVStoreEntryRepository[OwnerID, EntryID, TagID](
@@ -124,9 +122,7 @@ object MVStoreEntryRepository:
       OwnerID: zio.Tag,
       EntryID: zio.Tag,
       TagID: zio.Tag
-  ](using
-      LangRepository
-  ): ZLayer[
+  ]: ZLayer[
     MVStore & MVStoreTagRepository[OwnerID, TagID] & IdFactory[EntryID],
     String,
     MVStoreEntryRepository[OwnerID, EntryID, TagID]

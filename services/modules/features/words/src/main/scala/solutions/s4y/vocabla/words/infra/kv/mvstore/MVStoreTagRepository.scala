@@ -13,11 +13,8 @@ final class MVStoreTagRepository[OwnerID, TagID](
     map: MVMap[OwnerID, Chunk[MVStoreTag[TagID]]],
     idFactory: IdFactory[TagID]
 ) extends TagRepository {
-  override def addTag(
-      owner: Identifier[Owner],
-      label: String
-  ): IO[String, Identifier[Tag]] = {
-    val ownerId: OwnerID = owner.as[OwnerID]
+  override def add(tag: Tag): IO[String, Identifier[Tag]] = {
+    val ownerId: OwnerID = tag.owner.as[OwnerID]
     for {
       tags <-
         ZIO
@@ -28,13 +25,13 @@ final class MVStoreTagRepository[OwnerID, TagID](
           .mapError(th =>
             s"Error getting tags for owner $ownerId: ${th.getMessage}"
           )
-      existingTagOpt = tags.find(_.label == label)
+      existingTagOpt = tags.find(_.label == tag.label)
       id <- existingTagOpt match {
         case Some(existingTag) => ZIO.succeed(existingTag.id)
         case None =>
           for {
             newId <- idFactory.next
-            newTag = MVStoreTag(newId, label)
+            newTag = MVStoreTag(newId, tag.label)
             _ <- ZIO
               .attempt(map.put(ownerId, tags :+ newTag))
               .tapErrorCause(cause =>
@@ -46,7 +43,7 @@ final class MVStoreTagRepository[OwnerID, TagID](
     } yield Identifier(id)
   }
 
-  override def getTagsForOwner(
+  override def get(
       owner: Identifier[Owner]
   ): IO[String, Chunk[Identified[Tag]]] = {
     ZIO
@@ -56,9 +53,7 @@ final class MVStoreTagRepository[OwnerID, TagID](
       )
       .mapBoth(
         th => s"Error getting tags for owner $owner: ${th.getMessage}",
-        _.map(tag =>
-          Identified(Identifier(tag.id), Tag(tag.label, owner))
-        )
+        _.map(tag => Identified(Identifier(tag.id), Tag(tag.label, owner)))
       )
   }
 }

@@ -11,9 +11,7 @@ import java.util.UUID
 
 object MVStoreRepository {
 
-  def makeLayer[ID: zio.Tag](using
-      LangRepository
-  ): ZLayer[
+  def makeLayer[ID: zio.Tag]: ZLayer[
     MVStore & IdFactory[ID],
     String,
     EntryRepository & TagRepository

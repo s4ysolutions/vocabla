@@ -27,7 +27,7 @@ object Entries:
   private def ownerIdCodec(using
       IdentifierSchema
   ): PathCodec[Identifier[Owner]] =
-    uuid("ownerId").transform(
+    uuid("owner").transform(
       (_uuid: UUID) => _uuid.identifier[Owner],
       (id: Identifier[Owner]) => id.as[UUID]
     )
@@ -38,7 +38,7 @@ object Entries:
     ErrorParseID,
     ErrorService
   ], EntriesResponse, None] =
-    Endpoint(GET / prefix / "entries" / uuid("ownerId"))
+    Endpoint(GET / prefix / "entries" / uuid("owner"))
       // .in[EntriesRequest]
       .out[EntriesResponse]
       .outError[ErrorService](Status.InternalServerError)
@@ -50,7 +50,7 @@ object Entries:
         wordsService <- ZIO.service[WordsService]
         entries <- wordsService.getEntriesForOwner(
           ownerId.identifier[Owner]
-        ) // Identifier[Owner](request.path("ownerId"))
+        ) // Identifier[Owner](request.path("owner"))
       } yield EntriesResponse(entries))
         .mapError(error => Right(ErrorService(error)))
     }

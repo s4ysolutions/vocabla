@@ -9,9 +9,7 @@ import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreRepository
 import zio.ZLayer
 
 object WordsServiceMVStore:
-  def makeLayer[ID: zio.Tag](using
-      LangRepository
-  ): ZLayer[
+  def makeLayer[ID: zio.Tag]: ZLayer[
     MVStore & IdFactory[ID],
     String,
     WordsService

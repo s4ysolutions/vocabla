@@ -7,23 +7,16 @@ import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
   ErrorService
 }
 import solutions.s4y.vocabla.words.app.usecase.WordsService
-import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
+import solutions.s4y.vocabla.words.domain.model.Entry
+import zio.ZIO
 import zio.http.Method.POST
 import zio.http.codec.HttpContentCodec
 import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
 import zio.http.{Route, Status}
 import zio.schema.{DeriveSchema, Schema}
-import zio.{Chunk, ZIO}
 
-case class NewEntryRequest(
-                       word: String,
-                       wordLang: String,
-                       definition: String,
-                       definitionLang: String,
-                       ownerId: Identifier[Owner],
-                       tagLabels: Chunk[String]
-                     )
+case class NewEntryRequest(entry: Entry)
 case class NewEntryResponse(entryId: Identifier[Entry])
 
 object NewEntry:
@@ -42,20 +35,12 @@ object NewEntry:
 
   def route(using IdentifierSchema): Route[WordsService, Nothing] =
     endpoint.implement[WordsService] { request =>
-      (for {
-        wordsService <- ZIO
-          .service[WordsService]
-        id <- wordsService
-          .newEntry(
-            request.word,
-            request.wordLang,
-            request.definition,
-            request.definitionLang,
-            request.ownerId,
-            request.tagLabels
-          )
-      } yield NewEntryResponse(id))
-        .mapError(error => Right(ErrorService(error)))
+      ZIO
+        .serviceWithZIO[WordsService] { _.newEntry(request.entry) }
+        .mapBoth(
+          error => Right(ErrorService(error)),
+          id => NewEntryResponse(id)
+        )
     }
 
   private given (using IdentifierSchema): Schema[NewEntryRequest] =
