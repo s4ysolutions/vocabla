@@ -4,7 +4,6 @@ import org.h2.mvstore.{MVMap, MVStore}
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.TagRepository
-import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
 import solutions.s4y.vocabla.words.domain.model.{Owner, Tag}
 import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreTagRepository.MVStoreTag
 import zio.{Chunk, IO, ZIO, ZLayer}
@@ -59,7 +58,7 @@ final class MVStoreTagRepository[OwnerID, TagID](
 }
 
 object MVStoreTagRepository:
-  case class MVStoreTag[TagID](id: TagID, label: String)
+  final case class MVStoreTag[TagID](id: TagID, label: String)
 
   def apply[OwnerID, TagID](
       mvStore: MVStore,

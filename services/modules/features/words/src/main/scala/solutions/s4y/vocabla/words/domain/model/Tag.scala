@@ -5,7 +5,7 @@ import solutions.s4y.vocabla.domain.model.{Identifier, IdentifierSchema}
 import zio.prelude.Equal
 import zio.schema.{DeriveSchema, Schema}
 
-case class Tag(
+final case class Tag(
     label: String,
     owner: Identifier[Owner]
 ):

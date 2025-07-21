@@ -9,7 +9,7 @@ import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.MVSto
 import zio.prelude.*
 import zio.{Chunk, IO, ZIO, ZLayer}
 
-class MVStoreEntryRepository[OwnerID, EntryID, TagID](
+final class MVStoreEntryRepository[OwnerID, EntryID, TagID](
     map: MVMap[OwnerID, Chunk[MVStoreEntry[EntryID, TagID]]],
     idFactory: IdFactory[EntryID],
     tagRepository: MVStoreTagRepository[OwnerID, TagID]
@@ -80,12 +80,12 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       )
 
 object MVStoreEntryRepository:
-  case class MVStoreDefinition(
+  final case class MVStoreDefinition(
       definition: String,
       lang: String
   )
 
-  case class MVStoreEntry[EntryID, TagID](
+  final case class MVStoreEntry[EntryID, TagID](
       id: EntryID,
       headword: String,
       wordLang: String,

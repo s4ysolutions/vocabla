@@ -5,7 +5,7 @@ import solutions.s4y.vocabla.domain.model.{Identifier, IdentifierSchema}
 import zio.Chunk
 import zio.schema.{DeriveSchema, Schema}
 
-case class Entry(
+final case class Entry(
     headword: Headword,
     definitions: Chunk[Definition],
     tags: Chunk[Identifier[Tag]],
