@@ -1,21 +1,21 @@
 package solutions.s4y.vocabla.words.app.usecase
 
-import solutions.s4y.vocabla.domain.model.Identifier
+import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.lang.domain.model.Lang
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
-import zio.IO
+import zio.{Chunk, IO}
 
 class WordsServiceLive(
     private val entryRepository: EntryRepository
 ) extends WordsService:
   override def newEntry(
-                         word: String,
-                         wordLang: Lang.Code,
-                         definition: String,
-                         definitionLang: Lang.Code,
-                         owner: Identifier[Owner],
-                         tagLabels: List[String]
+      word: String,
+      wordLang: Lang.Code,
+      definition: String,
+      definitionLang: Lang.Code,
+      owner: Identifier[Owner],
+      tagLabels: Chunk[String]
   ): IO[
     String,
     Identifier[Entry]
@@ -28,3 +28,8 @@ class WordsServiceLive(
       definitionLang,
       tagLabels
     )
+
+  override def getEntriesForOwner(
+      ownerId: Identifier[Owner]
+  ): IO[String, Chunk[Identified[Entry]]] =
+    entryRepository.getEntriesForOwner(ownerId)

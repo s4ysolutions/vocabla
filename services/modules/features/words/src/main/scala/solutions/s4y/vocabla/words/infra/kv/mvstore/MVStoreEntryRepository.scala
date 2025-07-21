@@ -1,23 +1,20 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
-import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identifier}
+import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.lang.domain.model.Lang
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.domain.model.*
 import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
-import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{
-  MVStoreDefinition,
-  MVStoreEntry
-}
+import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreEntryRepository.{MVStoreDefinition, MVStoreEntry}
 import zio.prelude.*
 import zio.prelude.Equivalence.*
-import zio.{IO, ZIO, ZLayer}
+import zio.{Chunk, IO, ZIO, ZLayer}
 
 class MVStoreEntryRepository[OwnerID, EntryID, TagID](
-    map: MVMap[OwnerID, Seq[MVStoreEntry[EntryID, TagID]]],
+    map: MVMap[OwnerID, Chunk[MVStoreEntry[EntryID, TagID]]],
     idFactory: IdFactory[EntryID],
     tagRepository: MVStoreTagRepository[OwnerID, TagID]
 )(using langRepository: LangRepository, e1: Equivalence[Identifier[Tag], TagID])
@@ -29,7 +26,7 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       wordLang: Lang.Code,
       definition: String,
       definitionLang: Lang.Code,
-      tagLabels: Seq[String]
+      tagLabels: Chunk[String]
   ): IO[String, Identifier[Entry]] = for {
     tags <- tagRepository.getTagsForOwner(owner)
     tagIds <- ZIO.foreachPar(tagLabels)(label =>
@@ -40,7 +37,7 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
       entryId,
       word,
       wordLang,
-      List(MVStoreDefinition(definition, definitionLang)),
+      Chunk(MVStoreDefinition(definition, definitionLang)),
       tagIds.map(identity => identity.as[TagID])
     )
     ownerId = owner.as[OwnerID]
@@ -53,9 +50,9 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
 
   override def getEntriesForOwner(
       owner: Identifier[Owner]
-  ): IO[String, Seq[IdentifiedEntity[Entry]]] =
+  ): IO[String, Chunk[Identified[Entry]]] =
     ZIO
-      .attempt(Option(map.get(owner.as[OwnerID])).getOrElse(List.empty))
+      .attempt(Option(map.get(owner.as[OwnerID])).getOrElse(Chunk.empty))
       .tapErrorCause(cause =>
         ZIO.logWarningCause(s"Error getting entries for owner $owner", cause)
       )
@@ -65,7 +62,7 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
         },
         { mvsEntries =>
           mvsEntries.map { entry =>
-            IdentifiedEntity(
+            Identified(
               Identifier(entry.id),
               Entry(
                 Headword(entry.word, langRepository.getLang(entry.wordLang)),
@@ -86,9 +83,9 @@ class MVStoreEntryRepository[OwnerID, EntryID, TagID](
 
   private def getMVStoreEntriesForOwner(
       ownerId: OwnerID
-  ): IO[String, Seq[MVStoreEntry[EntryID, TagID]]] =
+  ): IO[String, Chunk[MVStoreEntry[EntryID, TagID]]] =
     ZIO
-      .attempt(Option(map.get(ownerId)).getOrElse(List.empty))
+      .attempt(Option(map.get(ownerId)).getOrElse(Chunk.empty))
       .tapErrorCause(cause =>
         ZIO.logWarningCause(s"Error getting entries for owner $ownerId", cause)
       )
@@ -106,8 +103,8 @@ object MVStoreEntryRepository:
       id: EntryID,
       word: String,
       wordLang: Lang.Code,
-      definitions: List[MVStoreDefinition],
-      tags: Seq[TagID]
+      definitions: Chunk[MVStoreDefinition],
+      tags: Chunk[TagID]
   )
 
   def apply[OwnerID, EntryID, TagID](
@@ -116,7 +113,7 @@ object MVStoreEntryRepository:
       tagRepository: MVStoreTagRepository[OwnerID, TagID]
   )(using LangRepository): MVStoreEntryRepository[OwnerID, EntryID, TagID] =
     val map =
-      mvStore.openMap[OwnerID, Seq[MVStoreEntry[EntryID, TagID]]]("entries")
+      mvStore.openMap[OwnerID, Chunk[MVStoreEntry[EntryID, TagID]]]("entries")
     new MVStoreEntryRepository[OwnerID, EntryID, TagID](
       map,
       idFactory,

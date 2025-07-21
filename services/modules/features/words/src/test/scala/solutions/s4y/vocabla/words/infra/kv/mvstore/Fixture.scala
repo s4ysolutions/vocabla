@@ -1,7 +1,6 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.MVStore
-import solutions.s4y.vocabla.domain.model.Identifier
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
 import solutions.s4y.vocabla.lang.infra.given

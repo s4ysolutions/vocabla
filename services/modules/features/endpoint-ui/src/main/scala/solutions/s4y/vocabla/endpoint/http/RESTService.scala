@@ -1,29 +1,20 @@
 package solutions.s4y.vocabla.endpoint.http
 
-import solutions.s4y.vocabla.endpoint.http.codecs.IdCodec
-import solutions.s4y.vocabla.endpoint.http.rest.words.{
-  entriesEndpoint,
-  entriesRoute,
-  newEntryEndpoint,
-  newEntryRoute
-}
-import solutions.s4y.vocabla.endpoint.http.rest.{pingEndpoint, pingRoute}
+import solutions.s4y.vocabla.endpoint.http.rest.Ping
+import solutions.s4y.vocabla.domain.model.IdentifierSchema
+import solutions.s4y.vocabla.endpoint.http.rest.words.{Entries, NewEntry}
 import solutions.s4y.vocabla.words.app.usecase.WordsService
 import zio.http.*
 import zio.http.Header.AccessControlAllowOrigin
 import zio.http.Middleware.CorsConfig
 import zio.http.codec.PathCodec
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}
-import zio.{LogLevel, Promise, Tag, Task, ULayer, ZIO, ZLayer, http}
+import zio.{LogLevel, Promise, Task, ULayer, ZIO, ZLayer, http}
 
-class RESTService[
-    DomainID: Tag,
-    OwnerID: {IdCodec, Tag},
-    EntryID: Tag,
-    TagID: Tag
-] {
+class RESTService(using identifierSchema: IdentifierSchema) {
 
-  private val endpoints = Seq(pingEndpoint, newEntryEndpoint, entriesEndpoint)
+  private val endpoints =
+    Seq(Ping.endpoint, NewEntry.endpoint, Entries.endpoint)
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
     title = "Vocabla API",
@@ -32,7 +23,7 @@ class RESTService[
   )
 
   private val restRoutes =
-    Seq(pingRoute, newEntryRoute[DomainID, OwnerID, EntryID], entriesRoute)
+    Seq(Ping.route, NewEntry.route, Entries.route)
 
   private val corsConfig: CorsConfig = CorsConfig(
     // allowedMethods = Acc
@@ -60,7 +51,7 @@ class RESTService[
       )
 
   def start(): ZIO[
-    WordsService[DomainID, OwnerID, EntryID] & Server,
+    WordsService & Server,
     String,
     Promise[Nothing, Unit]
   ] = {
@@ -81,10 +72,5 @@ class RESTService[
 }
 
 object RESTService:
-  def layer[
-      DomainID: Tag,
-      OwnerID: {IdCodec, Tag},
-      EntryID: Tag,
-      TagID: Tag
-  ](): ULayer[RESTService[DomainID, OwnerID, EntryID, TagID]] =
-    ZLayer.succeed(new RESTService[DomainID, OwnerID, EntryID, TagID])
+  def makeLayer()(using IdentifierSchema): ULayer[RESTService] =
+    ZLayer.succeed(new RESTService)

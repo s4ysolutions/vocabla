@@ -15,24 +15,27 @@ trait Identifier[E]:
 
   override def toString: String = s"Identifier(${internal.toString})"
 
-trait IdentityImpl[I]
-
 object Identifier:
   def apply[E, I](id: I): Identifier[E] = new Identifier[E]:
     type ID = I
     val internal: ID = id
 
   extension [I](internal: I)
-    def identity[E]: Identifier[E] = Identifier[E, I](internal)
+    def identifier[E]: Identifier[E] = Identifier[E, I](internal)
 
   extension [E](identifier: Identifier[E])
     def as[I]: I = identifier.internal.asInstanceOf[I]
 
-  given [E, I: Schema]: Schema[Identifier[E]] =
-    Schema[I].transform[Identifier[E]](
-      Identifier[E, I],
-      (identity: Identifier[E]) => identity.as[I]
+  given [E](using is: IdentifierSchema): Schema[Identifier[E]] =
+    is.schema.transform[Identifier[E]](
+      id => Identifier[E, is.ID](id),
+      (identity: Identifier[E]) => identity.as[is.ID]
     )
+
+  given [E](using is: IdentifierSchema): Schema[Seq[Identifier[E]]] = {
+    val schema = summon[Schema[List[Identifier[E]]]]
+    schema.transform(_.toSeq, _.toList)
+  }
 
   given [E, I: Equal](using eqi: Equal[I]): Equal[Identifier[E]] =
     (a, b) => eqi.equal(a.as[I], b.as[I])

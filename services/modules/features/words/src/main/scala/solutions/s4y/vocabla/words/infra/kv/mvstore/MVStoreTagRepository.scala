@@ -1,16 +1,16 @@
 package solutions.s4y.vocabla.words.infra.kv.mvstore
 
 import org.h2.mvstore.{MVMap, MVStore}
-import solutions.s4y.vocabla.domain.model.{IdentifiedEntity, Identifier}
+import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.words.app.repo.TagRepository
 import solutions.s4y.vocabla.words.domain.model.Tag.equalTag
 import solutions.s4y.vocabla.words.domain.model.{Owner, Tag}
 import solutions.s4y.vocabla.words.infra.kv.mvstore.MVStoreTagRepository.MVStoreTag
-import zio.{IO, ZIO, ZLayer}
+import zio.{Chunk, IO, ZIO, ZLayer}
 
 final class MVStoreTagRepository[OwnerID, TagID](
-    map: MVMap[OwnerID, Seq[MVStoreTag[TagID]]],
+    map: MVMap[OwnerID, Chunk[MVStoreTag[TagID]]],
     idFactory: IdFactory[TagID]
 ) extends TagRepository {
   override def addTag(
@@ -21,7 +21,7 @@ final class MVStoreTagRepository[OwnerID, TagID](
     for {
       tags <-
         ZIO
-          .attempt(Option(map.get(ownerId)).getOrElse(Seq.empty))
+          .attempt(Option(map.get(ownerId)).getOrElse(Chunk.empty))
           .tapErrorCause(cause =>
             ZIO.logWarningCause(s"Error getting tags for owner $ownerId", cause)
           )
@@ -48,16 +48,16 @@ final class MVStoreTagRepository[OwnerID, TagID](
 
   override def getTagsForOwner(
       owner: Identifier[Owner]
-  ): IO[String, Seq[IdentifiedEntity[Tag]]] = {
+  ): IO[String, Chunk[Identified[Tag]]] = {
     ZIO
-      .attempt(Option(map.get(owner.as[OwnerID])).getOrElse(Seq.empty))
+      .attempt(Option(map.get(owner.as[OwnerID])).getOrElse(Chunk.empty))
       .tapErrorCause(
         ZIO.logWarningCause(s"Error getting tags for owner $owner", _)
       )
       .mapBoth(
         th => s"Error getting tags for owner $owner: ${th.getMessage}",
         _.map(tag =>
-          IdentifiedEntity(Identifier(tag.id), Tag(tag.label, owner))
+          Identified(Identifier(tag.id), Tag(tag.label, owner))
         )
       )
   }
@@ -70,7 +70,7 @@ object MVStoreTagRepository:
       mvStore: MVStore,
       idFactory: IdFactory[TagID]
   ): MVStoreTagRepository[OwnerID, TagID] =
-    val map = mvStore.openMap[OwnerID, Seq[MVStoreTag[TagID]]]("tags")
+    val map = mvStore.openMap[OwnerID, Chunk[MVStoreTag[TagID]]]("tags")
     new MVStoreTagRepository[OwnerID, TagID](map, idFactory)
 
   def makeMVstoreLayer[OwnerID: zio.Tag, TagID: zio.Tag]: ZLayer[
