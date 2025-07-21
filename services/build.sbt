@@ -4,7 +4,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
 ThisBuild / scalaVersion := "3.7.1"
 
-val zioVersion = "2.1.19"
+val zioVersion = "2.1.20"
 val zioLoggingVersion = "2.5.0"
 val zioHttpVersion = "3.3.3"
 val zioSchemaVersion = "1.7.3"

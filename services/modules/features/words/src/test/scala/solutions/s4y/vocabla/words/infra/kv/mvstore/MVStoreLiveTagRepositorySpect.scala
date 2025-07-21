@@ -5,10 +5,10 @@ import solutions.s4y.vocabla.words.app.repo.{EntryRepository, TagRepository}
 import solutions.s4y.vocabla.words.domain.model.*
 import solutions.s4y.vocabla.words.infra.kv.mvstore.Fixture.layerTestRepository
 import zio.test.*
-import zio.{Chunk, ZIO, ZLayer}
+import zio.{Chunk, Scope, ZIO, ZLayer}
 
 object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
-  def spec = suite("MVStoreRepositories")(
+  def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreRepositories")(
     suite("TagRepository")(
       test("add should create a new tag") {
         for {
