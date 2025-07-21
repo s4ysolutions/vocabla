@@ -32,11 +32,6 @@ object Identifier:
       (identity: Identifier[E]) => identity.as[is.ID]
     )
 
-  given [E](using is: IdentifierSchema): Schema[Seq[Identifier[E]]] = {
-    val schema = summon[Schema[List[Identifier[E]]]]
-    schema.transform(_.toSeq, _.toList)
-  }
-
   given [E, I: Equal](using eqi: Equal[I]): Equal[Identifier[E]] =
     (a, b) => eqi.equal(a.as[I], b.as[I])
 

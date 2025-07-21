@@ -9,4 +9,5 @@ trait IdentifierSchema:
 object IdentifierSchema:
   def apply[I: Schema]: IdentifierSchema = new IdentifierSchema:
     type ID = I
-    val schema: Schema[I] = Schema[ID]
+    val schema: Schema[ID] = Schema[ID]
+

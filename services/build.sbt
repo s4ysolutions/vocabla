@@ -20,13 +20,13 @@ lazy val identity = (project in file("modules/domain/identity"))
     libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion
   )
 
-lazy val id = (project in file("modules/infrastructure/id"))
+lazy val id = (project in file("modules/infra/id"))
   .settings(
     name := "id",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion
   )
 
-lazy val mvStore = (project in file("modules/infrastructure/mv-store"))
+lazy val mvStore = (project in file("modules/infra/mv-store"))
   .settings(
     name := "mv-store",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
