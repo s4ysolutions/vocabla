@@ -39,10 +39,30 @@ lazy val lang = (project in file("modules/features/lang"))
     name := "lang"
   )
 
+lazy val students = (project in file("modules/features/students"))
+  .settings(
+    name := "students"
+  )
+
+lazy val tags = (project in file("modules/features/tags"))
+  .dependsOn(id)
+  .dependsOn(identity)
+  .dependsOn(mvStore)
+  .settings(
+    name := "tags",
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
+    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+  )
+
 lazy val words = (project in file("modules/features/words"))
   .dependsOn(id)
   .dependsOn(identity)
   .dependsOn(lang)
+  .dependsOn(tags)
   .dependsOn(mvStore)
   .settings(
     name := "words",

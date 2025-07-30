@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.words.app.usecase
+package solutions.s4y.vocabla.words.app.ports
 
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.lang.domain.model.Lang

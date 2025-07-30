@@ -1,58 +1,17 @@
-package solutions.s4y.vocabla.words.infra.kv.mvstore
+package solutions.s4y.vocabla.words.infra.mvstore
 
 import solutions.s4y.vocabla.domain.model.Identifier.identifier
-import solutions.s4y.vocabla.words.app.repo.{EntryRepository, TagRepository}
+import solutions.s4y.vocabla.tags.domain.model.Tag
+import solutions.s4y.vocabla.tags.domain.model.Owner as TagOwner
 import solutions.s4y.vocabla.words.domain.model.*
-import solutions.s4y.vocabla.words.infra.kv.mvstore.Fixture.layerTestRepository
+import Fixture.layerTestRepository
+import solutions.s4y.vocabla.tags.app.repo.TagRepository
+import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import zio.test.*
 import zio.{Chunk, Scope, ZIO, ZLayer}
 
 object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreRepositories")(
-    suite("TagRepository")(
-      test("add should create a new tag") {
-        for {
-          repository <- ZIO.service[TagRepository]
-          tagId <- repository.add(Tag("test-tag", 1.identifier[Owner]))
-          tags <- repository.get(1.identifier[Owner])
-        } yield assertTrue(
-          tagId == 11.identifier[Tag],
-          tags.size == 1,
-          tags.head.e.label == "test-tag",
-          tags.head.id == 11.identifier[Tag]
-        )
-      },
-      test("get should return all tags for specific owner") {
-        for {
-          repository <- ZIO.service[TagRepository]
-          tagId1 <- repository.add(Tag("tag1", 1.identifier[Owner]))
-          tagId2 <- repository.add(Tag("tag2", 1.identifier[Owner]))
-          tagId3 <- repository.add(Tag("tag3", 2.identifier[Owner]))
-          tags <- repository.get(1.identifier[Owner])
-        } yield assertTrue(
-          tags.size == 2,
-          tags.exists(t =>
-            t.id == 11
-              .identifier[
-                Tag
-              ] && t.id == tagId1 && t.e.label == "tag1"
-          ),
-          tags.exists(t =>
-            t.id == 12.identifier && t.id == tagId2 && t.e.label == "tag2"
-          ),
-          !tags.exists(t => t.id == tagId3)
-        )
-      },
-      test("get should return empty chunk when owner has no tags") {
-        for {
-          repository <- ZIO
-            .service[TagRepository]
-          tags <- repository.get(999.identifier[Owner])
-        } yield assertTrue(
-          tags.isEmpty
-        )
-      }
-    ).provide(layerTestRepository),
     suite("EntryRepository")(
       test("add should create a new entry") {
         for {
@@ -75,7 +34,7 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
             )
           )
           entry <- entryRepository.get(1.identifier[Owner])
-          tags <- tagRepository.get(1.identifier[Owner])
+          tags <- tagRepository.get(1.identifier[TagOwner])
         } yield assertTrue(
           entryId == 13.identifier, // ID generation may vary
           entry.exists(_.e.headword.word == "headword"),
@@ -87,9 +46,9 @@ object MVStoreLiveTagRepositorySpect extends ZIOSpecDefault {
           entry.head.e.tags(1) == 12.identifier[Tag],
           tags.size == 2,
           tags(0).id == 11.identifier[Tag],
-          tags(0).e == Tag("C", 1.identifier[Owner]),
+          tags(0).e == Tag("C", 1.identifier[TagOwner]),
           tags(1).id == 12.identifier[Tag],
-          tags(1).e == Tag("A", 1.identifier[Owner])
+          tags(1).e == Tag("A", 1.identifier[TagOwner])
         )
       }.provide(layerTestRepository),
       test("getEntry should return None for non-existent entry") {

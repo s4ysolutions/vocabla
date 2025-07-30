@@ -1,6 +1,7 @@
-package solutions.s4y.vocabla.words.app.usecase
+package solutions.s4y.vocabla.words.app
 
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
+import solutions.s4y.vocabla.words.app.ports.WordsService
 import solutions.s4y.vocabla.words.app.repo.EntryRepository
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.{Chunk, IO}

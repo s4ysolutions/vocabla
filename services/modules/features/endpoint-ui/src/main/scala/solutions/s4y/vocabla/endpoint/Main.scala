@@ -7,13 +7,11 @@ import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.lang.infra.langRoRepository
-import solutions.s4y.vocabla.words.app.usecase.{
-  WordsService,
-  WordsServiceMVStore
-}
+import solutions.s4y.vocabla.words.app.MVStoreWordsService
+import solutions.s4y.vocabla.words.app.ports.WordsService
 import zio.http.Server
 import zio.logging.LogFilter.LogLevelByNameConfig
-import zio.logging.{ConsoleLoggerConfig, LogFormat, consoleLogger, logMetrics}
+import zio.logging.{ConsoleLoggerConfig, LogFormat, consoleLogger}
 import zio.{
   Config,
   LogLevel,
@@ -56,7 +54,7 @@ object Main extends ZIOAppDefault:
     ZLayer.succeed(IdFactory.uuid)
   // finally end up with WordsService implementation
   private val wordsServiceLayer: ZLayer[Any, String, WordsService] =
-    (layerIdFactory ++ layerMVStore) >>> WordsServiceMVStore
+    (layerIdFactory ++ layerMVStore) >>> MVStoreWordsService
       .makeLayer[MVStoreID]
 
   private val program: ZIO[

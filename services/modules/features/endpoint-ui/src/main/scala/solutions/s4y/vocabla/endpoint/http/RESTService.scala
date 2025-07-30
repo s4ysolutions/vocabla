@@ -3,7 +3,7 @@ package solutions.s4y.vocabla.endpoint.http
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
 import solutions.s4y.vocabla.domain.model.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.words.{Entries, NewEntry}
-import solutions.s4y.vocabla.words.app.usecase.WordsService
+import solutions.s4y.vocabla.words.app.ports.WordsService
 import zio.http.*
 import zio.http.Header.AccessControlAllowOrigin
 import zio.http.Middleware.CorsConfig

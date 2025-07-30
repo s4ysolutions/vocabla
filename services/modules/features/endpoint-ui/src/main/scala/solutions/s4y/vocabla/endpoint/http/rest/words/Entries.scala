@@ -2,11 +2,8 @@ package solutions.s4y.vocabla.endpoint.http.rest.words
 
 import solutions.s4y.vocabla.domain.model.Identifier.identifier
 import solutions.s4y.vocabla.domain.model.{Identified, IdentifierSchema}
-import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
-  ErrorParseID,
-  ErrorService
-}
-import solutions.s4y.vocabla.words.app.usecase.WordsService
+import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{ErrorParseID, ErrorService}
+import solutions.s4y.vocabla.words.app.ports.WordsService
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.http.Method.GET
 import zio.http.codec.PathCodec

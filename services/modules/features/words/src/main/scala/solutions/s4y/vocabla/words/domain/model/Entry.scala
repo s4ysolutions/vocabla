@@ -2,6 +2,7 @@ package solutions.s4y.vocabla.words.domain.model
 
 import solutions.s4y.vocabla.domain.model.Identifier.identifier
 import solutions.s4y.vocabla.domain.model.{Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.tags.domain.model.Tag
 import zio.Chunk
 import zio.schema.{DeriveSchema, Schema}
 

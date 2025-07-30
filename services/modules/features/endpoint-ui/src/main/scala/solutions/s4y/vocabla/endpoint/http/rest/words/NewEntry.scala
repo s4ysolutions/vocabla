@@ -6,7 +6,7 @@ import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
   ErrorParseID,
   ErrorService
 }
-import solutions.s4y.vocabla.words.app.usecase.WordsService
+import solutions.s4y.vocabla.words.app.ports.WordsService
 import solutions.s4y.vocabla.words.domain.model.Entry
 import zio.ZIO
 import zio.http.Method.POST

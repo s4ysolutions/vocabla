@@ -1,7 +1,7 @@
-package solutions.s4y.vocabla.words.app.repo
+package solutions.s4y.vocabla.tags.app.repo
 
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
-import solutions.s4y.vocabla.words.domain.model.{Owner, Tag}
+import solutions.s4y.vocabla.tags.domain.model.{Owner, Tag}
 import zio.{Chunk, IO}
 
 trait TagRepository:

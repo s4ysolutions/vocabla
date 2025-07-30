@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.words.domain.model
+package solutions.s4y.vocabla.tags.domain.model
 
 import solutions.s4y.vocabla.domain.model.Identifier.*
 import solutions.s4y.vocabla.domain.model.{Identifier, IdentifierSchema}
