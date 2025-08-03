@@ -14,7 +14,7 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Any] =
     suite("MVStoreEntryRepository")(
       suite("Entry")(
-        test("add should create a new entry") {
+        test("create should create a new entry") {
           val entry = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -23,13 +23,13 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           val ownerId = 1.identifier[Owner]
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId <- repo.put(ownerId, entry)
+            entryId <- repo.create(ownerId, entry)
             retrievedEntry <- repo.get(entryId)
           } yield assert(retrievedEntry)(Assertion.equalTo(Some(entry)))
         }
       ),
       suite("Entry with owners")(
-        test("add should associate entry with owner") {
+        test("create should associate entry with owner") {
           val entry = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -38,13 +38,13 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           val ownerId = 1.identifier[Owner]
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId <- repo.put(ownerId, entry)
+            entryId <- repo.create(ownerId, entry)
             entries <- repo.getForOwner(ownerId).runCollect
           } yield assert(entries)(
             Assertion.equalTo(Chunk(Identified(entryId, entry)))
           )
         },
-        test("add should associate multiple entries with the same owner") {
+        test("create should associate multiple entries with the same owner") {
           val entry1 = Entry(
             Headword("headword1", "en"),
             Chunk(Definition("definition1", "es")),
@@ -58,8 +58,8 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           val ownerId = 1.identifier[Owner]
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId1 <- repo.put(ownerId, entry1)
-            entryId2 <- repo.put(ownerId, entry2)
+            entryId1 <- repo.create(ownerId, entry1)
+            entryId2 <- repo.create(ownerId, entry2)
             entries <- repo.getForOwner(ownerId).runCollect
           } yield assert(entries)(
             Assertion.equalTo(
@@ -67,7 +67,7 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
             )
           )
         },
-        test("add should not associate entry with a different owner") {
+        test("create should not associate entry with a different owner") {
           val entry1 = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -82,8 +82,8 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           val ownerId2 = 2.identifier[Owner]
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId1 <- repo.put(ownerId1, entry1)
-            entryId2 <- repo.put(ownerId2, entry2)
+            entryId1 <- repo.create(ownerId1, entry1)
+            entryId2 <- repo.create(ownerId2, entry2)
             entries <- repo.getForOwner(ownerId1).runCollect
           } yield assert(entries)(
             Assertion.equalTo(Chunk(Identified(entryId1, entry1)))
@@ -91,7 +91,7 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
         }
       ),
       suite("Entry with tags")(
-        test("add should associate entry with tag") {
+        test("create should associate entry with tag") {
           val entry = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -105,14 +105,14 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           )
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId <- repo.put(1.identifier[Owner], entry)
+            entryId <- repo.create(1.identifier[Owner], entry)
             _ <- repo.addTag(entryId, tagId)
             entries <- repo.getForTag(tagId).runCollect
           } yield assert(entries)(
             Assertion.equalTo(Chunk(Identified(entryId, entryExpected)))
           )
         },
-        test("add should associate multiple entries with the same tag") {
+        test("create should associate multiple entries with the same tag") {
           val entry1 = Entry(
             Headword("headword1", "en"),
             Chunk(Definition("definition1", "es")),
@@ -136,8 +136,8 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           )
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId1 <- repo.put(1.identifier[Owner], entry1)
-            entryId2 <- repo.put(1.identifier[Owner], entry2)
+            entryId1 <- repo.create(1.identifier[Owner], entry1)
+            entryId2 <- repo.create(1.identifier[Owner], entry2)
             _ <- repo.addTag(entryId1, tagId)
             _ <- repo.addTag(entryId2, tagId)
             entries <- repo.getForTag(tagId).runCollect
@@ -150,7 +150,7 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
             )
           )
         },
-        test("removeTag should remove association with tag") {
+        test("deleteTag should delete association with tag") {
           val entry = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -159,13 +159,13 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           val tagId = 1.identifier[Tag]
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId <- repo.put(1.identifier[Owner], entry)
+            entryId <- repo.create(1.identifier[Owner], entry)
             _ <- repo.addTag(entryId, tagId)
             _ <- repo.removeTag(entryId, tagId)
             entries <- repo.getForTag(tagId).runCollect
           } yield assert(entries)(Assertion.isEmpty)
         },
-        test("removeTag should remove association with tag but leave another tag intact") {
+        test("deleteTag should delete association with tag but leave another tag intact") {
           val entry1 = Entry(
             Headword("headword", "en"),
             Chunk(Definition("definition", "es")),
@@ -195,8 +195,8 @@ object MVStoreLiveTagRepositorySpec extends ZIOSpecDefault {
           )
           for {
             repo <- ZIO.service[EntryRepository]
-            entryId1 <- repo.put(1.identifier[Owner], entry1)
-            entryId2 <- repo.put(1.identifier[Owner], entry2)
+            entryId1 <- repo.create(1.identifier[Owner], entry1)
+            entryId2 <- repo.create(1.identifier[Owner], entry2)
             _ <- repo.addTag(entryId1, tagId1)
             _ <- repo.addTag(entryId2, tagId1)
             _ <- repo.addTag(entryId2, tagId2)

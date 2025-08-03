@@ -5,4 +5,6 @@ import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.{Chunk, IO}
 
 trait GetEntriesUseCase:
-  def apply(ownerId: Identifier[Owner]): IO[String, Chunk[Identified[Entry]]]
+  def getEntriesForOwner(
+      ownerId: Identifier[Owner]
+  ): IO[String, Chunk[Identified[Entry]]]

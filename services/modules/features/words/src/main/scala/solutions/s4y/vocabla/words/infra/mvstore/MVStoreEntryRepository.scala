@@ -25,7 +25,7 @@ private final class MVStoreEntryRepository[DtoID: ToSegment] private (
 )(using e1: Equivalence[Identifier[Tag], DtoID])
     extends EntryRepository:
 
-  override def put(
+  override def create(
       ownerId: Identifier[Owner],
       entry: Entry
   ): IO[String, Identifier[Entry]] =
@@ -37,7 +37,7 @@ private final class MVStoreEntryRepository[DtoID: ToSegment] private (
       _ <- associateEntryWithOwner(dtoEntryId, mvsOwnerId)
       _ <- associateEntryWithTags(dtoEntryId, entry.tags.map(_.as[DtoID]))
     } yield Identifier(dtoEntryId)
-  end put
+  end create
 
   override def get(entryId: Identifier[Entry]): IO[String, Option[Entry]] =
     getEntryByDtoId(entryId.as[DtoID])

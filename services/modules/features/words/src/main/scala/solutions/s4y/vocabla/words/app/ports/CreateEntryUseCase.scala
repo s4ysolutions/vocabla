@@ -5,5 +5,5 @@ import solutions.s4y.vocabla.lang.domain.model.Lang
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.{Chunk, IO}
 
-trait AddEntryUseCase:
-  def apply(ownerId: Identifier[Owner], entry: Entry): IO[String, Identifier[Entry]]
+trait CreateEntryUseCase:
+  def create(ownerId: Identifier[Owner], entry: Entry): IO[String, Identifier[Entry]]

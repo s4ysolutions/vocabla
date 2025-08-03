@@ -10,11 +10,11 @@ import zio.{Chunk, Scope, ZIO, ZLayer}
 object MVStoreTagRepositorySpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreRepositories")(
     suite("TagRepository")(
-      test("set should add and get tags for an ownerId") {
+      test("set should create and get tags for an ownerId") {
         for {
           repository <- ZIO.service[TagRepository]
-          tag1 <- repository.add(1.identifier[Owner], Tag("tag1"))
-          tag2 <- repository.add(1.identifier[Owner], Tag("tag2"))
+          tag1 <- repository.create(1.identifier[Owner], Tag("tag1"))
+          tag2 <- repository.create(1.identifier[Owner], Tag("tag2"))
           tags <- repository.get(1.identifier[Owner])
         } yield assertTrue(
           tags.size == 2,

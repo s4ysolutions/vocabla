@@ -7,7 +7,7 @@ import zio.IO
 import zio.stream.ZStream
 
 trait EntryRepository:
-  def put(
+  def create(
       ownerId: Identifier[Owner],
       entry: Entry
   ): IO[String, Identifier[Entry]]
@@ -19,7 +19,7 @@ trait EntryRepository:
   def getForOwner(
       owner: Identifier[Owner]
   ): ZStream[Any, String, Identified[Entry]]
-  
+
   def getForTag(
       tagId: Identifier[Tag]
   ): ZStream[Any, String, Identified[Entry]]
