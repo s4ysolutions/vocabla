@@ -27,7 +27,7 @@ object KeyValueMVStoreSpec extends ZIOSpecDefault:
             map <- ZIO.service[ZMVMap[String, String]]
             _ <- map.put(sk1.id, value1)
             value <- map.get(sk1.id)
-          } yield assert(value)(Assertion.equalTo(value1))
+          } yield assert(value)(Assertion.equalTo(Some(value1)))
         }
       ),
       suite("cursor")(
@@ -63,11 +63,7 @@ object KeyValueMVStoreSpec extends ZIOSpecDefault:
             read <- cursor.runCollect
           } yield assert(read)(
             Assertion.equalTo(
-              Chunk(
-                ("1:2:1", "121"),
-                ("1:2:2", "122"),
-                ("1:2:3", "123")
-              )
+              Chunk("121", "122", "123")
             )
           )
         }

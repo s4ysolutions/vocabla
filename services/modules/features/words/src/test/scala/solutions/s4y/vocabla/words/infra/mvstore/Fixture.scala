@@ -3,8 +3,7 @@ package solutions.s4y.vocabla.words.infra.mvstore
 import org.h2.mvstore.MVStore
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
-import solutions.s4y.vocabla.lang.app.repo.LangRepository
-import solutions.s4y.vocabla.lang.infra.given
+import solutions.s4y.vocabla.infrastructure.mvstore.SegmentedKey.given_ToSegment_Int
 import solutions.s4y.vocabla.tags.app.repo.TagRepository
 import solutions.s4y.vocabla.tags.infra.mvstore.MVStoreTagRepository
 import solutions.s4y.vocabla.words.app.repo.EntryRepository

@@ -8,6 +8,7 @@ class SkZMVMap[V](private val map: ZMVMap[String, V]) {
 
   def get(key: SegmentedKey): IO[String, Option[V]] = map.get(key.id)
   def put(key: SegmentedKey, value: V): IO[String, V] = map.put(key.id, value)
+  def remove(key: SegmentedKey): IO[String, Option[V]] = map.remove(key.id)
 
   def cursor(
       from: SegmentedKey,

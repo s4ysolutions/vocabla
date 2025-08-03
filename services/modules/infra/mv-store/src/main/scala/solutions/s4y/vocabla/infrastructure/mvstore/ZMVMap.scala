@@ -23,6 +23,12 @@ class ZMVMap[K, V](private val map: MVMap[K, V]) {
           s"Error putting key: $key, value: $value, error: ${e.getMessage}"
         )
 
+  def remove(key: K): IO[String, Option[V]] =
+    ZIO.logTrace(s"Removing key: $key") *>
+      ZIO
+        .attempt(Option(map.remove(key)))
+        .e(e => s"Error removing key: $key, error: ${e.getMessage}")
+
   def cursor(
       from: K,
       to: K,

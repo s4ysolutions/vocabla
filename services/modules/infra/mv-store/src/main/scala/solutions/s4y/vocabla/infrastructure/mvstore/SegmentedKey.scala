@@ -10,22 +10,15 @@ class SegmentedKey(val id: String):
     SegmentedKey(s"${toSegment(value)}${SegmentedKey.delimiter}$id")
 
 object SegmentedKey:
-  val delimiter: String = ":"
+  private[mvstore] val delimiter: String = ":"
+
+  given [T: ToSegment]: Conversion[T, SegmentedKey] with
+    def apply(segmented: T): SegmentedKey = new SegmentedKey(
+      summon[ToSegment[T]](segmented)
+    )
 
   given Conversion[SegmentedKey, String] with
     def apply(value: SegmentedKey): String = value.id
-
-  given Conversion[String, SegmentedKey] with
-    def apply(value: String): SegmentedKey = new SegmentedKey(value)
-
-  given Conversion[Int, SegmentedKey] with
-    def apply(value: Int): SegmentedKey = new SegmentedKey(value.toString)
-
-  given Conversion[Long, SegmentedKey] with
-    def apply(value: Long): SegmentedKey = new SegmentedKey(value.toString)
-
-  given Conversion[UUID, SegmentedKey] with
-    def apply(value: UUID): SegmentedKey = new SegmentedKey(value.toString)
 
   given ToSegment[String] with
     def apply(value: String): String = value
