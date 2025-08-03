@@ -8,7 +8,7 @@ import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreM
 import solutions.s4y.vocabla.lang.app.repo.LangRepository
 import solutions.s4y.vocabla.lang.infra.langRoRepository
 import solutions.s4y.vocabla.words.app.MVStoreWordsService
-import solutions.s4y.vocabla.words.app.ports.WordsService
+import solutions.s4y.vocabla.words.app.ports.EntryService
 import zio.http.Server
 import zio.logging.LogFilter.LogLevelByNameConfig
 import zio.logging.{ConsoleLoggerConfig, LogFormat, consoleLogger}
@@ -31,14 +31,7 @@ object Main extends ZIOAppDefault:
   given IdentifierSchema = IdentifierSchema[UUID]
 
   override val bootstrap: ZLayer[ZIOAppArgs, Config.Error, Unit] =
-    // Replace the default logger with the custom one
-    Runtime.removeDefaultLoggers >>>
-      consoleLogger(
-        ConsoleLoggerConfig(
-          LogFormat.colored + LogFormat.space + LogFormat.allAnnotations,
-          LogLevelByNameConfig(LogLevel.Trace)
-        )
-      )
+    super.bootstrap ++ consoleDebugLogger
 
   // create in-memory MV Store
   private def layerMVStore: ZLayer[Any, String, MVStore] =
@@ -52,13 +45,13 @@ object Main extends ZIOAppDefault:
   // id generator
   private def layerIdFactory: ULayer[IdFactory[MVStoreID]] =
     ZLayer.succeed(IdFactory.uuid)
-  // finally end up with WordsService implementation
-  private val wordsServiceLayer: ZLayer[Any, String, WordsService] =
+  // finally end up with EntryService implementation
+  private val wordsServiceLayer: ZLayer[Any, String, EntryService] =
     (layerIdFactory ++ layerMVStore) >>> MVStoreWordsService
       .makeLayer[MVStoreID]
 
   private val program: ZIO[
-    Scope & WordsService & RESTService & Server,
+    Scope & EntryService & RESTService & Server,
     String,
     Unit
   ] = {

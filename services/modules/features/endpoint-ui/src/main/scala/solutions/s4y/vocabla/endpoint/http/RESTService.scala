@@ -3,7 +3,7 @@ package solutions.s4y.vocabla.endpoint.http
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
 import solutions.s4y.vocabla.domain.model.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.words.{Entries, NewEntry}
-import solutions.s4y.vocabla.words.app.ports.WordsService
+import solutions.s4y.vocabla.words.app.ports.EntryService
 import zio.http.*
 import zio.http.Header.AccessControlAllowOrigin
 import zio.http.Middleware.CorsConfig
@@ -51,7 +51,7 @@ class RESTService(using identifierSchema: IdentifierSchema) {
       )
 
   def start(): ZIO[
-    WordsService & Server,
+    EntryService & Server,
     String,
     Promise[Nothing, Unit]
   ] = {
@@ -65,7 +65,7 @@ class RESTService(using identifierSchema: IdentifierSchema) {
           fiber <- ZIO.never.fork
         } yield promise
       ) /*
-      .provideSome[WordsService[DomainID, OwnerID, EntryID]](
+      .provideSome[EntryService[DomainID, OwnerID, EntryID]](
         Server.default.mapError(th => th.toString)
       )*/
   }

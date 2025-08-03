@@ -35,7 +35,7 @@ object Fixture:
     EntryRepository & TagRepository
   ] = {
     val dep = layerMVStore ++ layerIdFactory
-    val entries = dep >>> MVStoreEntryRepository.makeLayer[Fixture.ID]
-    val tags = dep >>> MVStoreTagRepository.makeLayer[Fixture.ID]
+    val entries = dep >>> MVStoreEntryRepository.makeLayer[Fixture.ID]()
+    val tags = dep >>> MVStoreTagRepository.makeLayer[Fixture.ID]()
     entries ++ tags
   }

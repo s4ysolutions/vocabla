@@ -3,7 +3,7 @@ package solutions.s4y.vocabla.endpoint.http.rest.words
 import solutions.s4y.vocabla.domain.model.Identifier.identifier
 import solutions.s4y.vocabla.domain.model.{Identified, IdentifierSchema}
 import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{ErrorParseID, ErrorService}
-import solutions.s4y.vocabla.words.app.ports.WordsService
+import solutions.s4y.vocabla.words.app.ports.EntryService
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
 import zio.http.Method.GET
 import zio.http.codec.PathCodec
@@ -24,7 +24,7 @@ object Entries:
   private def ownerIdCodec(using
       IdentifierSchema
   ): PathCodec[Identifier[Owner]] =
-    uuid("owner").transform(
+    uuid("ownerId").transform(
       (_uuid: UUID) => _uuid.identifier[Owner],
       (id: Identifier[Owner]) => id.as[UUID]
     )
@@ -35,19 +35,19 @@ object Entries:
     ErrorParseID,
     ErrorService
   ], EntriesResponse, None] =
-    Endpoint(GET / prefix / "entries" / uuid("owner"))
+    Endpoint(GET / prefix / "entries" / uuid("ownerId"))
       // .in[EntriesRequest]
       .out[EntriesResponse]
       .outError[ErrorService](Status.InternalServerError)
       .outError[ErrorParseID](Status.BadRequest)
 
-  def route(using IdentifierSchema): Route[WordsService, Nothing] =
-    endpoint.implement[WordsService] { ownerId =>
+  def route(using IdentifierSchema): Route[EntryService, Nothing] =
+    endpoint.implement[EntryService] { ownerId =>
       (for {
-        wordsService <- ZIO.service[WordsService]
+        wordsService <- ZIO.service[EntryService]
         entries <- wordsService.getEntriesForOwner(
           ownerId.identifier[Owner]
-        ) // Identifier[Owner](request.path("owner"))
+        ) // Identifier[Owner](request.path("ownerId"))
       } yield EntriesResponse(entries))
         .mapError(error => Right(ErrorService(error)))
     }

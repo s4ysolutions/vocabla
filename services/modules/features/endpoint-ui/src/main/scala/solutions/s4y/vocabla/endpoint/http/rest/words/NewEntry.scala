@@ -6,7 +6,7 @@ import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
   ErrorParseID,
   ErrorService
 }
-import solutions.s4y.vocabla.words.app.ports.WordsService
+import solutions.s4y.vocabla.words.app.ports.EntryService
 import solutions.s4y.vocabla.words.domain.model.Entry
 import zio.ZIO
 import zio.http.Method.POST
@@ -33,10 +33,10 @@ object NewEntry:
       .outError[ErrorService](Status.InternalServerError)
       .outError[ErrorParseID](Status.BadRequest)
 
-  def route(using IdentifierSchema): Route[WordsService, Nothing] =
-    endpoint.implement[WordsService] { request =>
+  def route(using IdentifierSchema): Route[EntryService, Nothing] =
+    endpoint.implement[EntryService] { request =>
       ZIO
-        .serviceWithZIO[WordsService] { _.newEntry(request.entry) }
+        .serviceWithZIO[EntryService] { _.newEntry(request.entry) }
         .mapBoth(
           error => Right(ErrorService(error)),
           id => NewEntryResponse(id)

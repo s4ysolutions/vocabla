@@ -2,8 +2,19 @@ package solutions.s4y.vocabla.words.app.repo
 
 import solutions.s4y.vocabla.domain.model.{Identified, Identifier}
 import solutions.s4y.vocabla.words.domain.model.{Entry, Owner}
-import zio.{Chunk, IO}
+import zio.IO
+import zio.stream.ZStream
 
 trait EntryRepository:
-  def add(entry: Entry): IO[String, Identifier[Entry]]
-  def get(owner: Identifier[Owner]): IO[String, Chunk[Identified[Entry]]]
+  def put(
+      ownerId: Identifier[Owner],
+      entry: Entry
+  ): IO[String, Identifier[Entry]]
+
+  def get(
+      entryId: Identifier[Entry]
+  ): IO[String, Option[Entry]]
+
+  def getForOwner(
+      owner: Identifier[Owner]
+  ): ZStream[Any, String, Identified[Entry]]

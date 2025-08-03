@@ -25,11 +25,11 @@ object Fixture:
       )
     )
 
-  def layerTestRepository: ZLayer[
+  def makeTagRepositoryLayer(): ZLayer[
     Any,
     Serializable,
     TagRepository
   ] = {
     layerMVStore ++ layerIdFactory >>> MVStoreTagRepository
-      .makeLayer[Fixture.ID]
+      .makeLayer[Fixture.ID]()
   }

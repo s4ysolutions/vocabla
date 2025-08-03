@@ -3,7 +3,7 @@ package solutions.s4y.vocabla.infrastructure.mvstore
 import org.h2.mvstore.MVStore
 import zio.{Cause, Scope, ZIO}
 
-object KeyValueMVStore {
+object KeyValueMVStore:
   private def makeMvStore(
       file: Option[String]
   ): ZIO[Scope, Throwable, MVStore] =
@@ -25,4 +25,5 @@ object KeyValueMVStore {
       }
     )
   def makeMVStoreMemory(): ZIO[Scope, Throwable, MVStore] = makeMvStore(None)
-}
+
+end KeyValueMVStore
