@@ -68,7 +68,7 @@ object Main extends ZIOAppDefault:
 
   override def run: ZIO[Scope, String, Unit] =
     program.provideSome[Scope](
-      // TODO: should go into RESTService layer
+      // TODO: should go into RESTService makeLayer
       Server.default.mapError(th => th.toString) ++
         RESTService.makeLayer() ++ wordsServiceLayer
     )

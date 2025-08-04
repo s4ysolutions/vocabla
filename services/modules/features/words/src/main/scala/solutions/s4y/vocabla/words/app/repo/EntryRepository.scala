@@ -19,17 +19,3 @@ trait EntryRepository:
   def getForOwner(
       owner: Identifier[Owner]
   ): ZStream[Any, String, Identified[Entry]]
-
-  def getForTag(
-      tagId: Identifier[Tag]
-  ): ZStream[Any, String, Identified[Entry]]
-
-  def addTag(
-      entryId: Identifier[Entry],
-      tagId: Identifier[Tag]
-  ): IO[String, Unit]
-
-  def removeTag(
-      entryId: Identifier[Entry],
-      tagId: Identifier[Tag]
-  ): IO[String, Unit]

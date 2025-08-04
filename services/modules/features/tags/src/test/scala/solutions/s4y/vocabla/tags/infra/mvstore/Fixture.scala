@@ -3,11 +3,18 @@ package solutions.s4y.vocabla.tags.infra.mvstore
 import org.h2.mvstore.MVStore
 import solutions.s4y.vocabla.id.IdFactory
 import solutions.s4y.vocabla.infrastructure.mvstore.KeyValueMVStore.makeMVStoreMemory
-import solutions.s4y.vocabla.tags.app.repo.TagRepository
+import solutions.s4y.vocabla.infrastructure.mvstore.ToSegment
+import solutions.s4y.vocabla.tags.app.repo.{
+  TagAssociationRepository,
+  TagRepository
+}
 import zio.{UIO, ULayer, ZIO, ZLayer}
 
 object Fixture:
   type ID = Int
+
+  given ToSegment[Fixture.ID] with
+    override def apply(value: ID): String = value.toString
 
   def layerIdFactory: ULayer[IdFactory[Fixture.ID]] =
     ZLayer.succeed(new IdFactory[Fixture.ID]:
@@ -27,9 +34,18 @@ object Fixture:
 
   def makeTagRepositoryLayer(): ZLayer[
     Any,
-    Serializable,
+    String,
     TagRepository
   ] = {
     layerMVStore ++ layerIdFactory >>> MVStoreTagRepository
-      .makeLayer[Fixture.ID]()
+      .makeLayer[Fixture.ID, Fixture.ID]()
+  }
+
+  def makeTagAssociationRepositoryLayer[TaggedT: zio.Tag](name: String): ZLayer[
+    Any,
+    Serializable,
+    TagAssociationRepository[TaggedT]
+  ] = {
+    layerMVStore ++ layerIdFactory >>> MVStoreTagAssociationRepository
+      .makeLayer[Fixture.ID, Fixture.ID, TaggedT](name)
   }

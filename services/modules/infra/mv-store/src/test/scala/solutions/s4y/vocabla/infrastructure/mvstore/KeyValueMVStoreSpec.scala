@@ -31,6 +31,79 @@ object KeyValueMVStoreSpec extends ZIOSpecDefault:
         }
       ),
       suite("cursor")(
+        test("cursor filter is inclusive") {
+          for {
+            map <- ZIO.service[ZMVMap[String, String]]
+            _ <- map.put("1", "one")
+            _ <- map.put("2", "two")
+            _ <- map.put("3", "three")
+            _ <- map.put("4", "four")
+            _ <- map.put("5", "five")
+            cursor = map.cursor(
+              "2",
+              "4",
+              false
+            ) // Cursor from key 3 to 4, inclusive
+            leftover <- cursor.map(kv => kv._1).runCollect
+          } yield assert(leftover)(Assertion.equalTo(Chunk("2", "3", "4")))
+        },
+        test("cursor filter can remove item while iterating") {
+          for {
+            map <- ZIO.service[ZMVMap[String, String]]
+            _ <- map.put("1", "one")
+            _ <- map.put("2", "two")
+            _ <- map.put("3", "three")
+            _ <- map.put("4", "four")
+            _ <- map.put("5", "five")
+            cursor = map.cursor(
+              "2",
+              "4",
+              false
+            ) // Cursor from key 3 to 4, inclusive
+            result <- cursor.foreach(kv => map.remove(kv._1))
+            leftover <- map.cursor("1").map(kv => kv._1).runCollect
+          } yield assert(leftover)(Assertion.equalTo(Chunk("1", "5")))
+        },
+        test("cursor filter can remove items with collected zio's") {
+          for {
+            map <- ZIO.service[ZMVMap[String, String]]
+            _ <- map.put("1", "one")
+            _ <- map.put("2", "two")
+            _ <- map.put("3", "three")
+            _ <- map.put("4", "four")
+            _ <- map.put("5", "five")
+            cursor = map.cursor(
+              "2",
+              "4",
+              false
+            ) // Cursor from key 3 to 4, inclusive
+            result <- cursor.map(kv => map.remove(kv._1)).runCollect
+            _ <- ZIO.logDebug(s"Removed keys: $result")
+            _ <- ZIO.collectAllPar(result)
+            leftover <- map.cursor("1").map(kv => kv._1).runCollect
+          } yield assert(leftover)(Assertion.equalTo(Chunk("1", "5")))
+        },
+        test("cursor filter can remove items with collected zio results") {
+          for {
+            map <- ZIO.service[ZMVMap[String, String]]
+            _ <- map.put("1", "one")
+            _ <- map.put("2", "two")
+            _ <- map.put("3", "three")
+            _ <- map.put("4", "four")
+            _ <- map.put("5", "five")
+            cursor = map.cursor(
+              "2",
+              "4",
+              false
+            ) // Cursor from key 3 to 4, inclusive
+            result <- cursor.map(kv => map.remove(kv._1)).runCollect
+            _ <- ZIO.logDebug(s"Removed keys: $result")
+            _ <- ZIO.collectAllPar(result)
+            leftover <- map.cursor("1").map(kv => kv._1).runCollect
+          } yield assert(leftover)(Assertion.equalTo(Chunk("1", "5")))
+        },
+      ),
+      suite("cursor sk")(
         test("sk can be used as a filter") {
           for {
             map <- ZIO.service[ZMVMap[String, String]]
@@ -59,7 +132,7 @@ object KeyValueMVStoreSpec extends ZIOSpecDefault:
           for {
             map <- ZIO.service[ZMVMap[String, String]]
             _ <- populateMap(map)
-            cursor = map.cursorOf(1 :: 2)
+            cursor = map.cursorOf(1 :: 2).map(_._2)
             read <- cursor.runCollect
           } yield assert(read)(
             Assertion.equalTo(

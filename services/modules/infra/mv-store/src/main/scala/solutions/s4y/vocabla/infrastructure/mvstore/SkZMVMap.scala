@@ -17,7 +17,7 @@ class SkZMVMap[V](private val map: ZMVMap[String, V]) {
   ): ZStream[Any, String, (String, V)] =
     map.cursor(from.id, to.id, inclusive)
 
-  def cursorOf(prefix: SegmentedKey): ZStream[Any, String, V] =
+  def cursorOf(prefix: SegmentedKey): ZStream[Any, String, (String, V)] =
     map.cursorOf(prefix.id + SegmentedKey.delimiter)
 }
 

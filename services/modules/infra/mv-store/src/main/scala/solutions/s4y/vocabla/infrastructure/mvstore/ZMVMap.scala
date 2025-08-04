@@ -39,16 +39,16 @@ class ZMVMap[K, V](private val map: MVMap[K, V]) {
   def cursor(from: K): ZStream[Any, String, (K, V)] =
     ZMVMap.cursorToStream(map.cursor(from))
 
-  def cursorOf(prefix: K): ZStream[Any, String, V] =
+  def cursorOf(prefix: K): ZStream[Any, String, (String, V)] =
     cursor(prefix)
       .takeWhile((key, _) => key.toString.startsWith(prefix.toString))
-      .map(_._2)
+      .map((key, value) => (key.toString, value))
 }
 
 object ZMVMap:
   def apply[K, V](map: MVMap[K, V]): ZMVMap[K, V] = new ZMVMap(map)
 
-  def cursorToStream[K, V](cursor: Cursor[K, V]): ZStream[Any, String, (K, V)] =
+  private def cursorToStream[K, V](cursor: Cursor[K, V]): ZStream[Any, String, (K, V)] =
     ZStream
       .unfold(cursor) { cursor => cursorNextS(cursor) }
 

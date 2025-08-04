@@ -30,6 +30,17 @@ object MVStoreTagRepositorySpec extends ZIOSpecDefault {
         } yield assertTrue(
           tags.isEmpty
         )
+      },
+      test("delete should remove a tag") {
+        for {
+          repository <- ZIO.service[TagRepository]
+          tagId <- repository.create(1.identifier[Owner], Tag("tagToDelete"))
+          deleted <- repository.delete(tagId)
+          tagsAfterDelete <- repository.get(1.identifier[Owner])
+        } yield assertTrue(
+          deleted,
+          tagsAfterDelete.isEmpty
+        )
       }
     ).provide(makeTagRepositoryLayer())
   )

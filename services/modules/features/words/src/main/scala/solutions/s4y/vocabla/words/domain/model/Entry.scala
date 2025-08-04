@@ -7,11 +7,10 @@ import zio.schema.{DeriveSchema, Schema}
 
 final case class Entry(
     headword: Headword,
-    definitions: Chunk[Definition],
-    tags: Chunk[Identifier[Tag]]
+    definitions: Chunk[Definition]
 ):
   override def toString: String = {
-    s"Entry: $headword, Definitions: ${definitions.mkString(", ")}, Tags: ${tags.mkString(", ")}"
+    s"Entry: $headword, Definitions: ${definitions.mkString(", ")}"
   }
 
 object Entry:
