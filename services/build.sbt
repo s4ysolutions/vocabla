@@ -5,10 +5,11 @@ ThisBuild / organization := "s4y.solutions"
 ThisBuild / scalaVersion := "3.7.1"
 
 val zioVersion = "2.1.20"
-val zioLoggingVersion = "2.5.1"
+val zioConfigVersion = "4.0.4"
 val zioHttpVersion = "3.3.3"
-val zioSchemaVersion = "1.7.4"
+val zioLoggingVersion = "2.5.1"
 val zioPreludeVersion = "1.0.0-RC41"
+val zioSchemaVersion = "1.7.4"
 
 Test / testOptions += Tests.Argument("-v")
 
@@ -17,13 +18,8 @@ lazy val zio = (project in file("modules/zio"))
     name := "zio",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
     libraryDependencies += "dev.zio" %% "zio-logging" % zioLoggingVersion,
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test
-  )
-
-lazy val id = (project in file("modules/infra/id"))
-  .settings(
-    name := "id",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
 lazy val domain = (project in file("modules/domain"))
@@ -38,7 +34,9 @@ lazy val appRepos = (project in file("modules/app-repos"))
   .dependsOn(domain)
   .settings(
     name := "app-repos",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
 lazy val appPorts = (project in file("modules/app-ports"))
@@ -55,9 +53,13 @@ lazy val app = (project in file("modules/app"))
   .dependsOn(appRepos)
   .dependsOn(domain)
   .settings(
-    name := "app",
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+    name := "app"
+  )
+
+lazy val id = (project in file("modules/infra/id"))
+  .settings(
+    name := "id",
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion
   )
 
 lazy val mvStore = (project in file("modules/infra/mv-store"))
@@ -67,9 +69,19 @@ lazy val mvStore = (project in file("modules/infra/mv-store"))
   .dependsOn(domain)
   .settings(
     name := "mv-store",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
-    libraryDependencies += "dev.zio" %% "zio-streams" % zioVersion,
     libraryDependencies += "com.h2database" % "h2-mvstore" % "2.3.232",
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+  )
+
+lazy val pgSQL = (project in file("modules/infra/pgsql"))
+  .dependsOn(zio)
+  .dependsOn(appRepos)
+  .dependsOn(domain)
+  .settings(
+    name := "pgsql",
+    libraryDependencies += "org.postgresql" % "postgresql" % "42.7.7",
+    libraryDependencies += "dev.zio" %% "zio-config" % zioConfigVersion,
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
