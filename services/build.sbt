@@ -7,7 +7,7 @@ ThisBuild / scalaVersion := "3.7.1"
 val zioVersion = "2.1.20"
 val zioLoggingVersion = "2.5.1"
 val zioHttpVersion = "3.3.3"
-val zioSchemaVersion = "1.7.3"
+val zioSchemaVersion = "1.7.4"
 val zioPreludeVersion = "1.0.0-RC41"
 
 Test / testOptions += Tests.Argument("-v")
@@ -46,14 +46,13 @@ lazy val appPorts = (project in file("modules/app-ports"))
   .settings(
     name := "app-ports",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
 lazy val app = (project in file("modules/app"))
   .dependsOn(appPorts)
+  .dependsOn(appRepos)
   .dependsOn(domain)
   .settings(
     name := "app",

@@ -9,8 +9,8 @@ import zio.test.*
 import zio.test.Assertion.{equalTo, isNone, isSome, isTrue}
 import zio.{Scope, ZIO, ZLayer}
 
-object MVStoreTagRepositorySpec extends ZIOSpecDefault {
-  override def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreTagRepositorySpec")(
+object TagRepositoryMVStoreSpec extends ZIOSpecDefault {
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("TagRepositoryMVStoreSpec")(
     test("create should add and get a tag") {
       val ownerId = 1.identifier[Student]
       val tag = Tag("tag1", ownerId)

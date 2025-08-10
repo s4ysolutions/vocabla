@@ -10,8 +10,8 @@ import zio.test.*
 import zio.test.Assertion.{equalTo, isNone, isSome, isTrue}
 import zio.{Chunk, Scope, ZIO}
 
-object MVStoreEntryRepositorySpec extends ZIOSpecDefault {
-  override def spec: Spec[TestEnvironment & Scope, Any] = suite("MVStoreEntryRepositorySpec")(
+object EntryRepositoryMVStoreSpec extends ZIOSpecDefault {
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("EntryRepositoryMVStoreSpec")(
     test("create should add and get an entry") {
       val ownerId = 1.identifier[Student]
       val entry = Entry(

@@ -2,7 +2,6 @@ package solutions.s4y.infra.mvstore
 
 import org.h2.mvstore.{Cursor, MVMap, MVStore}
 import solutions.s4y.zio.e
-import solutions.s4y.infra.mvstore.ZMVMap
 import zio.stream.ZStream
 import zio.{IO, ZIO}
 
@@ -71,18 +70,11 @@ object ZMVMap:
       cursor: Cursor[K, V]
   ): ZStream[Any, String, (K, V)] =
     ZStream
-      .unfold(cursor) { cursor => cursorNextS(cursor) }
-
-  private def cursorNext[K, V](cursor: Cursor[K, V]): Option[(K, V)] =
-    if (cursor.hasNext) {
-      val key: K = cursor.next()
-      val value: V = cursor.getValue
-      Some((key, value))
-    } else None
-
-  private def cursorNextS[K, V](
-      cursor: Cursor[K, V]
-  ): Option[((K, V), Cursor[K, V])] =
-    cursorNext(cursor).map((_, cursor))
-
+      .unfold(cursor) { cursor =>
+        if (cursor.hasNext) {
+          val key: K = cursor.next()
+          val value: V = cursor.getValue
+          Some(((key, value)), cursor)
+        } else None
+      }
 end ZMVMap

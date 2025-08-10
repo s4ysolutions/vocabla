@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla.infra.mvstore
 
 import org.h2.mvstore.MVStore
+import org.h2.mvstore.tx.TransactionStore
 import solutions.s4y.infra.id.IdFactory
 import solutions.s4y.infra.mvstore.ZMVStore.makeMVStoreMemory
 import solutions.s4y.infra.sk.ToSegment
