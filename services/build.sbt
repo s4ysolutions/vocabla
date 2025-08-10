@@ -12,25 +12,12 @@ val zioPreludeVersion = "1.0.0-RC41"
 
 Test / testOptions += Tests.Argument("-v")
 
-lazy val identity = (project in file("modules/domain/identity"))
+lazy val zio = (project in file("modules/zio"))
   .settings(
-    name := "identity",
-    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion
-  )
-
-lazy val error = (project in file("modules/error"))
-  .settings(
-    name := "error",
+    name := "zio",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
+    libraryDependencies += "dev.zio" %% "zio-logging" % zioLoggingVersion,
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test
-  )
-
-lazy val logging = (project in file("modules/logging"))
-  .settings(
-    name := "logging",
-    libraryDependencies += "dev.zio" %% "zio-logging" % zioLoggingVersion
   )
 
 lazy val id = (project in file("modules/infra/id"))
@@ -39,77 +26,66 @@ lazy val id = (project in file("modules/infra/id"))
     libraryDependencies += "dev.zio" %% "zio" % zioVersion
   )
 
+lazy val domain = (project in file("modules/domain"))
+  .settings(
+    name := "domain",
+    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion
+  )
+
+lazy val appRepos = (project in file("modules/app-repos"))
+  .dependsOn(domain)
+  .settings(
+    name := "app-repos",
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion
+  )
+
+lazy val appPorts = (project in file("modules/app-ports"))
+  .dependsOn(domain)
+  .settings(
+    name := "app-ports",
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+  )
+
+lazy val app = (project in file("modules/app"))
+  .dependsOn(appPorts)
+  .dependsOn(domain)
+  .settings(
+    name := "app",
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+  )
+
 lazy val mvStore = (project in file("modules/infra/mv-store"))
-  .dependsOn(error)
-  .dependsOn(logging)
+  .dependsOn(zio)
+  .dependsOn(id)
+  .dependsOn(appRepos)
+  .dependsOn(domain)
   .settings(
     name := "mv-store",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
     libraryDependencies += "dev.zio" %% "zio-streams" % zioVersion,
     libraryDependencies += "com.h2database" % "h2-mvstore" % "2.3.232",
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
-lazy val lang = (project in file("modules/features/lang"))
+lazy val lang = (project in file("modules/infra/lang"))
+  .dependsOn(app)
   .settings(
     name := "lang"
   )
 
-lazy val students = (project in file("modules/features/students"))
-  .settings(
-    name := "students"
-  )
-
-lazy val tags = (project in file("modules/features/tags"))
-  .dependsOn(id)
-  .dependsOn(logging)
-  .dependsOn(identity)
-  .dependsOn(mvStore)
-  .settings(
-    name := "tags",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
-    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
-  )
-
-lazy val words = (project in file("modules/features/words"))
-  .dependsOn(id)
-  .dependsOn(identity)
-  .dependsOn(error)
-  .dependsOn(lang)
-  .dependsOn(tags)
-  .dependsOn(mvStore)
-  .settings(
-    name := "words",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
-    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
-  )
-
-lazy val me = (project in file("modules/features/me"))
-  .dependsOn(words)
-  .dependsOn(tags)
-  .settings(
-    name := "me",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion,
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
-  )
-
-lazy val endpointUI =
-  (project in file("modules/features/endpoint-ui"))
-    .dependsOn(logging)
-    .dependsOn(tags)
-    .dependsOn(words)
-    .dependsOn(me)
+lazy val rest =
+  (project in file("modules/presentation/rest"))
+    .dependsOn(zio)
     .settings(
-      name := "endpoint-ui",
+      name := "rest",
       libraryDependencies += "dev.zio" %% "zio" % zioVersion,
       libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
       libraryDependencies += "dev.zio" %% "zio-http" % zioHttpVersion,
