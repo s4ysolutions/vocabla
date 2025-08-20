@@ -2,5 +2,5 @@ package solutions.s4y.vocabla.app.repo.tx
 
 import zio.IO
 
-trait Transaction:
+trait TransactionContext:
   def rollback(): IO[String, Unit]

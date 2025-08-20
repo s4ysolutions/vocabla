@@ -10,6 +10,7 @@ val zioHttpVersion = "3.3.3"
 val zioLoggingVersion = "2.5.1"
 val zioPreludeVersion = "1.0.0-RC41"
 val zioSchemaVersion = "1.7.4"
+val dotenvVersion = "5.2.2"
 
 Test / testOptions += Tests.Argument("-v")
 
@@ -82,8 +83,10 @@ lazy val pgSQL = (project in file("modules/infra/pgsql"))
     name := "pgsql",
     libraryDependencies += "org.postgresql" % "postgresql" % "42.7.7",
     libraryDependencies += "dev.zio" %% "zio-config" % zioConfigVersion,
+    libraryDependencies += "com.zaxxer" % "HikariCP" % "7.0.1",
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+    libraryDependencies += "io.github.cdimascio" % "java-dotenv" % dotenvVersion % Test
   )
 
 lazy val lang = (project in file("modules/infra/lang"))

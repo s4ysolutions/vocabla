@@ -1,6 +1,8 @@
 package solutions.s4y.vocabla.app.repo.tx
 
-import zio.IO
+import zio.{IO, ZIO}
 
 trait TransactionManager:
-  def withTransactionZIO[A](f: Transaction => IO[String, A]): IO[String, A]
+  def transaction[R, A](
+      zio: ZIO[R & TransactionContext, String, A]
+  ): ZIO[R, String, A]
