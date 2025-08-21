@@ -5,6 +5,7 @@ import solutions.s4y.zio.e
 import zio.{IO, ZIO, ZLayer}
 
 import java.sql.Connection
+import scala.util.Using
 
 class DataSourcePg(val dataSource: HikariDataSource) {
 
@@ -24,23 +25,30 @@ class DataSourcePg(val dataSource: HikariDataSource) {
 }
 
 object DataSourcePg {
-  val live: ZLayer[PgSqlConfig, String, DataSourcePg] =
+  val layer: ZLayer[PgSqlConfig, String, DataSourcePg] =
     ZLayer.scoped {
       for {
+        _ <- ZIO.logDebug("Initializing DataSourcePg")
         config <- ZIO.service[PgSqlConfig]
         hikariConfig = {
           val hc = new HikariConfig()
           hc.setJdbcUrl(config.url)
           hc.setUsername(config.user)
           hc.setPassword(config.password)
+          hc.setSchema(config.schema)
           hc
         }
         ds <- ZIO.acquireRelease(
-          ZIO
-            .attemptBlocking(
-              new DataSourcePg(new HikariDataSource(hikariConfig))
-            )
-            .e(th => th.getMessage)
+          ZIO.attempt {
+            val ds = new DataSourcePg(new HikariDataSource(hikariConfig))
+            val schema = ds.dataSource.getSchema
+            Using.Manager { use =>
+              val connection = use(ds.dataSource.getConnection)
+              val statement = use(connection.createStatement())
+              statement.execute(s"CREATE SCHEMA IF NOT EXISTS $schema")
+            }
+            ds
+          }.orDie <* ZIO.logDebug("DataSourcePg initialized")
         )(ds => ZIO.attemptBlocking(ds.close()).orDie)
       } yield ds
     }

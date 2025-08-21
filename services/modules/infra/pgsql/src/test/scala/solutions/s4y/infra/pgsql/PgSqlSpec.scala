@@ -129,7 +129,7 @@ object PgSqlSpec extends ZIOSpecDefault {
       : ZLayer[Any, String, TransactionManagerPg] =
     ZLayer.fromZIO(
       ZIO.config(PgSqlConfig.pgSqlConfig).orDie
-    ) >>> DataSourcePg.live >>>
+    ) >>> DataSourcePg.layer >>>
       ZLayer.fromFunction((dataSourcePg: DataSourcePg) => {
         populateDatasource(dataSourcePg)
         TransactionManagerPg(dataSourcePg)

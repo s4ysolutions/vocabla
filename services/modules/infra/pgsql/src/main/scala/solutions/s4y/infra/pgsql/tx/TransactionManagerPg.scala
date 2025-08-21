@@ -1,7 +1,10 @@
 package solutions.s4y.infra.pgsql.tx
 
-import solutions.s4y.infra.pgsql.DataSourcePg
-import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
+import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
+import solutions.s4y.vocabla.app.repo.tx.{
+  TransactionContext,
+  TransactionManager
+}
 import solutions.s4y.zio.e
 import zio.{ZIO, ZLayer}
 
@@ -22,7 +25,7 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
                 }
                 .e(th => th.getMessage)
             )
-          )(t => ZIO.attempt(t.connection.close()).orDie)
+          )(tx => ZIO.attempt(tx.connection.close()).orDie)
           .flatMap(tx =>
             unitOfWork
               .provideSomeLayer(ZLayer.succeed(tx))
@@ -32,3 +35,11 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
               )
           )
       }
+
+object TransactionManagerPg:
+  val layer: ZLayer[DataSourcePg, String, TransactionManagerPg] =
+    ZLayer.fromZIO(
+      ZIO.config(PgSqlConfig.pgSqlConfig).orDie
+    ) >>> DataSourcePg.layer >>>
+      ZLayer.fromFunction(TransactionManagerPg(_))
+end TransactionManagerPg
