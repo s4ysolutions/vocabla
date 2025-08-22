@@ -11,7 +11,7 @@ import zio.ZIO
 import java.sql.{PreparedStatement, Statement}
 
 /** Macro that accepts SQL string for prepared statement and expression to set
-  * params, returns generated ID Usage: executeInsertWithId("INSERT INTO table
+  * params, returns generated ID Usage: insertWithId("INSERT INTO table
   * (col1, col2) VALUES (?, ?)", _.setString(1, "value").setLong(2, 123L))
   */
 inline def executeInsertWithId[T](

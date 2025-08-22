@@ -3,6 +3,7 @@ package solutions.s4y.zio
 import zio.logging.LogFilter.LogLevelByNameConfig
 import zio.logging.LogFormat.*
 import zio.logging.*
+import zio.logging.slf4j.bridge.Slf4jBridge
 import zio.{LogLevel, Runtime, Trace}
 
 val enclosingClass: LogFormat =
@@ -33,11 +34,13 @@ val colorFormat =
     ).highlight).filter(LogFilter.causeNonEmpty)
 
 val consoleColorTraceLogger = Runtime.removeDefaultLoggers >>>
+  Slf4jBridge.init() >>>
   consoleLogger(
     ConsoleLoggerConfig(colorFormat, LogLevelByNameConfig(LogLevel.Trace))
   )
 
 val consoleColorDebugLogger = Runtime.removeDefaultLoggers >>>
+  Slf4jBridge.init() >>>
   consoleLogger(
     ConsoleLoggerConfig(colorFormat, LogLevelByNameConfig(LogLevel.Debug))
   )

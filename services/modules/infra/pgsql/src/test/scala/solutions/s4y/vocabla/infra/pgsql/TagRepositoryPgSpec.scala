@@ -11,7 +11,7 @@ import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
 object TagRepositoryPgSpec extends ZIOSpecDefault {
 
   override def spec = suite("TagRepositoryPgSpec")(
-    suite("Create") {
+    suite("Create")(
       test("create a tag") {
         for {
           transactionManager <- ZIO.service[TransactionManager]
@@ -22,9 +22,38 @@ object TagRepositoryPgSpec extends ZIOSpecDefault {
             } yield id
           }
         } yield assertTrue(id == 1.identifier[Tag])
+      },
+      test("get a tag") {
+        for {
+          transactionManager <- ZIO.service[TransactionManager]
+          tagOpt <- transactionManager.transaction {
+            for {
+              repo <- ZIO.service[TagRepository]
+              id <- repo.create(Tag("Test Tag", 1L.identifier[Student]))
+              tagOpt <- repo.get(id)
+            } yield tagOpt
+          }
+        } yield assertTrue(
+          tagOpt.get == Tag("Test Tag", 1L.identifier[Student])
+        )
+      },
+      test("update a tag") {
+        for {
+          transactionManager <- ZIO.service[TransactionManager]
+          updated <- transactionManager.transaction {
+            for {
+              repo <- ZIO.service[TagRepository]
+              id <- repo.create(Tag("Test Tag", 1L.identifier[Student]))
+              _ <- repo.updateLabel(id, "Updated Tag")
+              tagOpt <- repo.get(id)
+            } yield tagOpt
+          }
+        } yield assertTrue(
+          updated.get == Tag("Updated Tag", 1L.identifier[Student])
+        )
       }
-    }
+    )
   ).provideLayer(
     consoleColorDebugLogger >>> Fixture.layer
-  ) @@ TestAspect.before(Fixture.testSystem)
+  ) @@ TestAspect.before(Fixture.testSystem) @@ TestAspect.sequential
 }
