@@ -3,8 +3,9 @@ package solutions.s4y.vocabla.infra.pgsql
 import io.github.cdimascio.dotenv.DotenvBuilder
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
-import solutions.s4y.vocabla.app.repo.{EntryRepository, TagRepository}
+import solutions.s4y.vocabla.app.repo.{EntryRepository, TagAssociationRepository, TagRepository}
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
+import solutions.s4y.vocabla.domain.Entry
 import zio.test.TestSystem
 import zio.{ZIO, ZLayer}
 
@@ -19,6 +20,12 @@ object Fixture {
     ZLayer(
       ZIO.logDebug("Init")
     ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer)
+  }
+
+  val layerWithTagAssociationRepository: ZLayer[Any, String, TransactionManager & TagRepository & EntryRepository & TagAssociationRepository[Entry]] = {
+    ZLayer(
+      ZIO.logDebug("Init")
+    ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer)
   }
 
   val layer: ZLayer[Any, String, TransactionManager & TagRepository] = {

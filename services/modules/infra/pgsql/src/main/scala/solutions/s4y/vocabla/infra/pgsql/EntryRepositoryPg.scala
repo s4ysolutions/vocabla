@@ -5,10 +5,9 @@ import org.postgresql.util.PGobject
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
 import solutions.s4y.infra.pgsql.wrappers.{
-  deleteOne,
-  insertWithId,
-  selectOne,
-  updateOne
+  pgDelete,
+  pgInsertWithId,
+  pgSelectOne
 }
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
@@ -22,7 +21,7 @@ class EntryRepositoryPg extends EntryRepository:
   override def create(
       entry: Entry
   ): ZIO[TransactionContext, String, Identifier[Entry]] =
-    insertWithId[Entry](
+    pgInsertWithId[Entry](
       "INSERT INTO entries (word, langCode, definitions, ownerId) VALUES (?, ?, ?, ?)",
       st => {
         val defs: Array[Object] = entry.definitions.map { defn =>
@@ -41,7 +40,7 @@ class EntryRepositoryPg extends EntryRepository:
   override def delete(
       entryId: Identifier[Entry]
   ): ZIO[TransactionContext, String, Boolean] =
-    deleteOne(
+    pgDelete(
       "DELETE FROM entries WHERE id = ?",
       st => st.setLong(1, entryId.as[Long])
     )
@@ -49,7 +48,7 @@ class EntryRepositoryPg extends EntryRepository:
   override def get(
       entryId: Identifier[Entry]
   ): ZIO[TransactionContext, String, Option[Entry]] =
-    selectOne[Entry](
+    pgSelectOne[Entry](
       "SELECT word, langCode, definitions, ownerId FROM entries WHERE id = ?",
       st => st.setLong(1, entryId.as[Long]),
       rs => {
@@ -80,7 +79,7 @@ end EntryRepositoryPg
 
 object EntryRepositoryPg:
   private val init = Seq(
-    "DROP TABLE IF EXISTS entries",
+    "DROP TABLE IF EXISTS entries CASCADE",
     "DROP TYPE IF EXISTS definition",
     """CREATE TYPE definition AS (
       definition TEXT,

@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.DataSourcePg
-import solutions.s4y.infra.pgsql.wrappers.{deleteOne, insertWithId, selectOne, updateOne}
+import solutions.s4y.infra.pgsql.wrappers.{pgDelete, pgInsertWithId, pgSelectOne, pgUpdateOne}
 import solutions.s4y.vocabla.app.repo.TagRepository
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.identity.Identifier
@@ -13,7 +13,7 @@ class TagRepositoryPg extends TagRepository:
   override def create(
       tag: Tag
   ): ZIO[TransactionContext, String, Identifier[Tag]] =
-    insertWithId[Tag](
+    pgInsertWithId[Tag](
       "INSERT INTO tags (label, ownerId) VALUES (?, ?)",
       st => {
         st.setString(1, tag.label)
@@ -25,7 +25,7 @@ class TagRepositoryPg extends TagRepository:
       id: Identifier[Tag],
       label: String
   ): ZIO[TransactionContext, String, Unit] =
-    updateOne(
+    pgUpdateOne(
       "UPDATE tags SET label=? WHERE id=?",
       st => {
         st.setString(1, label)
@@ -36,7 +36,7 @@ class TagRepositoryPg extends TagRepository:
   override def delete(
       tagId: Identifier[Tag]
   ): ZIO[TransactionContext, String, Boolean] =
-    deleteOne(
+    pgDelete(
       "DELETE FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long])
     )
@@ -44,7 +44,7 @@ class TagRepositoryPg extends TagRepository:
   override def get(
       tagId: Identifier[Tag]
   ): ZIO[TransactionContext, String, Option[Tag]] =
-    selectOne[Tag](
+    pgSelectOne[Tag](
       "SELECT label, ownerId FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long]),
       rs => Tag(rs.getString(1), rs.getLong(2).identifier[Student])
@@ -54,7 +54,7 @@ end TagRepositoryPg
 
 object TagRepositoryPg:
   private val init = Seq(
-    "DROP TABLE IF EXISTS tags",
+    "DROP TABLE IF EXISTS tags CASCADE",
     "CREATE TABLE tags (id SERIAL PRIMARY KEY, label TEXT NOT NULL, ownerId BIGINT NOT NULL)"
   )
   val layer: ZLayer[DataSourcePg, String, TagRepository] =

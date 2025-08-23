@@ -7,8 +7,8 @@ import java.sql.PreparedStatement
 
 /** Executes an update statement that affects one row in the database. This
   * function is typically used for operations like updating a single record.
-  * Usage: deleteOne("UPDATE table SET col1 = ? WHERE id = ?",
-  * _.setString(1, "newValue").setLong(2, 123L))
+  * Usage: pgDelete("UPDATE table SET col1 = ? WHERE id = ?", _.setString(1,
+  * "newValue").setLong(2, 123L))
   * @param sql
   *   SQL statement to execute, typically an UPDATE
   * @param setParams
@@ -17,11 +17,11 @@ import java.sql.PreparedStatement
   *   A ZIO effect that completes successfully if the update affects exactly one
   *   row,
   */
-def updateOne(
+def pgDelete(
     sql: String,
     setParams: PreparedStatement => Unit
-): ZIO[TransactionContext, String, Unit] =
-  withConnection { connection =>
+): ZIO[TransactionContext, String, Boolean] =
+  pgWithConnection { connection =>
     ZIO.scoped {
       for {
         st <- ZIO
@@ -41,9 +41,6 @@ def updateOne(
           .mapError(error =>
             s"Failed to execute statement: ${error.getMessage}"
           )
-        _ <- ZIO.when(rowsAffected == 0)(
-          ZIO.fail("No rows were affected")
-        )
-      } yield ()
+      } yield rowsAffected > 0
     }
   }

@@ -6,7 +6,7 @@ import zio.ZIO
 
 import java.sql.Connection
 
-def withConnection[R, E, A](
+def pgWithConnection[R, E, A](
     f: Connection => ZIO[R, E, A]
 ): ZIO[R & TransactionContext, E, A] =
   ZIO.serviceWithZIO[TransactionContext] { tx =>

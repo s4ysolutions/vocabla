@@ -6,11 +6,11 @@ import zio.ZIO
 
 import scala.util.Using
 
-def selectOne[A](
+def pgSelectOne[A](
     sql: String,
     setParams: java.sql.PreparedStatement => Unit,
     mapResult: java.sql.ResultSet => A
-): ZIO[TransactionContext, String, Option[A]] = withConnection { connection =>
+): ZIO[TransactionContext, String, Option[A]] = pgWithConnection { connection =>
   ZIO.scoped {
     ZIO
       .fromAutoCloseable(

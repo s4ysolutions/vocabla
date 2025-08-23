@@ -1,32 +1,33 @@
 package solutions.s4y.vocabla.app.repo
 
+import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.identity.Identifier
-import zio.IO
+import zio.{Chunk, ZIO}
 
 trait TagAssociationRepository[TaggedT]:
   def associateTagWithEntry(
       tagId: Identifier[Tag],
       taggedId: Identifier[TaggedT]
-  ): IO[String, Unit]
+  ): ZIO[TransactionContext, String, Boolean]
 
   def disassociateTagFromEntry(
       tagId: Identifier[Tag],
       taggId: Identifier[TaggedT]
-  ): IO[String, Unit]
+  ): ZIO[TransactionContext, String, Boolean]
 
   def disassociateTagFromAll(
       tagId: Identifier[Tag]
-  ): IO[String, Unit]
+  ): ZIO[TransactionContext, String, Boolean]
 
   def disassociateTaggedFromAll(
       taggedId: Identifier[TaggedT]
-  ): IO[String, Unit]
+  ): ZIO[TransactionContext, String, Boolean]
 
   def getTagged(
       tagId: Identifier[Tag]
-  ): IO[String, List[Identifier[TaggedT]]]
+  ): ZIO[TransactionContext, String, Chunk[Identifier[TaggedT]]]
 
   def getTags(
       taggedId: Identifier[TaggedT]
-  ): IO[String, List[Tag]]
+  ): ZIO[TransactionContext, String, Chunk[Identifier[Tag]]]

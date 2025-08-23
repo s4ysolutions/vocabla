@@ -20,10 +20,6 @@ lazy val zio = (project in file("modules/zio"))
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
     libraryDependencies += "dev.zio" %% "zio-logging" % zioLoggingVersion,
     libraryDependencies += "dev.zio" %% "zio-logging-slf4j2-bridge" % "2.5.1",
-    //libraryDependencies += "dev.zio" %% "zio-logging-slf4j2" % "2.5.1",
-    // libraryDependencies += "dev.zio" %% "zio-logging-slf4j-bridge" % "2.5.1",
-    // libraryDependencies += "org.slf4j" % "slf4j-simple" % "2.0.17",
-    // libraryDependencies += "dev.zio" %% "zio-logging-slf4j" % "2.5.1",
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )

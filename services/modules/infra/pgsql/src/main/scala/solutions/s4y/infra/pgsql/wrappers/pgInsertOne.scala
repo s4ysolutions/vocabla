@@ -8,14 +8,14 @@ import zio.ZIO
 import java.sql.{PreparedStatement, Statement}
 
 /** Function that executes an insert statement and returns the generated ID
-  * Usage: insertWithId("INSERT INTO table (col1, col2) VALUES (?, ?)",
+  * Usage: pgInsertWithId("INSERT INTO table (col1, col2) VALUES (?, ?)",
   * _.setString(1, "value").setLong(2, 123L))
   */
-def insertWithId[T](
+def pgInsertOne[T](
     sql: String,
     setParams: PreparedStatement => Unit
-): ZIO[TransactionContext, String, Identifier[T]] =
-  withConnection { connection =>
+): ZIO[TransactionContext, String, Boolean] =
+  pgWithConnection { connection =>
     ZIO.scoped {
       for {
         st <- ZIO
@@ -35,25 +35,6 @@ def insertWithId[T](
           .mapError(error =>
             s"Failed to execute statement: ${error.getMessage}"
           )
-        _ <- ZIO.when(rowsAffected == 0)(
-          ZIO.fail("No rows were affected")
-        )
-        rs <- ZIO
-          .fromAutoCloseable(ZIO.attempt(st.getGeneratedKeys))
-          .mapError(error =>
-            s"Failed to get generated keys: ${error.getMessage}"
-          )
-        id <- ZIO
-          .attempt {
-            if (rs.next()) {
-              rs.getLong(1).identifier[T]
-            } else {
-              throw new Exception("No generated key returned")
-            }
-          }
-          .mapError(error =>
-            s"Failed to extract generated key: ${error.getMessage}"
-          )
-      } yield id
+      } yield rowsAffected > 0
     }
   }
