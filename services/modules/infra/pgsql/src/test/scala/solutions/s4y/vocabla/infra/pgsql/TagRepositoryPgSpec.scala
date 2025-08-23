@@ -5,12 +5,12 @@ import solutions.s4y.vocabla.app.repo.tx.TransactionManager
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Student, Tag}
 import solutions.s4y.zio.consoleColorDebugLogger
-import zio.ZIO
-import zio.test.{Spec, TestAspect, ZIOSpecDefault, assertTrue}
+import zio.{Scope, ZIO}
+import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
 
 object TagRepositoryPgSpec extends ZIOSpecDefault {
 
-  override def spec = suite("TagRepositoryPgSpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("TagRepositoryPgSpec")(
     suite("Create")(
       test("create a tag") {
         for {

@@ -41,6 +41,6 @@ def deleteOne(
           .mapError(error =>
             s"Failed to execute statement: ${error.getMessage}"
           )
-      } yield (rowsAffected > 0)
+      } yield rowsAffected > 0
     }
   }
