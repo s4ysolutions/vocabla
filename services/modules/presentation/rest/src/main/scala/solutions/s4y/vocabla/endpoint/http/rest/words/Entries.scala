@@ -1,5 +1,5 @@
 package solutions.s4y.vocabla.endpoint.http.rest.words
-
+/*
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.{Identified, IdentifierSchema}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
@@ -29,7 +29,7 @@ object Entries:
       (_uuid: UUID) => _uuid.identifier[Owner],
       (id: Identifier[Owner]) => id.as[UUID]
     )
-   */
+ */
   def endpoint(using
       IdentifierSchema
   ): Endpoint[UUID, UUID, Either[
@@ -55,7 +55,7 @@ object Entries:
 
   private given (using IdentifierSchema): Schema[EntriesResponse] =
     DeriveSchema.gen[EntriesResponse]
-/*
+
 val words = Seq(
   "abandon",
   "ability",

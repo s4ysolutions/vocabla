@@ -3,8 +3,12 @@ package solutions.s4y.vocabla.infra.pgsql
 import io.github.cdimascio.dotenv.DotenvBuilder
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
-import solutions.s4y.vocabla.app.repo.{EntryRepository, TagAssociationRepository, TagRepository}
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
+import solutions.s4y.vocabla.app.repo.{
+  EntryRepository,
+  TagAssociationRepository,
+  TagRepository
+}
 import solutions.s4y.vocabla.domain.Entry
 import zio.test.TestSystem
 import zio.{ZIO, ZLayer}
@@ -13,16 +17,25 @@ object Fixture {
   val layerWithDataSourcePg: ZLayer[Any, String, DataSourcePg] =
     PgSqlConfig.layer >>> DataSourcePg.layer
 
-  val layerWithTransactionManager: ZLayer[Any, String, TransactionManagerPg] =
+  val layerWithTransactionManager: ZLayer[Any, String, TransactionManager] =
     layerWithDataSourcePg >>> TransactionManagerPg.layer
 
-  val layerWithEntryRepository: ZLayer[Any, String, TransactionManager & TagRepository & EntryRepository] = {
+  val layerWithEntryRepository: ZLayer[
+    Any,
+    String,
+    TransactionManager & TagRepository & EntryRepository
+  ] = {
     ZLayer(
       ZIO.logDebug("Init")
     ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer)
   }
 
-  val layerWithTagAssociationRepository: ZLayer[Any, String, TransactionManager & TagRepository & EntryRepository & TagAssociationRepository[Entry]] = {
+  val layerWithTagAssociationRepository: ZLayer[
+    Any,
+    String,
+    TransactionManager & TagRepository & EntryRepository &
+      TagAssociationRepository[Entry]
+  ] = {
     ZLayer(
       ZIO.logDebug("Init")
     ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer)

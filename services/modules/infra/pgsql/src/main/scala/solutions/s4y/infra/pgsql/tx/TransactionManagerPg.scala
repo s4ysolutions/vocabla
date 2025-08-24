@@ -37,7 +37,7 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
       }
 
 object TransactionManagerPg:
-  val layer: ZLayer[DataSourcePg, String, TransactionManagerPg] =
+  val layer: ZLayer[DataSourcePg, String, TransactionManager] =
     ZLayer.fromZIO(
       ZIO.config(PgSqlConfig.pgSqlConfig).orDie
     ) >>> DataSourcePg.layer >>>

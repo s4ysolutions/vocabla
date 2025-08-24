@@ -1,20 +1,24 @@
 package solutions.s4y.vocabla.endpoint.http
 
-import solutions.s4y.vocabla.domain.identity.IdentifierSchema
+import org.slf4j.LoggerFactory
+import solutions.s4y.vocabla.app.VocablaApp
+import solutions.s4y.vocabla.app.ports.PingUseCase
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
-import solutions.s4y.vocabla.endpoint.http.rest.words.{Entries, NewEntry}
-import solutions.s4y.vocabla.words.app.ports.EntryService
 import zio.http.*
-import zio.http.Header.AccessControlAllowOrigin
 import zio.http.Middleware.CorsConfig
-import zio.http.codec.PathCodec
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}
-import zio.{LogLevel, Promise, Task, ULayer, ZIO, ZLayer, http}
+import zio.{LogLevel, Promise, ZEnvironment, ZIO, ZLayer}
 
-class RESTService(using identifierSchema: IdentifierSchema) {
+import scala.language.postfixOps
+
+final class RESTService(
+    private val server: Server,
+    private val useCases: PingUseCase
+):
+  RESTService.logger.debug("Creating RESTService instance")
 
   private val endpoints =
-    Seq(Ping.endpoint, NewEntry.endpoint, Entries.endpoint)
+    Seq(Ping.endpoint)
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
     title = "Vocabla API",
@@ -22,55 +26,54 @@ class RESTService(using identifierSchema: IdentifierSchema) {
     endpoints
   )
 
-  private val restRoutes =
-    Seq(Ping.route, NewEntry.route, Entries.route)
+  private val restRoutes: Seq[Route[PingUseCase, Response]] =
+    Seq(Ping.route) // , Entries.route)
 
-  private val corsConfig: CorsConfig = CorsConfig(
-    // allowedMethods = Acc
-    // Some(Set(Method.GET, Method.POST, Method.PUT, Method.DELETE)),
-    // allowedOrigin = _ => Some(AccessControlAllowOrigin.All)
-    // allowedHeaders = Some(Set("Content-Type", "Authorization")),
-    // exposedHeaders = Some(Set("Content-Type", "Authorization")),
-    // allowCredentials = true,
-    // maxAge = Some(3600)
-  )
-  private val routes =
-    ((Routes.fromIterable(restRoutes) @@ Middleware.cors(
-      corsConfig
-    )) ++ SwaggerUI.routes(
-      "/openapi",
-      openAPI
-    )) @@ Middleware
-      .requestLogging(level =
-        status =>
-          if (status.isSuccess) {
-            LogLevel.Info
-          } else {
-            LogLevel.Error
-          }
-      )
+  private val corsConfig: CorsConfig = CorsConfig()
+  private val routes: Routes[PingUseCase, Response] =
+    (Routes.fromIterable(restRoutes)
+      @@ Middleware.cors(
+        corsConfig
+      ) ++ SwaggerUI.routes(
+        "/openapi",
+        openAPI
+      )) @@ Middleware.requestLogging(level =
+      status =>
+        if (status.isSuccess) {
+          LogLevel.Info
+        } else {
+          LogLevel.Error
+        }
+    )
 
   def start(): ZIO[
-    EntryService & Server,
-    String,
+    Any,
+    Nothing,
     Promise[Nothing, Unit]
-  ] = {
-    Server
-      .install(routes)
-      .flatMap(port =>
-        for {
-          promise <- Promise.make[Nothing, Unit]
-          _ <- ZIO.log(s"Server started on http://localhost:$port") //  ZIO.never
-          _ <- promise.succeed(())
-          fiber <- ZIO.never.fork
-        } yield promise
-      ) /*
-      .provideSome[EntryService[DomainID, OwnerID, EntryID]](
-        Server.default.mapError(th => th.toString)
-      )*/
-  }
-}
+  ] = (for {
+    promise <- Promise.make[Nothing, Unit]
+    _ <- for {
+      _ <- server.install(routes)
+      port <- server.port
+      _ <- ZIO.log(s"Server started on http://localhost: ${port}")
+      _ <- promise.succeed(())
+      _ <- ZIO.never.fork
+    } yield ()
+  } yield promise).provideEnvironment(ZEnvironment(useCases))
+end RESTService
 
 object RESTService:
-  def makeLayer()(using IdentifierSchema): ULayer[RESTService] =
-    ZLayer.succeed(new RESTService)
+  val layer: ZLayer[Any, String, RESTService] = {
+    ZLayer.succeed("Constructing RESTService layer") >>>
+      VocablaApp.layer.flatMap(app =>
+        ZLayer.succeed(ZIO.logDebug("Constructing HTTP server...")) >>>
+          Server.default
+            .mapError(th => th.getMessage)
+            .map(server => app ++ server)
+      )
+      >>> ZLayer.fromFunction(
+        new RESTService(_, _)
+      )
+  }
+
+  private val logger = LoggerFactory.getLogger(RESTService.getClass)

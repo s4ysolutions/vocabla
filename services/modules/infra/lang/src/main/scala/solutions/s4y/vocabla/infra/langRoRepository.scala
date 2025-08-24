@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla.infra
 
 import solutions.s4y.vocabla.app.repo.LangRepository
+import solutions.s4y.vocabla.domain.Lang
 
 val langRoRepository: LangRepository = new LangRepository:
   val defaultLang: Lang = Lang("en", "🇬🇧", "English")
@@ -13,7 +14,7 @@ val langRoRepository: LangRepository = new LangRepository:
       Lang("es", "🇪🇸", "Spanish")
     )
 
-  def readLang(
+  def getLang(
       code: String
   ): Lang = {
     getLangs.find(_.code == code).getOrElse(unknownLang)

@@ -1,22 +1,32 @@
 package solutions.s4y.vocabla.app
 
-import solutions.s4y.vocabla.app.ports.{CreateEntryCommand, CreateEntryUseCase}
+import org.slf4j.LoggerFactory
+import solutions.s4y.vocabla.app.ports.{PingCommand, PingUseCase}
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
-import solutions.s4y.vocabla.domain.Entry
-import solutions.s4y.vocabla.domain.identity.Identifier
-import zio.IO
+import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
+import zio.{ZIO, ZLayer, durationInt}
 
-private final class VocablaApp(
-    val transactionManager: TransactionManager,
-    val entryRepository: EntryRepository
-) extends CreateEntryUseCase:
+final class VocablaApp(
+    private val tm: TransactionManager,
+    private val entriesRepository: EntryRepository
+) extends PingUseCase: // , CreateEntryUseCase:
+  VocablaApp.logger.debug("Creating VocablaApp instance")
 
-  override def apply(
-      command: CreateEntryCommand
-  ): IO[String, Identifier[Entry]] =
-    transactionManager.withTransactionZIO { tx =>
-      entryRepository.createEntry(command.entry);
-    }
+  override def apply[R](
+      pingCommand: PingCommand
+  ): ZIO[Any, String, PingCommand.Response] =
+    ZIO
+      .succeed("PONG from VocablaApp: " + pingCommand.payload)
+      .delay(200.millis)
 
+end VocablaApp
+
+object VocablaApp:
+  val layer: ZLayer[Any, String, PingUseCase] =
+    InfraPgLive.layer >>> ZLayer.fromFunction(
+      new VocablaApp(_, _)
+    )
+
+  private val logger = LoggerFactory.getLogger(VocablaApp.getClass)
 end VocablaApp

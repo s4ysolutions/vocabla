@@ -1,31 +1,25 @@
 package solutions.s4y.vocabla.endpoint.http.rest
 
+import solutions.s4y.vocabla.app.ports.{PingCommand, PingUseCase}
 import zio.http.codec.HttpCodec
 import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
-import zio.http.{Method, Route}
-import zio.schema.annotation.validate
+import zio.http.{Method, Response, Route}
 import zio.schema.validation.Validation
 import zio.schema.{DeriveSchema, Schema}
 import zio.{ZIO, ZNothing, durationInt}
 
-case class PingRequest(
-    @validate(Validation.minLength(2)) payload: String
-)
-case class PingResponse(payload: String)
-
 object Ping:
-  val endpoint: Endpoint[Unit, PingRequest, ZNothing, PingResponse, None] =
+  val endpoint
+      : Endpoint[Unit, PingCommand, Nothing, PingCommand.Response, None] =
     Endpoint(Method.GET / prefix / "ping")
-      .query(HttpCodec.query[PingRequest])
-      .out[PingResponse]
+      .query(HttpCodec.query[PingCommand])
+      .out[PingCommand.Response]
 
-  val route: Route[Any, Nothing] =
+  val route: Route[PingUseCase, Response] =
     endpoint.implement(request =>
       ZIO
-        .sleep(200.millis)
-        .as(PingResponse(s"pong: ${request.payload}"))
+        .serviceWithZIO[PingUseCase](_(request))
+        .mapError(s => Exception(s))
+        .orDie
     )
-
-  private given Schema[PingRequest] = DeriveSchema.gen[PingRequest]
-  private given Schema[PingResponse] = DeriveSchema.gen[PingResponse]

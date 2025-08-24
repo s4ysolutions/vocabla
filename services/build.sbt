@@ -1,5 +1,7 @@
 import sbt.Keys.libraryDependencies
 
+import javax.xml.crypto.dsig.keyinfo.PGPData
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
 ThisBuild / scalaVersion := "3.7.1"
@@ -50,32 +52,6 @@ lazy val appPorts = (project in file("modules/app-ports"))
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
-lazy val app = (project in file("modules/app"))
-  .dependsOn(appPorts)
-  .dependsOn(appRepos)
-  .dependsOn(domain)
-  .settings(
-    name := "app"
-  )
-
-lazy val id = (project in file("modules/infra/id"))
-  .settings(
-    name := "id",
-    libraryDependencies += "dev.zio" %% "zio" % zioVersion
-  )
-
-lazy val mvStore = (project in file("modules/infra/mv-store"))
-  .dependsOn(zio)
-  .dependsOn(id)
-  .dependsOn(appRepos)
-  .dependsOn(domain)
-  .settings(
-    name := "mv-store",
-    libraryDependencies += "com.h2database" % "h2-mvstore" % "2.3.232",
-    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
-  )
-
 lazy val pgSQL = (project in file("modules/infra/pgsql"))
   .dependsOn(zio)
   .dependsOn(appRepos)
@@ -90,6 +66,33 @@ lazy val pgSQL = (project in file("modules/infra/pgsql"))
     libraryDependencies += "io.github.cdimascio" % "java-dotenv" % dotenvVersion % Test
   )
 
+lazy val app = (project in file("modules/app"))
+  .dependsOn(appPorts)
+  .dependsOn(appRepos)
+  .dependsOn(domain)
+  .dependsOn(pgSQL)
+  .settings(
+    name := "app"
+  )
+
+lazy val id = (project in file("modules/infra/id"))
+  .settings(
+    name := "id",
+    libraryDependencies += "dev.zio" %% "zio" % zioVersion
+  )
+/*
+lazy val mvStore = (project in file("modules/infra/mv-store"))
+  .dependsOn(zio)
+  .dependsOn(id)
+  .dependsOn(appRepos)
+  .dependsOn(domain)
+  .settings(
+    name := "mv-store",
+    libraryDependencies += "com.h2database" % "h2-mvstore" % "2.3.232",
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+  )
+ */
 lazy val lang = (project in file("modules/infra/lang"))
   .dependsOn(app)
   .settings(
@@ -99,6 +102,9 @@ lazy val lang = (project in file("modules/infra/lang"))
 lazy val rest =
   (project in file("modules/presentation/rest"))
     .dependsOn(zio)
+    .dependsOn(appPorts)
+    .dependsOn(pgSQL)
+    .dependsOn(lang)
     .settings(
       name := "rest",
       libraryDependencies += "dev.zio" %% "zio" % zioVersion,

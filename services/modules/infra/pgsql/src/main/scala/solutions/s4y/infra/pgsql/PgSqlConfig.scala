@@ -25,5 +25,6 @@ object PgSqlConfig:
       .to[PgSqlConfig]
 
   val layer: ZLayer[Any, Nothing, PgSqlConfig] = ZLayer.fromZIO(
-    ZIO.config(PgSqlConfig.pgSqlConfig).orDie
+    ZIO.logDebug("Loading PgSqlConfig") *>
+      ZIO.config(PgSqlConfig.pgSqlConfig).orDie
   )
