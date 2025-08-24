@@ -55,7 +55,7 @@ final class RESTService(
     _ <- for {
       _ <- server.install(routes)
       port <- server.port
-      _ <- ZIO.log(s"Server started on http://localhost: ${port}")
+      _ <- ZIO.log(s"Server started on http://localhost: $port")
       _ <- promise.succeed(())
       _ <- ZIO.never.fork
     } yield ()

@@ -1,12 +1,16 @@
 package solutions.s4y.vocabla.app.ports
 
 import zio.ZIO
-import zio.schema.{DeriveSchema, Schema}
-import zio.schema.annotation.validate
+import zio.schema.annotation.{description, validate}
 import zio.schema.validation.Validation
+import zio.schema.{DeriveSchema, Schema}
 
 final case class PingCommand(
-    @validate(Validation.minLength(2)) payload: String
+    @description(
+      "The payload message to echo back. Must be at least 2 characters long."
+    )
+    @validate(Validation.minLength(2))
+    payload: String
 )
 
 object PingCommand:

@@ -1,20 +1,31 @@
 package solutions.s4y.vocabla.endpoint.http.rest
 
 import solutions.s4y.vocabla.app.ports.{PingCommand, PingUseCase}
-import zio.http.codec.HttpCodec
+import zio.ZIO
+import zio.http.codec.{Doc, HttpCodec}
 import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
 import zio.http.{Method, Response, Route}
-import zio.schema.validation.Validation
-import zio.schema.{DeriveSchema, Schema}
-import zio.{ZIO, ZNothing, durationInt}
+import zio.schema.Schema
 
 object Ping:
   val endpoint
       : Endpoint[Unit, PingCommand, Nothing, PingCommand.Response, None] =
-    Endpoint(Method.GET / prefix / "ping")
-      .query(HttpCodec.query[PingCommand])
-      .out[PingCommand.Response]
+    Endpoint(
+      (Method.GET / prefix / "ping") ?? Doc.p(
+        "Diagnostic endpoint to check service health"
+      )
+    )
+      .query(
+        HttpCodec
+          .query[PingCommand]
+          .examples("example" -> PingCommand("a payload")) ?? Doc.p(
+          "The payload message to echo back. Must be at least 2 characters long."
+        )
+      )
+      .out[PingCommand.Response](Doc.p("The echoed payload")) ?? Doc.p(
+      "Ping endpoint that echoes back the provided payload"
+    )
 
   val route: Route[PingUseCase, Response] =
     endpoint.implement(request =>
