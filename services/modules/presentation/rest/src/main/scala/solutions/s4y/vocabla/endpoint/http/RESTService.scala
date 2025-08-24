@@ -2,8 +2,14 @@ package solutions.s4y.vocabla.endpoint.http
 
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp
-import solutions.s4y.vocabla.app.ports.PingUseCase
+import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
+import solutions.s4y.vocabla.endpoint.http.rest.auth.Authentication.bearerAuthWithContext
+import solutions.s4y.vocabla.endpoint.http.rest.auth.UserContext
+import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
+import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
+import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}
@@ -13,12 +19,22 @@ import scala.language.postfixOps
 
 final class RESTService(
     private val server: Server,
-    private val useCases: PingUseCase
-):
+    private val pingUseCase: PingUseCase,
+    private val createEntryUseCase: CreateEntryUseCase,
+    private val createTagUseCase: CreateTagUseCase,
+    private val getEntryUseCase: GetEntryUseCase,
+    private val getTagUseCase: GetTagUseCase
+)(using IdentifierSchema):
   RESTService.logger.debug("Creating RESTService instance")
 
   private val endpoints =
-    Seq(Ping.endpoint)
+    Seq(
+      Ping.endpoint,
+      CreateEntry.endpoint,
+      CreateTag.endpoint,
+      GetEntry.endpoint,
+      GetTag.endpoint
+    )
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
     title = "Vocabla API",
@@ -26,12 +42,19 @@ final class RESTService(
     endpoints
   )
 
-  private val restRoutes: Seq[Route[PingUseCase, Response]] =
-    Seq(Ping.route) // , Entries.route)
-
   private val corsConfig: CorsConfig = CorsConfig()
-  private val routes: Routes[PingUseCase, Response] =
-    (Routes.fromIterable(restRoutes)
+  private val routes: Routes[
+    PingUseCase & CreateEntryUseCase & CreateTagUseCase & GetEntryUseCase &
+      GetTagUseCase,
+    Response
+  ] =
+    (Routes(
+      Ping.route,
+      CreateEntry.route,
+      CreateTag.route,
+      GetEntry.route,
+      GetTag.route
+    )
       @@ Middleware.cors(
         corsConfig
       ) ++ SwaggerUI.routes(
@@ -44,7 +67,7 @@ final class RESTService(
         } else {
           LogLevel.Error
         }
-    )
+    ) @@ bearerAuthWithContext
 
   def start(): ZIO[
     Any,
@@ -59,7 +82,16 @@ final class RESTService(
       _ <- promise.succeed(())
       _ <- ZIO.never.fork
     } yield ()
-  } yield promise).provideEnvironment(ZEnvironment(useCases))
+  } yield promise)
+    .provideEnvironment(
+      ZEnvironment(
+        pingUseCase,
+        createEntryUseCase,
+        createTagUseCase,
+        getEntryUseCase,
+        getTagUseCase
+      )
+    )
 end RESTService
 
 object RESTService:
@@ -70,10 +102,23 @@ object RESTService:
           Server.default
             .mapError(th => th.getMessage)
             .map(server => app ++ server)
-      )
-      >>> ZLayer.fromFunction(
-        new RESTService(_, _)
-      )
+      ) >>> ZLayer.fromZIO(for {
+        server <- ZIO.service[Server]
+        pingUseCase <- ZIO.service[PingUseCase]
+        createEntryUseCase <- ZIO.service[CreateEntryUseCase]
+        createTagUseCase <- ZIO.service[CreateTagUseCase]
+        getEntryUseCase <- ZIO.service[GetEntryUseCase]
+        getTagUseCase <- ZIO.service[GetTagUseCase]
+        restService = new RESTService(
+          server,
+          pingUseCase,
+          createEntryUseCase,
+          createTagUseCase,
+          getEntryUseCase,
+          getTagUseCase
+        )
+        _ <- ZIO.logInfo("RESTService layer constructed")
+      } yield restService)
   }
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

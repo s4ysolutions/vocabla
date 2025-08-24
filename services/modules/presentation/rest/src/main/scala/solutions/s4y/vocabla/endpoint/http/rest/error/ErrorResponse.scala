@@ -1,13 +1,15 @@
 package solutions.s4y.vocabla.endpoint.http.rest.error
 
-import zio.schema.{DeriveSchema, Schema}
+import zio.schema.{Schema, derived}
 
 enum ErrorResponse:
   case ErrorService(message: String)
   case ErrorParseID(message: String)
   case ErrorUnknown(message: String)
+  case AuthenticationError(message: String)
 
 object ErrorResponse:
-  given Schema[ErrorService] = DeriveSchema.gen[ErrorService]
-  given Schema[ErrorParseID] = DeriveSchema.gen[ErrorParseID]
-  given Schema[ErrorUnknown] = DeriveSchema.gen[ErrorUnknown]
+  given Schema[ErrorService] = Schema.derived
+  given Schema[ErrorParseID] = Schema.derived
+  given Schema[ErrorUnknown] = Schema.derived
+  given Schema[AuthenticationError] = Schema.derived

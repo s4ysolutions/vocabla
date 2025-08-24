@@ -8,7 +8,6 @@ import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 import java.util.UUID
 
 object Main extends ZIOAppDefault:
-  given IdentifierSchema = IdentifierSchema[UUID]
 
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Unit] =
     consoleColorTraceLogger

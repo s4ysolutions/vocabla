@@ -16,6 +16,7 @@ object Ping:
         "Diagnostic endpoint to check service health"
       )
     )
+      .tag("Diagnostics")
       .query(
         HttpCodec
           .query[PingCommand]
