@@ -14,7 +14,7 @@ import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.entry.{Definition, Headword}
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Entry, Student}
+import solutions.s4y.vocabla.domain.{Entry, User}
 import zio.{Chunk, ZIO, ZLayer}
 
 class EntryRepositoryPg extends EntryRepository:
@@ -70,7 +70,7 @@ class EntryRepositoryPg extends EntryRepository:
         Entry(
           Headword(rs.getString(1), rs.getString(2)),
           definitions,
-          rs.getLong(4).identifier[Student]
+          rs.getLong(4).identifier[User.Student]
         )
       }
     )

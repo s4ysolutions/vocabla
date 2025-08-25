@@ -2,19 +2,21 @@ package solutions.s4y.vocabla.domain
 
 import solutions.s4y.vocabla.domain.identity.{Identified, IdentifierSchema}
 import zio.prelude.Equal
-import zio.schema.{DeriveSchema, Schema}
+import zio.schema.{Schema, derived}
 
-final case class Student(
-    nickname: String
-):
-  override def toString: String = s"Student: $nickname"
+final case class User(
+    admin: Option[User.Admin],
+    student: Option[User.Student]
+)
 
-object Student:
+object User:
+  final case class Admin(active: Boolean)
+  final case class Student(nickname: String)
+
+  given (using is: IdentifierSchema): Schema[Student] = Schema.derived
+
   given Equal[Student] =
     Equal.make((a, b) => a.nickname == b.nickname)
 
   given Equal[Identified[Student]] =
     Equal.make((a, b) => a.e.nickname == b.e.nickname)
-
-  given (using is: IdentifierSchema): Schema[Student] =
-    DeriveSchema.gen[Student]

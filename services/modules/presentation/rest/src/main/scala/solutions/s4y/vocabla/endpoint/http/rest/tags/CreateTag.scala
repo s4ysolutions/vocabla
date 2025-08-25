@@ -41,7 +41,7 @@ object CreateTag:
     endpoint.implement { request =>
       (for {
         uc <- ZIO.service[UserContext]
-        _ <- ZIO.logDebug("CreateTag called by user " + uc.userId)
+        _ <- ZIO.logDebug("CreateTag called by user " + uc.id)
         useCase <- ZIO.service[CreateTagUseCase]
         response <- useCase(CreateTagCommand(request.tag))
       } yield response).mapError(error => ErrorService(error))

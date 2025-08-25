@@ -3,7 +3,7 @@ package solutions.s4y.vocabla.app.ports
 import solutions.s4y.vocabla.app.ports
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import solutions.s4y.vocabla.domain.{Entry, Student, Tag}
+import solutions.s4y.vocabla.domain.{Entry, User, Tag}
 import zio.schema.annotation.{caseName, description, fieldName, recordName}
 import zio.schema.validation.Validation
 import zio.schema.{DeriveSchema, Schema}
@@ -18,7 +18,7 @@ final case class CreateEntryCommand(
     @description("IDs of tags to be associated with the entry.")
     tagIds: Chunk[Identifier[Tag]],
     @description("ID of the student who owns the entry.")
-    ownerId: Identifier[Student]
+    ownerId: Identifier[User.Student]
 )
 
 object CreateEntryCommand:

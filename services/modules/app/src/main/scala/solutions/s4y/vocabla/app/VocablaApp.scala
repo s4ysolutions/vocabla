@@ -1,29 +1,25 @@
 package solutions.s4y.vocabla.app
 
 import org.slf4j.LoggerFactory
-import solutions.s4y.vocabla.app.ports.{
-  CreateEntryCommand,
-  CreateEntryUseCase,
-  CreateTagCommand,
-  CreateTagUseCase,
-  GetEntryCommand,
-  GetEntryUseCase,
-  GetTagCommand,
-  GetTagUseCase,
-  PingCommand,
-  PingUseCase
-}
-import solutions.s4y.vocabla.app.repo.{EntryRepository, TagRepository}
+import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
-import solutions.s4y.vocabla.domain.identity.Identifier.given
+import solutions.s4y.vocabla.app.repo.{
+  EntryRepository,
+  TagRepository,
+  UserRepository
+}
+import solutions.s4y.vocabla.domain.User
+import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
 import zio.{ZIO, ZLayer, durationInt}
 
 final class VocablaApp(
     private val tm: TransactionManager,
+    private val userRepository: UserRepository,
     private val entriesRepository: EntryRepository,
     private val tagsRepository: TagRepository
 ) extends PingUseCase,
+      GetUserUseCase,
       CreateEntryUseCase,
       CreateTagUseCase,
       GetEntryUseCase,
@@ -56,24 +52,41 @@ final class VocablaApp(
   override def apply[R](
       command: GetEntryCommand
   ): ZIO[R, String, GetEntryCommand.Response] = tm.transaction {
-    for {
-      entry <- entriesRepository.get(command.entryId)
-    } yield GetEntryCommand.Response(entry)
+    entriesRepository
+      .get(command.entryId)
+      .map((entry => GetEntryCommand.Response(entry)))
   }
 
   override def apply[R](
       command: GetTagCommand
   ): ZIO[R, String, GetTagCommand.Response] = tm.transaction {
-    for {
-      tag <- tagsRepository.get(command.tagId)
-    } yield GetTagCommand.Response(tag)
+    tagsRepository
+      .get(command.tagId)
+      .map(tag => GetTagCommand.Response(tag))
   }
+
+  override def apply[R](
+      command: GetUserCommand
+  ): ZIO[R, String, GetUserCommand.Response] =
+    apply(command.userId).map(userOpt => GetUserCommand.Response(userOpt))
+
+  override def apply[R](
+      id: Identifier[User]
+  ): ZIO[R, String, Option[User]] = tm.transaction {
+    userRepository.get(id)
+  }
+
 end VocablaApp
 
 object VocablaApp:
-  val layer: ZLayer[Any, String, PingUseCase & CreateEntryUseCase & CreateTagUseCase & GetEntryUseCase & GetTagUseCase] =
+  val layer: ZLayer[
+    Any,
+    String,
+    PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
+      GetEntryUseCase & GetTagUseCase
+  ] =
     InfraPgLive.layer >>> ZLayer.fromFunction(
-      new VocablaApp(_, _, _)
+      new VocablaApp(_, _, _, _)
     )
 
   private val logger = LoggerFactory.getLogger(VocablaApp.getClass)

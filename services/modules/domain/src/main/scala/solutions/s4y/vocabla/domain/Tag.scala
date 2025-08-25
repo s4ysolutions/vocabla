@@ -6,11 +6,11 @@ import solutions.s4y.vocabla.domain.identity.{
   IdentifierSchema
 }
 import zio.prelude.Equal
-import zio.schema.{DeriveSchema, Schema}
+import zio.schema.{Schema, derived}
 
 final case class Tag(
-                      label: String,
-                      ownerId: Identifier[Student]
+    label: String,
+    ownerId: Identifier[User.Student]
 ):
   override def toString: String = s"Tag: $label"
 
@@ -21,4 +21,4 @@ object Tag:
   given Equal[Identified[Tag]] =
     Equal.make((a, b) => a.e.label == b.e.label)
 
-  given (using is: IdentifierSchema): Schema[Tag] = DeriveSchema.gen[Tag]
+  given (using is: IdentifierSchema): Schema[Tag] = Schema.derived

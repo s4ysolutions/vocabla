@@ -20,6 +20,7 @@ import scala.language.postfixOps
 final class RESTService(
     private val server: Server,
     private val pingUseCase: PingUseCase,
+    private val getUserUseCase: GetUserUseCase,
     private val createEntryUseCase: CreateEntryUseCase,
     private val createTagUseCase: CreateTagUseCase,
     private val getEntryUseCase: GetEntryUseCase,
@@ -44,30 +45,28 @@ final class RESTService(
 
   private val corsConfig: CorsConfig = CorsConfig()
   private val routes: Routes[
-    PingUseCase & CreateEntryUseCase & CreateTagUseCase & GetEntryUseCase &
-      GetTagUseCase,
+    PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
+      GetEntryUseCase & GetTagUseCase,
     Response
-  ] =
-    (Routes(
-      Ping.route,
-      CreateEntry.route,
-      CreateTag.route,
-      GetEntry.route,
-      GetTag.route
-    )
-      @@ Middleware.cors(
-        corsConfig
-      ) ++ SwaggerUI.routes(
-        "/openapi",
-        openAPI
-      )) @@ Middleware.requestLogging(level =
-      status =>
-        if (status.isSuccess) {
-          LogLevel.Info
-        } else {
-          LogLevel.Error
-        }
-    ) @@ bearerAuthWithContext
+  ] = {
+    (Routes(Ping.route)
+      ++
+        Routes(
+          CreateEntry.route,
+          CreateTag.route,
+          GetEntry.route,
+          GetTag.route
+        ) @@ bearerAuthWithContext) @@ Middleware.cors(corsConfig)
+      ++ SwaggerUI.routes("/openapi", openAPI) @@ Middleware
+        .requestLogging(level =
+          status =>
+            if (status.isSuccess) {
+              LogLevel.Info
+            } else {
+              LogLevel.Error
+            }
+        )
+  }
 
   def start(): ZIO[
     Any,
@@ -78,19 +77,18 @@ final class RESTService(
     _ <- for {
       _ <- server.install(routes)
       port <- server.port
-      _ <- ZIO.log(s"Server started on http://localhost: $port")
+      _ <- ZIO.log(s"Server started on http://localhost:$port")
       _ <- promise.succeed(())
       _ <- ZIO.never.fork
     } yield ()
   } yield promise)
     .provideEnvironment(
-      ZEnvironment(
-        pingUseCase,
-        createEntryUseCase,
-        createTagUseCase,
-        getEntryUseCase,
-        getTagUseCase
-      )
+      ZEnvironment(pingUseCase)
+        .add(getUserUseCase)
+        .add(createEntryUseCase)
+        .add(createTagUseCase)
+        .add(getEntryUseCase)
+        .add(getTagUseCase)
     )
 end RESTService
 
@@ -105,6 +103,7 @@ object RESTService:
       ) >>> ZLayer.fromZIO(for {
         server <- ZIO.service[Server]
         pingUseCase <- ZIO.service[PingUseCase]
+        getUserUseCase <- ZIO.service[GetUserUseCase]
         createEntryUseCase <- ZIO.service[CreateEntryUseCase]
         createTagUseCase <- ZIO.service[CreateTagUseCase]
         getEntryUseCase <- ZIO.service[GetEntryUseCase]
@@ -112,6 +111,7 @@ object RESTService:
         restService = new RESTService(
           server,
           pingUseCase,
+          getUserUseCase,
           createEntryUseCase,
           createTagUseCase,
           getEntryUseCase,

@@ -1,12 +1,17 @@
 package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.DataSourcePg
-import solutions.s4y.infra.pgsql.wrappers.{pgDelete, pgInsertWithId, pgSelectOne, pgUpdateOne}
+import solutions.s4y.infra.pgsql.wrappers.{
+  pgDelete,
+  pgInsertWithId,
+  pgSelectOne,
+  pgUpdateOne
+}
 import solutions.s4y.vocabla.app.repo.TagRepository
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Student, Tag}
+import solutions.s4y.vocabla.domain.{User, Tag}
 import zio.{ZIO, ZLayer}
 
 class TagRepositoryPg extends TagRepository:
@@ -47,7 +52,7 @@ class TagRepositoryPg extends TagRepository:
     pgSelectOne[Tag](
       "SELECT label, ownerId FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long]),
-      rs => Tag(rs.getString(1), rs.getLong(2).identifier[Student])
+      rs => Tag(rs.getString(1), rs.getLong(2).identifier[User.Student])
     )
 
 end TagRepositoryPg
