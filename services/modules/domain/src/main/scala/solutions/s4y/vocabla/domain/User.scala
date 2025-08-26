@@ -1,13 +1,19 @@
 package solutions.s4y.vocabla.domain
 
-import solutions.s4y.vocabla.domain.identity.{Identified, IdentifierSchema}
+import solutions.s4y.vocabla.domain.identity.{
+  Identified,
+  Identifier,
+  IdentifierSchema
+}
 import zio.prelude.Equal
 import zio.schema.{Schema, derived}
 
 final case class User(
     admin: Option[User.Admin],
     student: Option[User.Student]
-)
+):
+  val isAdmin: Boolean = admin.exists(_.active)
+  val isStudent: Boolean = student.isDefined
 
 object User:
   final case class Admin(active: Boolean)

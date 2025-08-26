@@ -7,8 +7,7 @@ import solutions.s4y.vocabla.app.repo.{
 }
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Entry, Student, Tag}
-import solutions.s4y.vocabla.domain.entry.{Definition, Headword}
+import solutions.s4y.vocabla.domain.{Definition, Entry, Headword, Student, Tag}
 import solutions.s4y.zio.consoleColorDebugLogger
 import zio.{Chunk, Scope, ZIO}
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}

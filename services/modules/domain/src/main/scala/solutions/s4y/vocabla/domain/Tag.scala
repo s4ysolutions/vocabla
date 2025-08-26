@@ -1,17 +1,14 @@
 package solutions.s4y.vocabla.domain
 
-import solutions.s4y.vocabla.domain.identity.{
-  Identified,
-  Identifier,
-  IdentifierSchema
-}
+import solutions.s4y.vocabla.domain.identity.{Identified, Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.owner.Owned
 import zio.prelude.Equal
 import zio.schema.{Schema, derived}
 
 final case class Tag(
     label: String,
     ownerId: Identifier[User.Student]
-):
+) extends Owned[User.Student]:
   override def toString: String = s"Tag: $label"
 
 object Tag:

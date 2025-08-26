@@ -1,6 +1,6 @@
 package solutions.s4y.vocabla.domain.identity
 
-import zio.prelude.{Equal, Equivalence}
+import zio.prelude.{Equal, EqualOps, Equivalence}
 import zio.schema.Schema
 
 trait Identifier[E]:
@@ -24,7 +24,9 @@ object Identifier:
     def identifier[E]: Identifier[E] = Identifier[E, I](internal)
 
   extension [E](identifier: Identifier[E])
-    def as[I]: I = identifier.internal.asInstanceOf[I]
+    def as[I] : I = identifier.internal.asInstanceOf[I]
+    def asIdentifier[E1]: Identifier[E1] =
+      Identifier[E1, identifier.ID](identifier.internal)
 
   given [E](using is: IdentifierSchema): Schema[Identifier[E]] =
     is.schema.transform[Identifier[E]](
@@ -32,8 +34,8 @@ object Identifier:
       (identity: Identifier[E]) => identity.as[is.ID]
     )
 
-  given [E, I: Equal](using eqi: Equal[I]): Equal[Identifier[E]] =
-    (a, b) => eqi.equal(a.as[I], b.as[I])
+  given [E, I: Equal]: Equal[Identifier[E]] =
+    Equal.make((a, b) => a.as[I] == b.as[I]) // TODO: === causes Cast error
 
   given [E, I]: Equivalence[Identifier[E], I] = Equivalence(
     (identity: Identifier[E]) => identity.as[I],

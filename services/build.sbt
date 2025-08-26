@@ -1,7 +1,5 @@
 import sbt.Keys.libraryDependencies
 
-import javax.xml.crypto.dsig.keyinfo.PGPData
-
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
 ThisBuild / scalaVersion := "3.7.1"
@@ -31,7 +29,8 @@ lazy val domain = (project in file("modules/domain"))
     name := "domain",
     libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
     libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
-    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
+    libraryDependencies += "org.scalameta" %% "munit" % "1.1.1" % Test
   )
 
 lazy val appRepos = (project in file("modules/app-repos"))

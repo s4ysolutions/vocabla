@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.app.ports
 
+import solutions.s4y.vocabla.app.ports.errors.InfraFailure
 import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
@@ -27,7 +28,7 @@ object GetUserCommand:
 trait GetUserUseCase:
   def apply[R](
       command: GetUserCommand
-  ): ZIO[R, String, GetUserCommand.Response]
+  ): ZIO[R, InfraFailure, GetUserCommand.Response]
   def apply[R](
       id: Identifier[User]
   ): ZIO[R, String, Option[User]]

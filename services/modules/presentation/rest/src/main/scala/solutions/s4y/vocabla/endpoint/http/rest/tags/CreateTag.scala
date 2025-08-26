@@ -1,19 +1,16 @@
 package solutions.s4y.vocabla.endpoint.http.rest.tags
 
+import solutions.s4y.vocabla.app.ports.errors.{InfraFailure, NotAuthorized}
 import solutions.s4y.vocabla.app.ports.{CreateTagCommand, CreateTagUseCase}
+import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.endpoint.http.rest.auth.UserContext
-import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse
-import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{
-  AuthenticationError,
-  ErrorService
-}
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.AuthenticationError
 import solutions.s4y.vocabla.endpoint.http.rest.prefix
 import zio.ZIO
+import zio.http.*
 import zio.http.Method.POST
 import zio.http.codec.HttpCodec
-import zio.http.endpoint.{AuthType, Endpoint}
-import zio.http.*
+import zio.http.endpoint.{AuthType, Endpoint, orOutError}
 
 object CreateTag:
 
@@ -22,27 +19,26 @@ object CreateTag:
   ): Endpoint[
     Unit,
     CreateTagCommand,
-    ErrorResponse,
+    InfraFailure | NotAuthorized | AuthenticationError,
     CreateTagCommand.Response,
     AuthType.Bearer.type
   ] = Endpoint(POST / prefix / "tags")
     .tag("Tags")
     .in[CreateTagCommand]
     .out[CreateTagCommand.Response]
-    .outErrors[ErrorResponse](
-      HttpCodec.error[ErrorService](Status.InternalServerError),
-      HttpCodec.error[AuthenticationError](Status.Unauthorized)
-    )
+    .outError[InfraFailure](Status.InternalServerError)
+    .orOutError[NotAuthorized](Status.Forbidden)
+    .orOutError[AuthenticationError](Status.Unauthorized)
     .auth(AuthType.Bearer)
 
   def route(using
       IdentifierSchema
   ): Route[CreateTagUseCase & UserContext, Response] =
     endpoint.implement { request =>
-      (for {
+      for {
         uc <- ZIO.service[UserContext]
         _ <- ZIO.logDebug("CreateTag called by user " + uc.id)
         useCase <- ZIO.service[CreateTagUseCase]
         response <- useCase(CreateTagCommand(request.tag))
-      } yield response).mapError(error => ErrorService(error))
+      } yield response
     }

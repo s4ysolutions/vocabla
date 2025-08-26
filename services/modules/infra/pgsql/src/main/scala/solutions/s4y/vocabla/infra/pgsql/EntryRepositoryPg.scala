@@ -11,9 +11,9 @@ import solutions.s4y.infra.pgsql.wrappers.{
 }
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
-import solutions.s4y.vocabla.domain.entry.{Definition, Headword}
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
+import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
 import solutions.s4y.vocabla.domain.{Entry, User}
 import zio.{Chunk, ZIO, ZLayer}
 

@@ -3,10 +3,10 @@ package solutions.s4y.vocabla.endpoint.http
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
-import solutions.s4y.vocabla.endpoint.http.rest.auth.Authentication.bearerAuthWithContext
-import solutions.s4y.vocabla.endpoint.http.rest.auth.UserContext
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.Authentication.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
 import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.schema.given

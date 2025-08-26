@@ -2,14 +2,15 @@ package solutions.s4y.vocabla.app
 
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.app.ports.errors.{InfraFailure, NotAuthorized}
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
 import solutions.s4y.vocabla.app.repo.{
   EntryRepository,
   TagRepository,
   UserRepository
 }
-import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier
+import solutions.s4y.vocabla.domain.{AuthorizationService, User, UserContext}
 import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
 import zio.{ZIO, ZLayer, durationInt}
 
@@ -43,18 +44,27 @@ final class VocablaApp(
 
   override def apply[R](
       command: CreateTagCommand
-  ): ZIO[R, String, CreateTagCommand.Response] = tm.transaction {
-    for {
-      tagId <- tagsRepository.create(command.tag)
-    } yield CreateTagCommand.Response(tagId)
-  }
+  ): ZIO[
+    R & UserContext,
+    InfraFailure | NotAuthorized,
+    CreateTagCommand.Response
+  ] = for {
+    _ <- ZIO.serviceWithZIO[UserContext](
+      AuthorizationService
+        .canCreateTag(command.tag, _)
+        .fold(errors => ZIO.fail(NotAuthorized(errors)), _ => ZIO.unit)
+    )
+    tagId <- tm
+      .transaction { tagsRepository.create(command.tag) }
+      .mapError(e => InfraFailure(e))
+  } yield CreateTagCommand.Response(tagId)
 
   override def apply[R](
       command: GetEntryCommand
   ): ZIO[R, String, GetEntryCommand.Response] = tm.transaction {
     entriesRepository
       .get(command.entryId)
-      .map((entry => GetEntryCommand.Response(entry)))
+      .map(entry => GetEntryCommand.Response(entry))
   }
 
   override def apply[R](
@@ -67,8 +77,11 @@ final class VocablaApp(
 
   override def apply[R](
       command: GetUserCommand
-  ): ZIO[R, String, GetUserCommand.Response] =
-    apply(command.userId).map(userOpt => GetUserCommand.Response(userOpt))
+  ): ZIO[R, InfraFailure, GetUserCommand.Response] =
+    apply(command.userId).mapBoth(
+      e => InfraFailure(e),
+      userOpt => GetUserCommand.Response(userOpt)
+    )
 
   override def apply[R](
       id: Identifier[User]
