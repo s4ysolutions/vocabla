@@ -7,7 +7,7 @@ import solutions.s4y.vocabla.domain.{User, UserContext}
 import zio.ZIO
 import zio.http.*
 
-object Authentication:
+object BearerUserContext:
   val bearerAuthWithContext: HandlerAspect[GetUserUseCase, UserContext] =
     HandlerAspect.interceptIncomingHandler(Handler.fromFunctionZIO[Request] {
       request =>
@@ -46,4 +46,4 @@ object Authentication:
               .contentType(MediaType.text.plain)
         }
     })
-end Authentication
+end BearerUserContext
