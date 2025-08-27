@@ -24,7 +24,7 @@ object Identifier:
     def identifier[E]: Identifier[E] = Identifier[E, I](internal)
 
   extension [E](identifier: Identifier[E])
-    def as[I] : I = identifier.internal.asInstanceOf[I]
+    def as[I]: I = identifier.internal.asInstanceOf[I]
     def asIdentifier[E1]: Identifier[E1] =
       Identifier[E1, identifier.ID](identifier.internal)
 
@@ -35,9 +35,11 @@ object Identifier:
     )
 
   given [E, I: Equal]: Equal[Identifier[E]] =
-    Equal.make((a, b) => a.as[I] == b.as[I]) // TODO: === causes Cast error
+    Equal.make((a, b) =>
+      a.internal == b.internal
+    ) // .asInstanceOf[a.ID] ) // TODO: === causes Cast error
 
   given [E, I]: Equivalence[Identifier[E], I] = Equivalence(
-    (identity: Identifier[E]) => identity.as[I],
+    (identifier: Identifier[E]) => identifier.as[I],
     (id: I) => Identifier[E, I](id)
   )
