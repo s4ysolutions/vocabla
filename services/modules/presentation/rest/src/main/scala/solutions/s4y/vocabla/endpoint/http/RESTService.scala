@@ -6,7 +6,8 @@ import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.Authentication.bearerAuthWithContext
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.BearerUserContext.bearerAuthWithContext
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.browserLocale
 import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
 import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.schema.given
@@ -56,7 +57,9 @@ final class RESTService(
           CreateTag.route,
           GetEntry.route,
           GetTag.route
-        ) @@ bearerAuthWithContext) @@ Middleware.cors(corsConfig)
+        ) @@ bearerAuthWithContext) @@ Middleware.cors(
+      corsConfig
+    ) @@ browserLocale
       ++ SwaggerUI.routes("/openapi", openAPI) @@ Middleware
         .requestLogging(level =
           status =>
