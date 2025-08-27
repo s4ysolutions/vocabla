@@ -2,7 +2,7 @@ import sbt.Keys.libraryDependencies
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
-ThisBuild / scalaVersion := "3.7.1"
+ThisBuild / scalaVersion := "3.7.2"
 
 val zioVersion = "2.1.20"
 val zioConfigVersion = "4.0.4"
@@ -11,8 +11,16 @@ val zioLoggingVersion = "2.5.1"
 val zioPreludeVersion = "1.0.0-RC41"
 val zioSchemaVersion = "1.7.4"
 val dotenvVersion = "5.2.2"
+val munitVersion = "1.1.1"
 
 Test / testOptions += Tests.Argument("-v")
+
+lazy val i18n = (project in file("modules/i18n"))
+  .settings(
+    name := "i18n",
+    libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
+    libraryDependencies += "org.scalameta" %% "munit" % munitVersion % Test
+  )
 
 lazy val zio = (project in file("modules/zio"))
   .settings(
@@ -30,7 +38,7 @@ lazy val domain = (project in file("modules/domain"))
     libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
     libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
-    libraryDependencies += "org.scalameta" %% "munit" % "1.1.1" % Test
+    libraryDependencies += "org.scalameta" %% "munit" % munitVersion % Test
   )
 
 lazy val appRepos = (project in file("modules/app-repos"))
