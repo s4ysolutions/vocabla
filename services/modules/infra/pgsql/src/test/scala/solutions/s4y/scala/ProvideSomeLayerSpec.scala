@@ -1,7 +1,7 @@
 package solutions.s4y.scala
 
-import zio.{ZIO, ZLayer}
-import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.{Scope, ZIO, ZLayer}
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
 
 val sut =
   for {
@@ -18,7 +18,7 @@ val sut =
   } yield (a, b, a2)
 
 object ProvideSomeLayerSpec extends ZIOSpecDefault {
-  def spec = suite("ProvideSomeLayerSpec")(
+  def spec: Spec[TestEnvironment & Scope, Any] = suite("ProvideSomeLayerSpec")(
     test("provideSomeLayer should handle nested layers correctly") {
       sut
         .provideSomeLayer(

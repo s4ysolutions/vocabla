@@ -3,11 +3,11 @@ package solutions.s4y.vocabla.app.ports
 import solutions.s4y.vocabla.app.ports
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import solutions.s4y.vocabla.domain.{Entry, User, Tag}
+import solutions.s4y.vocabla.domain.{Entry, Tag, User, UserContext}
 import zio.schema.annotation.{caseName, description, fieldName, recordName}
 import zio.schema.validation.Validation
 import zio.schema.{DeriveSchema, Schema}
-import zio.{Chunk, ZIO}
+import zio.{Chunk, IO, ZIO}
 
 @description("Command to create a new vocabulary entry.")
 final case class CreateEntryCommand(
@@ -35,6 +35,6 @@ object CreateEntryCommand:
 
 @description("Use case for creating a new vocabulary entry.")
 trait CreateEntryUseCase:
-  def apply[R](
+  def apply(
       command: CreateEntryCommand
-  ): ZIO[R, String, CreateEntryCommand.Response]
+  ): IO[String, CreateEntryCommand.Response]

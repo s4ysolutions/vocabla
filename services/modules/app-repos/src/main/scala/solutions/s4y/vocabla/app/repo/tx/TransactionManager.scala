@@ -2,7 +2,7 @@ package solutions.s4y.vocabla.app.repo.tx
 
 import zio.{IO, ZIO}
 
-trait TransactionManager:
+trait TransactionManager[TR <: Transaction, TX <: TransactionContext]:
   def transaction[R, A](
-      zio: ZIO[R & TransactionContext, String, A]
+      unitOfWork: ZIO[R & TR & TX, String, A]
   ): ZIO[R, String, A]

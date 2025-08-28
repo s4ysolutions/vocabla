@@ -1,16 +1,11 @@
 package solutions.s4y.vocabla.infra.pgsql
 
-import solutions.s4y.vocabla.app.repo.{
-  EntryRepository,
-  TagAssociationRepository,
-  TagRepository
-}
-import solutions.s4y.vocabla.app.repo.tx.TransactionManager
+import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
+import solutions.s4y.vocabla.domain.*
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Definition, Entry, Headword, Student, Tag}
 import solutions.s4y.zio.consoleColorDebugLogger
-import zio.{Chunk, Scope, ZIO}
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.{Chunk, Scope, ZIO}
 
 object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
 
@@ -19,20 +14,22 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
       suite("Tag-Entry Associations")(
         test("associate tag with entry") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create a tag and entry first
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[Student]))
+                tagId <- tagRepo.create(
+                  Tag("Test Tag", 1L.identifier[User.Student])
+                )
                 entryId <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry", "en"),
-                    Chunk(Definition("Test Definition", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry", "en"),
+                    Chunk(Entry.Definition("Test Definition", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 
@@ -44,20 +41,20 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("get tags for entry") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             tags <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and entry
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[Student]))
+                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
                 entryId <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry", "en"),
-                    Chunk(Definition("Test Definition", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry", "en"),
+                    Chunk(Entry.Definition("Test Definition", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 
@@ -75,20 +72,20 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("get tagged entries for tag") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             entryIds <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and entry
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[Student]))
+                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
                 entryId <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry", "en"),
-                    Chunk(Definition("Test Definition", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry", "en"),
+                    Chunk(Entry.Definition("Test Definition", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 
@@ -105,20 +102,20 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("disassociate tag from entry") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create and associate
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[Student]))
+                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
                 entryId <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry", "en"),
-                    Chunk(Definition("Test Definition", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry", "en"),
+                    Chunk(Entry.Definition("Test Definition", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
                 _ <- assocRepo.associateTagWithEntry(tagId, entryId)
@@ -134,27 +131,27 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("disassociate tag from all entries") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and multiple entries
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[Student]))
+                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
                 entryId1 <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry 1", "en"),
-                    Chunk(Definition("Test Definition 1", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry 1", "en"),
+                    Chunk(Entry.Definition("Test Definition 1", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
                 entryId2 <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry 2", "en"),
-                    Chunk(Definition("Test Definition 2", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry 2", "en"),
+                    Chunk(Entry.Definition("Test Definition 2", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 
@@ -173,25 +170,25 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("disassociate entry from all tags") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create multiple tags and one entry
                 tagId1 <- tagRepo.create(
-                  Tag("Test Tag 1", 1L.identifier[Student])
+                  Tag("Test Tag 1", 1L.identifier[User.Student])
                 )
                 tagId2 <- tagRepo.create(
-                  Tag("Test Tag 2", 1L.identifier[Student])
+                  Tag("Test Tag 2", 1L.identifier[User.Student])
                 )
                 entryId <- entryRepo.create(
                   Entry(
-                    Headword("Test Entry", "en"),
-                    Chunk(Definition("Test Definition", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Test Entry", "en"),
+                    Chunk(Entry.Definition("Test Definition", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 
@@ -210,28 +207,28 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         },
         test("multiple associations work correctly") {
           for {
-            transactionManager <- ZIO.service[TransactionManager]
+            transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
               for {
-                tagRepo <- ZIO.service[TagRepository]
-                entryRepo <- ZIO.service[EntryRepository]
-                assocRepo <- ZIO.service[TagAssociationRepository[Entry]]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                entryRepo <- ZIO.service[EntryRepositoryPg]
+                assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create 2 tags and 2 entries
-                tagId1 <- tagRepo.create(Tag("Tag 1", 1L.identifier[Student]))
-                tagId2 <- tagRepo.create(Tag("Tag 2", 1L.identifier[Student]))
+                tagId1 <- tagRepo.create(Tag("Tag 1", 1L.identifier[User.Student]))
+                tagId2 <- tagRepo.create(Tag("Tag 2", 1L.identifier[User.Student]))
                 entryId1 <- entryRepo.create(
                   Entry(
-                    Headword("Entry 1", "en"),
-                    Chunk(Definition("Definition 1", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Entry 1", "en"),
+                    Chunk(Entry.Definition("Definition 1", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
                 entryId2 <- entryRepo.create(
                   Entry(
-                    Headword("Entry 2", "en"),
-                    Chunk(Definition("Definition 2", "en")),
-                    1L.identifier[Student]
+                    Entry.Headword("Entry 2", "en"),
+                    Chunk(Entry.Definition("Definition 2", "en")),
+                    1L.identifier[User.Student]
                   )
                 )
 

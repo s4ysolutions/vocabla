@@ -1,11 +1,11 @@
 package solutions.s4y.vocabla.app.repo
 
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
+import solutions.s4y.vocabla.app.repo.tx.{Transaction, TransactionContext}
 import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier
 import zio.ZIO
 
-trait UserRepository:
+trait UserRepository[TR <: Transaction, TX <: TransactionContext]:
   /*
   def create(
       student: Student
@@ -20,4 +20,4 @@ trait UserRepository:
    */
   def get(
       userId: Identifier[User]
-  ): ZIO[TransactionContext, String, Option[User]]
+  ): ZIO[TR & TX, String, Option[User]]

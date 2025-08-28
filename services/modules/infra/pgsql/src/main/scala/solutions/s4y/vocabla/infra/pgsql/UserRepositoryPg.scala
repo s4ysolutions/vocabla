@@ -1,17 +1,19 @@
 package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.DataSourcePg
+import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionPg}
 import solutions.s4y.infra.pgsql.wrappers.pgSelectOne
 import solutions.s4y.vocabla.app.repo.UserRepository
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier
 import zio.{ZIO, ZLayer}
 
-class UserRepositoryPg extends UserRepository:
+class UserRepositoryPg
+    extends UserRepository[TransactionPg, TransactionContextPg]:
+
   override def get(
       userId: Identifier[User]
-  ): ZIO[TransactionContext, String, Option[User]] =
+  ): ZIO[TransactionContextPg, String, Option[User]] =
     pgSelectOne[User](
       "SELECT student, admin FROM users WHERE id = ?",
       st => st.setLong(1, userId.as[Long]),
@@ -56,7 +58,7 @@ object UserRepositoryPg:
     )"""
   )
 
-  val layer: ZLayer[DataSourcePg, String, UserRepository] =
+  val layer: ZLayer[DataSourcePg, String, UserRepositoryPg] =
     ZLayer {
       ZIO
         .serviceWithZIO[DataSourcePg] { ds =>

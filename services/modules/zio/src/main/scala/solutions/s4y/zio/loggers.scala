@@ -40,7 +40,7 @@ val consoleColorTraceLogger = Runtime.removeDefaultLoggers >>>
   )
 
 val consoleColorDebugLogger = Runtime.removeDefaultLoggers >>>
-  Slf4jBridge.init() >>>
+  Slf4jBridge.init().orDie >>>
   consoleLogger(
     ConsoleLoggerConfig(colorFormat, LogLevelByNameConfig(LogLevel.Debug))
   )

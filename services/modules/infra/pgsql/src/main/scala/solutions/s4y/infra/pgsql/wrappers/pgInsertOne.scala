@@ -1,5 +1,6 @@
 package solutions.s4y.infra.pgsql.wrappers
 
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
@@ -14,7 +15,7 @@ import java.sql.{PreparedStatement, Statement}
 def pgInsertOne[T](
     sql: String,
     setParams: PreparedStatement => Unit
-): ZIO[TransactionContext, String, Boolean] =
+): ZIO[TransactionContextPg, String, Boolean] =
   pgWithConnection { connection =>
     ZIO.scoped {
       for {

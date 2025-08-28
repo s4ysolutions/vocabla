@@ -7,4 +7,6 @@ class Connection(val id: String) {
   def setAutoCommit(autoCommit: Boolean): Unit = ()
   def commit(): Unit = ()
   def rollback(): Unit = ()
+
+  override def toString: String = "conn"
 }

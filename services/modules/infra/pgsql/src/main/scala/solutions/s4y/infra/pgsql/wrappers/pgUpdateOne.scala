@@ -1,5 +1,6 @@
 package solutions.s4y.infra.pgsql.wrappers
 
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import zio.ZIO
 
@@ -7,8 +8,8 @@ import java.sql.PreparedStatement
 
 /** Executes an update statement that affects one row in the database. This
   * function is typically used for operations like updating a single record.
-  * Usage: pgDelete("UPDATE table SET col1 = ? WHERE id = ?",
-  * _.setString(1, "newValue").setLong(2, 123L))
+  * Usage: pgDelete("UPDATE table SET col1 = ? WHERE id = ?", _.setString(1,
+  * "newValue").setLong(2, 123L))
   * @param sql
   *   SQL statement to execute, typically an UPDATE
   * @param setParams
@@ -20,7 +21,7 @@ import java.sql.PreparedStatement
 def pgUpdateOne(
     sql: String,
     setParams: PreparedStatement => Unit
-): ZIO[TransactionContext, String, Unit] =
+): ZIO[TransactionContextPg, String, Unit] =
   pgWithConnection { connection =>
     ZIO.scoped {
       for {

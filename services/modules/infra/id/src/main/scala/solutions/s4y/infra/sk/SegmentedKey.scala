@@ -12,7 +12,7 @@ class SegmentedKey(val id: String):
   def ::[T](value: T)(using toSegment: ToSegment[T]): SegmentedKey =
     SegmentedKey(s"${toSegment(value)}${SegmentedKey.delimiter}$id")
 
-object SegmentedKey:
+private object SegmentedKey:
   private[infra] val delimiter: String = ":"
 
   given [T: ToSegment]: Conversion[T, SegmentedKey] with

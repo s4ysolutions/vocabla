@@ -1,19 +1,19 @@
 package solutions.s4y.vocabla.app.repo
 
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
+import solutions.s4y.vocabla.app.repo.tx.{Transaction, TransactionContext}
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.Identifier
-import zio.{IO, ZIO}
+import zio.ZIO
 
-trait EntryRepository:
+trait EntryRepository[TR <: Transaction, TX <: TransactionContext]:
   def create(
       entry: Entry
-  ): ZIO[TransactionContext, String, Identifier[Entry]]
+  ): ZIO[TR & TX, String, Identifier[Entry]]
 
   def get(
       entryId: Identifier[Entry]
-  ): ZIO[TransactionContext, String, Option[Entry]]
+  ): ZIO[TR & TX, String, Option[Entry]]
 
   def delete(
       entryId: Identifier[Entry]
-  ): ZIO[TransactionContext, String, Boolean]
+  ): ZIO[TR & TX, String, Boolean]

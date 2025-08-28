@@ -1,101 +1,112 @@
 package solutions.s4y.infra.pgsql.architecture
 
-import zio.test.{Assertion, ZIOSpecDefault, assert}
-import zio.{UIO, ZIO, ZLayer}
+import solutions.s4y.infra.pgsql.architecture
+import zio.test.{Assertion, Spec, ZIOSpecDefault, assert}
+import zio.{IO, ULayer, ZIO, ZLayer}
 
 import scala.language.postfixOps
 
-trait TransactionManager:
-  def transaction[R, E, A](
-      zio: ZIO[R & TransactionContext, Throwable, A]
-  ): ZIO[R, Throwable, A]
+trait Transaction:
+  def rollback(): Unit
 
-case class TransactionContext(connection: Connection):
-  override def toString: String = "tx"
+class TestTransaction(private val connection: Connection) extends Transaction:
+  override def rollback(): Unit = connection.rollback()
 
-object TransactionManager:
-  val postgres: ZLayer[DataSource, Throwable, TransactionManager] =
-    ZLayer.fromFunction((ds: DataSource) =>
-      new TransactionManager:
-        def transaction[R, E, A](
-            zio: ZIO[R & TransactionContext, Throwable, A]
-        ): ZIO[R, Throwable, A] =
-          ZIO.scoped {
-            ZIO
-              .acquireRelease(
-                ZIO
-                  .attempt {
-                    val conn = ds.getConnection
-                    conn.setAutoCommit(false)
-                    TransactionContext(conn)
-                  }
-              )(tx => ZIO.attempt(tx.connection.close()).orDie)
-              .flatMap(tx =>
-                zio
-                  .provideSomeLayer(ZLayer.succeed(tx))
-                  .tapBoth(
-                    err => ZIO.attempt(tx.connection.rollback()).orDie,
-                    _ => ZIO.attempt(tx.connection.commit()).orDie
-                  )
-              )
-          }
-    )
-trait TestRepository:
-  def findById(id: String): ZIO[TransactionContext, Throwable, Option[String]]
+trait TransactionContext
+
+case class TestTransactionContext(connection: Connection)
+    extends TransactionContext:
+  override def toString: String = "txImpl"
+
+trait TransactionManager[T <: Transaction, TX <: TransactionContext]:
+  def transaction[E, A](
+      zio: ZIO[T & TX, Throwable, A]
+  ): IO[Throwable, A]
+
+class TestTransactionManager(private val ds: DataSource)
+    extends TransactionManager[TestTransaction, TestTransactionContext]:
+  override def transaction[E, A](
+      zio: ZIO[TestTransaction & TestTransactionContext, Throwable, A]
+  ): IO[Throwable, A] =
+    ZIO.scoped {
+      ZIO
+        .acquireRelease(
+          ZIO
+            .attempt {
+              val conn = ds.getConnection
+              conn.setAutoCommit(false)
+              (TestTransactionContext(conn), TestTransaction(conn))
+            }
+        )(t => ZIO.attempt(t._1.connection.close()).orDie)
+        .flatMap(t =>
+          zio
+            .provideSomeLayer(ZLayer.succeed(t._1))
+            .provideSomeLayer(ZLayer.succeed(t._2))
+            .tapBoth(
+              err => ZIO.attempt(t._2.rollback()).orDie,
+              _ => ZIO.attempt(t._1.connection.commit()).orDie
+            )
+        )
+    }
+
+object TestTransactionManager:
+  val live: ZLayer[DataSource, Nothing, TestTransactionManager] =
+    ZLayer.fromFunction(new TestTransactionManager(_))
+
+trait Repository[T <: Transaction, TX <: TransactionContext]:
+  def findById(
+      id: String
+  ): ZIO[T & TX, Throwable, Option[String]]
+
+class TestRepository
+    extends Repository[TestTransaction, TestTransactionContext]:
+  override def findById(
+      id: String
+  ): ZIO[TestTransactionContext, Throwable, Option[String]] =
+    for {
+      tx <- ZIO.service[TestTransactionContext] // { _.connection }
+      result <- ZIO.succeed {
+        Option(s"Record with id: $id within $tx by ${tx.connection}")
+      }
+    } yield result
 
 object TestRepository:
-  val live2: ZLayer[Any, Nothing, TestRepository] =
-    ZLayer.succeed(
-      new TestRepository:
-        override def findById(id: String): UIO[Option[String]] =
-          for {
-            conn <- ZIO.environmentWith[Any] { env =>
-              zio.Unsafe.unsafe { unsafe =>
-                env.unsafe.get[Connection](zio.Tag[Connection].tag)(using
-                  unsafe
-                )
-              }
-            }
-            result <- ZIO.succeed {
-              Option(s"Record with id: $id $conn")
-            }
-          } yield result
-    )
-  val live: ZLayer[Any, Nothing, TestRepository] =
-    ZLayer.succeed(
-      new TestRepository:
-        override def findById(
-            id: String
-        ): ZIO[TransactionContext, Throwable, Option[String]] =
-          for {
-            tx <- ZIO.service[TransactionContext] // { _.connection }
-            result <- ZIO.succeed {
-              Option(s"Record with id: $id $tx")
-            }
-          } yield result
-    )
+  val live: ULayer[TestRepository] = ZLayer.succeed(new TestRepository())
 
-val testUseCase
-    : ZIO[TransactionManager & TestRepository, Throwable, Option[String]] =
-  for {
-    tm <- ZIO.service[TransactionManager]
-    result <- tm.transaction {
-      for {
-        repo <- ZIO.service[TestRepository]
-        res <- repo.findById("test-id")
-      } yield res
+trait UseCase:
+  def apply(): IO[Throwable, Option[String]]
+
+class TestUseCase[T <: Transaction, TX <: TransactionContext](
+    val tm: TransactionManager[T, TX],
+    val repository: Repository[T, TX]
+) extends UseCase:
+  def apply(): IO[Throwable, Option[String]] =
+    tm.transaction {
+      repository.findById("test-id")
     }
-  } yield result
+
+object TestUseCase:
+  type T = TestTransaction
+  type TX = TestTransactionContext
+  val live: ZLayer[
+    TransactionManager[T, TX] & Repository[T, TX],
+    Nothing,
+    TestUseCase[T, TX]
+  ] =
+    ZLayer.fromFunction(new TestUseCase[T, TX](_, _))
 
 object ArchitectureSpec extends ZIOSpecDefault:
-  override def spec =
+  override def spec: Spec[Any, Throwable] =
     suite("ArchitectureSpec")(
       test("Can create a transaction") {
         for {
-          result <- testUseCase
+          useCase <- ZIO.service[UseCase]
+          result <- useCase()
           _ <- ZIO.debug(s"Result: $result")
-        } yield assert(result)(Assertion.equalTo(Some("Record with id: test-id tx")))
+        } yield assert(result)(
+          Assertion.equalTo(Some("Record with id: test-id within txImpl by conn"))
+        )
       }
-    ).provide(
-      DataSource.live >>> TransactionManager.postgres ++ TestRepository.live
-    )
+    ).provide {
+      (DataSource.live >>> TestTransactionManager.live ++ TestRepository.live) >>> TestUseCase.live
+    }

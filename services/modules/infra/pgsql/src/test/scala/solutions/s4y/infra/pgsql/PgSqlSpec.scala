@@ -2,13 +2,10 @@ package solutions.s4y.infra.pgsql
 
 import io.github.cdimascio.dotenv.{Dotenv, DotenvBuilder}
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
-import solutions.s4y.vocabla.app.repo.tx.{
-  TransactionContext,
-  TransactionManager
-}
+import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
 import zio.test.Assertion.equalTo
-import zio.test.{TestAspect, TestSystem, ZIOSpecDefault, assert, assertTrue}
-import zio.{ZIO, ZLayer}
+import zio.test.{Spec, TestAspect, TestEnvironment, TestSystem, ZIOSpecDefault, assert, assertTrue}
+import zio.{Scope, ZIO, ZLayer}
 
 import java.sql.{Connection, DriverManager, Statement}
 import java.util.Properties
@@ -16,7 +13,7 @@ import scala.util.Using
 
 object PgSqlSpec extends ZIOSpecDefault {
 
-  override def spec = suite("org.postgresql\" % \"postgresql")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("org.postgresql\" % \"postgresql")(
     suite("Connection") {
       test("connect to test database") {
         for {
@@ -74,15 +71,14 @@ object PgSqlSpec extends ZIOSpecDefault {
             st.close()
             result
           }
-        } yield assert(rs1)(equalTo(Seq("example", "example2"))) &&
-          assert(rs2)(equalTo(Seq("example")))
+        } yield assertTrue(rs1 == Seq("example", "example2"), rs2 == Seq("example"))
       }
       // test("") {}
     }.provideLayer(dataConnectionLayer),
     suite("TransactionContext")(
       test("TransactionManager is available") {
         for {
-          transactionManager <- ZIO.service[TransactionManager]
+          transactionManager <- ZIO.service[TransactionManagerPg]
           _ <- ZIO.attempt(transactionManager.transaction(ZIO.unit))
         } yield assertTrue(
           transactionManager.isInstanceOf[TransactionManagerPg]
@@ -90,7 +86,7 @@ object PgSqlSpec extends ZIOSpecDefault {
       },
       test("TransactionManager provides transaction context") {
         for {
-          transactionManager <- ZIO.service[TransactionManager]
+          transactionManager <- ZIO.service[TransactionManagerPg]
           tx <- transactionManager.transaction {
             ZIO.service[TransactionContext]
           }
@@ -135,12 +131,12 @@ object PgSqlSpec extends ZIOSpecDefault {
         TransactionManagerPg(dataSourcePg)
       })
 
-  private def populateDatasource(dataSourcePg: DataSourcePg) = {
+  private def populateDatasource(dataSourcePg: DataSourcePg): Unit = {
     val connection = dataSourcePg.dataSource.getConnection
     populateConnection(connection)
   }
 
-  private def populateConnection(connection: Connection) = {
+  private def populateConnection(connection: Connection): Unit = {
     try {
       val statement = connection.createStatement()
       statement.execute("CREATE SCHEMA IF NOT EXISTS vocabla_test")

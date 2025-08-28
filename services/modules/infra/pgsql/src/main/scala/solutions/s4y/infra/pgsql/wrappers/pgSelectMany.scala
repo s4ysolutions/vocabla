@@ -1,5 +1,6 @@
 package solutions.s4y.infra.pgsql.wrappers
 
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.zio.e
 import zio.{Chunk, ZIO}
@@ -10,7 +11,7 @@ def pgSelectMany[A](
     sql: String,
     setParams: java.sql.PreparedStatement => Unit,
     mapResult: java.sql.ResultSet => A
-): ZIO[TransactionContext, String, Chunk[A]] = pgWithConnection { connection =>
+): ZIO[TransactionContextPg, String, Chunk[A]] = pgWithConnection { connection =>
   ZIO.scoped {
     ZIO
       .fromAutoCloseable(

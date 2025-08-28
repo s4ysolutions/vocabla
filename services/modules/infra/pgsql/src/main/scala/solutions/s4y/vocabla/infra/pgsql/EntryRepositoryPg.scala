@@ -4,23 +4,20 @@ import org.postgresql.jdbc.PgArray
 import org.postgresql.util.PGobject
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
-import solutions.s4y.infra.pgsql.wrappers.{
-  pgDelete,
-  pgInsertWithId,
-  pgSelectOne
-}
+import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionPg}
+import solutions.s4y.infra.pgsql.wrappers.{pgDelete, pgInsertWithId, pgSelectOne}
 import solutions.s4y.vocabla.app.repo.EntryRepository
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
+import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
 import solutions.s4y.vocabla.domain.{Entry, User}
 import zio.{Chunk, ZIO, ZLayer}
 
-class EntryRepositoryPg extends EntryRepository:
+class EntryRepositoryPg extends EntryRepository[TransactionPg, TransactionContextPg]:
+
   override def create(
       entry: Entry
-  ): ZIO[TransactionContext, String, Identifier[Entry]] =
+  ): ZIO[TransactionContextPg, String, Identifier[Entry]] =
     pgInsertWithId[Entry](
       "INSERT INTO entries (word, langCode, definitions, ownerId) VALUES (?, ?, ?, ?)",
       st => {
@@ -39,7 +36,7 @@ class EntryRepositoryPg extends EntryRepository:
 
   override def delete(
       entryId: Identifier[Entry]
-  ): ZIO[TransactionContext, String, Boolean] =
+  ): ZIO[TransactionContextPg, String, Boolean] =
     pgDelete(
       "DELETE FROM entries WHERE id = ?",
       st => st.setLong(1, entryId.as[Long])
@@ -47,7 +44,7 @@ class EntryRepositoryPg extends EntryRepository:
 
   override def get(
       entryId: Identifier[Entry]
-  ): ZIO[TransactionContext, String, Option[Entry]] =
+  ): ZIO[TransactionContextPg, String, Option[Entry]] =
     pgSelectOne[Entry](
       "SELECT word, langCode, definitions, ownerId FROM entries WHERE id = ?",
       st => st.setLong(1, entryId.as[Long]),
@@ -93,7 +90,7 @@ object EntryRepositoryPg:
      ownerId BIGINT NOT NULL
     )"""
   )
-  val layer: ZLayer[DataSourcePg, String, EntryRepository] =
+  val layer: ZLayer[DataSourcePg, String, EntryRepositoryPg] =
     ZLayer {
       ZIO
         .serviceWithZIO[DataSourcePg] { ds =>

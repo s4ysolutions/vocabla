@@ -5,7 +5,7 @@ import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.Tag
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema}
-import zio.ZIO
+import zio.{IO, ZIO}
 
 @description("Command to get a tag by ID.")
 final case class GetTagCommand(
@@ -27,6 +27,6 @@ object GetTagCommand:
 
 @description("Use case for retrieving a tag by ID.")
 trait GetTagUseCase:
-  def apply[R](
+  def apply(
       command: GetTagCommand
-  ): ZIO[R, String, GetTagCommand.Response]
+  ): IO[String, GetTagCommand.Response]

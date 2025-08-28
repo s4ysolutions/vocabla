@@ -4,7 +4,7 @@ import solutions.s4y.vocabla.app.ports.errors.InfraFailure
 import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import zio.ZIO
+import zio.{IO, ZIO}
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema, derived}
 
@@ -26,9 +26,9 @@ object GetUserCommand:
 
 @description("Use case for retrieving an user by ID.")
 trait GetUserUseCase:
-  def apply[R](
+  def apply(
       command: GetUserCommand
-  ): ZIO[R, InfraFailure, GetUserCommand.Response]
-  def apply[R](
+  ): IO[InfraFailure, GetUserCommand.Response]
+  def apply(
       id: Identifier[User]
-  ): ZIO[R, String, Option[User]]
+  ): IO[String, Option[User]]

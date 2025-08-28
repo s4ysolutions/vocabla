@@ -6,6 +6,5 @@ import zio.{IO, ZIO}
 
 import java.sql.Connection
 
-case class TransactionContextPg(connection: Connection) extends TransactionContext:
-  def rollback(): IO[String, Unit] =
-    ZIO.attempt(connection.rollback()).e(_.getMessage)
+case class TransactionContextPg(connection: Connection)
+    extends TransactionContext

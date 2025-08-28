@@ -1,6 +1,6 @@
 package solutions.s4y.vocabla.app.ports
 
-import zio.ZIO
+import zio.{IO, ZIO}
 import zio.schema.annotation.{description, validate}
 import zio.schema.validation.Validation
 import zio.schema.{DeriveSchema, Schema}
@@ -18,4 +18,4 @@ object PingCommand:
   given Schema[PingCommand] = DeriveSchema.gen[PingCommand]
 
 trait PingUseCase:
-  def apply[R](command: PingCommand): ZIO[R, String, PingCommand.Response]
+  def apply(command: PingCommand): IO[String, PingCommand.Response]

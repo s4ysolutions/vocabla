@@ -5,8 +5,8 @@ import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Tag, UserContext}
 import zio.schema.annotation.description
-import zio.schema.{DeriveSchema, Schema, derived}
-import zio.ZIO
+import zio.schema.{Schema, derived}
+import zio.{IO, ZIO}
 
 @description("Command to create a new tag.")
 final case class CreateTagCommand(
@@ -28,10 +28,10 @@ object CreateTagCommand:
 
 @description("Use case for creating a new tag.")
 trait CreateTagUseCase:
-  def apply[R](
+  def apply(
       command: CreateTagCommand
   ): ZIO[
-    R & UserContext,
+    UserContext,
     InfraFailure | NotAuthorized,
     CreateTagCommand.Response
   ]

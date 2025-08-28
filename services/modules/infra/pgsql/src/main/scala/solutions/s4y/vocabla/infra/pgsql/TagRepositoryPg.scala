@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.DataSourcePg
+import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionPg}
 import solutions.s4y.infra.pgsql.wrappers.{
   pgDelete,
   pgInsertWithId,
@@ -8,16 +9,16 @@ import solutions.s4y.infra.pgsql.wrappers.{
   pgUpdateOne
 }
 import solutions.s4y.vocabla.app.repo.TagRepository
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{User, Tag}
+import solutions.s4y.vocabla.domain.{Tag, User}
 import zio.{ZIO, ZLayer}
 
-class TagRepositoryPg extends TagRepository:
+class TagRepositoryPg
+    extends TagRepository[TransactionPg, TransactionContextPg]:
   override def create(
       tag: Tag
-  ): ZIO[TransactionContext, String, Identifier[Tag]] =
+  ): ZIO[TransactionContextPg, String, Identifier[Tag]] =
     pgInsertWithId[Tag](
       "INSERT INTO tags (label, ownerId) VALUES (?, ?)",
       st => {
@@ -29,7 +30,7 @@ class TagRepositoryPg extends TagRepository:
   override def updateLabel(
       id: Identifier[Tag],
       label: String
-  ): ZIO[TransactionContext, String, Unit] =
+  ): ZIO[TransactionContextPg, String, Unit] =
     pgUpdateOne(
       "UPDATE tags SET label=? WHERE id=?",
       st => {
@@ -40,7 +41,7 @@ class TagRepositoryPg extends TagRepository:
 
   override def delete(
       tagId: Identifier[Tag]
-  ): ZIO[TransactionContext, String, Boolean] =
+  ): ZIO[TransactionContextPg, String, Boolean] =
     pgDelete(
       "DELETE FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long])
@@ -48,7 +49,7 @@ class TagRepositoryPg extends TagRepository:
 
   override def get(
       tagId: Identifier[Tag]
-  ): ZIO[TransactionContext, String, Option[Tag]] =
+  ): ZIO[TransactionContextPg, String, Option[Tag]] =
     pgSelectOne[Tag](
       "SELECT label, ownerId FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long]),
@@ -62,7 +63,7 @@ object TagRepositoryPg:
     "DROP TABLE IF EXISTS tags CASCADE",
     "CREATE TABLE tags (id SERIAL PRIMARY KEY, label TEXT NOT NULL, ownerId BIGINT NOT NULL)"
   )
-  val layer: ZLayer[DataSourcePg, String, TagRepository] =
+  val layer: ZLayer[DataSourcePg, String, TagRepositoryPg] =
     ZLayer {
       ZIO
         .serviceWithZIO[DataSourcePg] { ds =>

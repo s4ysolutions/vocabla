@@ -1,11 +1,8 @@
 package solutions.s4y.vocabla.endpoint
 
-import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.RESTService
 import solutions.s4y.zio.consoleColorTraceLogger
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
-
-import java.util.UUID
 
 object Main extends ZIOAppDefault:
 

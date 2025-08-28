@@ -1,9 +1,8 @@
 package solutions.s4y.vocabla.infra.pgsql
 
-import solutions.s4y.vocabla.app.repo.EntryRepository
-import solutions.s4y.vocabla.app.repo.tx.TransactionManager
+import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Definition, Entry, Headword, Student, Tag}
+import solutions.s4y.vocabla.domain.{Entry, Tag, User}
 import solutions.s4y.zio.consoleColorDebugLogger
 import zio.{Chunk, Scope, ZIO}
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assert}
@@ -14,14 +13,14 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
     suite("Create")(
       test("create an entry") {
         for {
-          transactionManager <- ZIO.service[TransactionManager]
+          transactionManager <- ZIO.service[TransactionManagerPg]
           id <- transactionManager.transaction {
             for {
-              repo <- ZIO.service[EntryRepository]
+              repo <- ZIO.service[EntryRepositoryPg]
               entry = Entry(
-                Headword("Test Entry", "en"),
-                Chunk(Definition("Test Definition", "en")),
-                1L.identifier[Student]
+                Entry.Headword("Test Entry", "en"),
+                Chunk(Entry.Definition("Test Definition", "en")),
+                1L.identifier[User.Student]
               )
               id <- repo.create(entry)
             } yield id
@@ -30,14 +29,14 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
       },
       test("get an entry") {
         for {
-          transactionManager <- ZIO.service[TransactionManager]
+          transactionManager <- ZIO.service[TransactionManagerPg]
           entryOpt <- transactionManager.transaction {
             for {
-              repo <- ZIO.service[EntryRepository]
+              repo <- ZIO.service[EntryRepositoryPg]
               entry = Entry(
-                Headword("Test Entry", "en"),
-                Chunk(Definition("Test Definition", "en")),
-                1L.identifier[Student]
+                Entry.Headword("Test Entry", "en"),
+                Chunk(Entry.Definition("Test Definition", "en")),
+                1L.identifier[User.Student]
               )
               id <- repo.create(entry)
               entryOpt <- repo.get(id)
@@ -46,23 +45,23 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
         } yield assert(entryOpt.get)(
           zio.test.Assertion.equalTo(
             Entry(
-              Headword("Test Entry", "en"),
-              Chunk(Definition("Test Definition", "en")),
-              1L.identifier[Student]
+              Entry.Headword("Test Entry", "en"),
+              Chunk(Entry.Definition("Test Definition", "en")),
+              1L.identifier[User.Student]
             )
           )
         )
       },
       test("delete an entry") {
         for {
-          transactionManager <- ZIO.service[TransactionManager]
+          transactionManager <- ZIO.service[TransactionManagerPg]
           deleted <- transactionManager.transaction {
             for {
-              repo <- ZIO.service[EntryRepository]
+              repo <- ZIO.service[EntryRepositoryPg]
               entry = Entry(
-                Headword("Test Entry", "en"),
-                Chunk(Definition("Test Definition", "en")),
-                1L.identifier[Student]
+                Entry.Headword("Test Entry", "en"),
+                Chunk(Entry.Definition("Test Definition", "en")),
+                1L.identifier[User.Student]
               )
               id <- repo.create(entry)
               deleted <- repo.delete(id)

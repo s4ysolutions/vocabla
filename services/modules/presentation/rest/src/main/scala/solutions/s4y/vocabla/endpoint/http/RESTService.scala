@@ -96,6 +96,7 @@ final class RESTService(
 end RESTService
 
 object RESTService:
+  //noinspection SimplifyMapBothInspection
   val layer: ZLayer[Any, String, RESTService] = {
     ZLayer.succeed("Constructing RESTService layer") >>>
       VocablaApp.layer.flatMap(app =>

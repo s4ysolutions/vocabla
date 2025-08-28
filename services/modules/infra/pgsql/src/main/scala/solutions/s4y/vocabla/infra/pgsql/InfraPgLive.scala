@@ -1,18 +1,16 @@
 package solutions.s4y.vocabla.infra.pgsql
 
-import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
-import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
-import solutions.s4y.vocabla.app.repo.tx.TransactionManager
-import solutions.s4y.vocabla.app.repo.{
-  EntryRepository,
-  TagAssociationRepository,
-  TagRepository,
-  UserRepository
+import solutions.s4y.infra.pgsql.tx.{
+  TransactionContextPg,
+  TransactionManagerPg,
+  TransactionPg
 }
-import solutions.s4y.vocabla.domain.Entry
+import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
 import zio.ZLayer
 
 object InfraPgLive:
+  type TR = TransactionPg
+  type TX = TransactionContextPg
   // enforce sequential initialization of layers
   private val repositoriesLayer = for {
     tm <- TransactionManagerPg.layer
@@ -25,7 +23,7 @@ object InfraPgLive:
   val layer: ZLayer[
     Any,
     String,
-    TransactionManager & UserRepository & EntryRepository & TagRepository &
-      TagAssociationRepository[Entry]
+    TransactionManagerPg & UserRepositoryPg & EntryRepositoryPg &
+      TagRepositoryPg & TagAssociationRepositoryPg
   ] =
     PgSqlConfig.layer >>> DataSourcePg.layer >>> repositoriesLayer
