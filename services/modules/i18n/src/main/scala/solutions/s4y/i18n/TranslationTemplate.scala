@@ -8,7 +8,7 @@ case class TranslationTemplate(
     args: Vector[Any] = Vector.empty
 ):
 
-  lazy val key: TranslationKey = TranslationKey(sc.parts.mkString("{}"))
+  lazy val key: TranslationKey = TranslationKey(sc)
 
   def apply(newArgs: Any*): TranslationTemplate =
     copy(args = args ++ newArgs.toVector)

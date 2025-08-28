@@ -15,7 +15,9 @@ private object ResourcesStringsTranslations:
       .findFirstMatchIn(s)
       .map(m =>
         (
-          TranslationKey(s.substring(0, m.start).replace("\\=", "=").trim),
+          TranslationKey(
+            StringContext(s.substring(0, m.start).replace("\\=", "=").trim)
+          ),
           s.substring(m.end).trim
         )
       )
