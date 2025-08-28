@@ -4,7 +4,8 @@ import java.text.MessageFormat
 import java.util.Locale
 import scala.collection.mutable
 import scala.io.{Codec, Source}
-private object ResourceTranslations:
+
+private object ResourcesStringsTranslations:
   private val extension = "i18n"
   private val equal = """(?<!\\)=""".r
   private given Codec = Codec.UTF8
@@ -144,12 +145,12 @@ private object ResourceTranslations:
     }
     translations.toMap
   end apply
-end ResourceTranslations
+end ResourcesStringsTranslations
 
-class ResourcesResolver(baseName: String, defaultLocale: Locale)
+class ResourcesStringsResolver(baseName: String, defaultLocale: Locale)
     extends TranslationResolver:
   private val defaultTranslation: Map[TranslationKey, String] =
-    ResourceTranslations(baseName, defaultLocale)
+    ResourcesStringsTranslations(baseName, defaultLocale)
   private val translations: mutable.Map[Locale, Map[TranslationKey, String]] =
     mutable.Map.empty
 
@@ -158,12 +159,15 @@ class ResourcesResolver(baseName: String, defaultLocale: Locale)
       defaultTranslation.getOrElse(key, key.toString + "(not found)")
     else {
       translations
-        .getOrElseUpdate(locale, ResourceTranslations(baseName, locale))
+        .getOrElseUpdate(locale, ResourcesStringsTranslations(baseName, locale))
         .getOrElse(key, defaultTranslation.getOrElse(key, key.toString))
     }
 
-  def resolve(key: TranslationKey, args: Array[Any], locale: Locale): String =
+  override def resolve(
+      locale: Locale,
+      key: TranslationKey,
+      args: Any*
+  ): String =
     val pattern = translation(key, locale)
-    if args.length == 0 then return pattern
-    val temp = new MessageFormat(pattern)
-    temp.format(args)
+    if args.isEmpty then return pattern
+    MessageFormat.format(pattern, args*)

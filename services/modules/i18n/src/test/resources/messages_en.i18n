@@ -1,5 +1,6 @@
 Hello, World!=Hello, World!(en)
 Hello, {}!=Hello, {0}!(en)
+Hello, {} and {}!=Hello, {0} and {1}!(en)
 items.count=You have {0} {1}
 items.count.zero=You have no items
 items.count.one=You have one {1}
