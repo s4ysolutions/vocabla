@@ -16,6 +16,7 @@ import solutions.s4y.vocabla.app.repo.{
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{AuthorizationService, User, UserContext}
 import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
+import zio.prelude.Validation
 import zio.{IO, ZIO, ZLayer, durationInt}
 
 final class VocablaApp[TR <: Transaction, TX <: TransactionContext](
@@ -40,12 +41,14 @@ final class VocablaApp[TR <: Transaction, TX <: TransactionContext](
 
   override def apply(
       command: CreateEntryCommand
-  ): IO[String, CreateEntryCommand.Response] =
-    tm.transaction {
-      for {
-        entryId <- entriesRepository.create(command.entry)
-      } yield CreateEntryCommand.Response(entryId)
-    }
+  ): ZIO[
+    UserContext,
+    InfraFailure | NotAuthorized,
+    CreateEntryCommand.Response
+  ] = authorized(AuthorizationService.canCreateEntry(command.entry, _)) *>
+    transaction(entriesRepository.create(command.entry)).map(entryId =>
+      CreateEntryCommand.Response(entryId)
+    )
 
   override def apply(
       command: CreateTagCommand
@@ -53,16 +56,10 @@ final class VocablaApp[TR <: Transaction, TX <: TransactionContext](
     UserContext,
     InfraFailure | NotAuthorized,
     CreateTagCommand.Response
-  ] = for {
-    _ <- ZIO.serviceWithZIO[UserContext](
-      AuthorizationService
-        .canCreateTag(command.tag, _)
-        .fold(errors => ZIO.fail(NotAuthorized(errors)), _ => ZIO.unit)
+  ] = authorized(AuthorizationService.canCreateTag(command.tag, _)) *>
+    transaction(tagsRepository.create(command.tag)).map(tagId =>
+      CreateTagCommand.Response(tagId)
     )
-    tagId <- tm
-      .transaction { tagsRepository.create(command.tag) }
-      .mapError(e => InfraFailure(e))
-  } yield CreateTagCommand.Response(tagId)
 
   override def apply(
       command: GetEntryCommand
@@ -96,6 +93,20 @@ final class VocablaApp[TR <: Transaction, TX <: TransactionContext](
   ): IO[String, Option[User]] = tm.transaction {
     userRepository.get(id)
   }
+
+  private def authorized(
+      uc: UserContext => Validation[String, Unit]
+  ): ZIO[UserContext, NotAuthorized, Unit] =
+    ZIO.serviceWithZIO[UserContext](
+      uc(_).fold(errors => ZIO.fail(NotAuthorized(errors)), _ => ZIO.unit)
+    )
+
+  private def transaction[T](
+      unitOfWork: ZIO[TR & TX, String, T]
+  ): IO[InfraFailure, T] =
+    tm.transaction(unitOfWork)
+      .mapError(e => InfraFailure(e))
+
 end VocablaApp
 
 object VocablaApp:

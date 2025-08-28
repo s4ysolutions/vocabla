@@ -5,6 +5,37 @@ import java.util.Locale
 import scala.collection.mutable
 import scala.io.{Codec, Source}
 
+class ResourcesStringsResolver(baseName: String, defaultLocale: Locale)
+    extends TranslationResolver:
+  private val defaultTranslation: Map[TranslationKey, String] =
+    ResourcesStringsTranslations(baseName, defaultLocale)
+  private val translations: mutable.Map[Locale, Map[TranslationKey, String]] =
+    mutable.Map.empty
+
+  private def translation(key: TranslationKey, locale: Locale): String =
+    if locale == defaultLocale then
+      defaultTranslation.getOrElse(key, key.toString + "(not found)")
+    else {
+      translations
+        .getOrElseUpdate(locale, ResourcesStringsTranslations(baseName, locale))
+        .getOrElse(key, defaultTranslation.getOrElse(key, key.toString))
+    }
+
+  override def resolve(
+      locale: Locale,
+      key: TranslationKey,
+      args: Any*
+  ): String =
+    val pattern = translation(key, locale)
+    if args.isEmpty then return pattern
+    MessageFormat.format(pattern, args*)
+end ResourcesStringsResolver
+
+object ResourcesStringsResolver:
+  given default: TranslationResolver =
+    new ResourcesStringsResolver("messages", Locale.ENGLISH)
+end ResourcesStringsResolver
+
 private object ResourcesStringsTranslations:
   private val extension = "i18n"
   private val equal = """(?<!\\)=""".r
@@ -148,28 +179,3 @@ private object ResourcesStringsTranslations:
     translations.toMap
   end apply
 end ResourcesStringsTranslations
-
-class ResourcesStringsResolver(baseName: String, defaultLocale: Locale)
-    extends TranslationResolver:
-  private val defaultTranslation: Map[TranslationKey, String] =
-    ResourcesStringsTranslations(baseName, defaultLocale)
-  private val translations: mutable.Map[Locale, Map[TranslationKey, String]] =
-    mutable.Map.empty
-
-  private def translation(key: TranslationKey, locale: Locale): String =
-    if locale == defaultLocale then
-      defaultTranslation.getOrElse(key, key.toString + "(not found)")
-    else {
-      translations
-        .getOrElseUpdate(locale, ResourcesStringsTranslations(baseName, locale))
-        .getOrElse(key, defaultTranslation.getOrElse(key, key.toString))
-    }
-
-  override def resolve(
-      locale: Locale,
-      key: TranslationKey,
-      args: Any*
-  ): String =
-    val pattern = translation(key, locale)
-    if args.isEmpty then return pattern
-    MessageFormat.format(pattern, args*)

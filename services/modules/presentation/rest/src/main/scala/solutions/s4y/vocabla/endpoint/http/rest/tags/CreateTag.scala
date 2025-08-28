@@ -34,13 +34,6 @@ object CreateTag:
   def route(using
       IdentifierSchema
   ): Route[CreateTagUseCase & UserContext, Response] =
-    endpoint.implement { request =>
-      for {
-        uc <- ZIO.service[UserContext]
-        _ <- ZIO.logDebug(
-          "CreateTag called by user " + uc.id
-        )
-        useCase <- ZIO.service[CreateTagUseCase]
-        response <- useCase(CreateTagCommand(request.tag))
-      } yield response
-    }
+    endpoint.implement(request =>
+      ZIO.serviceWithZIO[CreateTagUseCase](_(CreateTagCommand(request.tag)))
+    )

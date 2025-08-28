@@ -33,6 +33,7 @@ lazy val zio = (project in file("modules/zio"))
   )
 
 lazy val domain = (project in file("modules/domain"))
+  .dependsOn(i18n)
   .settings(
     name := "domain",
     libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,

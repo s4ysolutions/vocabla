@@ -1,13 +1,14 @@
 package solutions.s4y.vocabla.app.ports
 
 import solutions.s4y.vocabla.app.ports
+import solutions.s4y.vocabla.app.ports.errors.{InfraFailure, NotAuthorized}
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, Tag, User, UserContext}
-import zio.schema.annotation.{caseName, description, fieldName, recordName}
+import zio.schema.annotation.description
 import zio.schema.validation.Validation
 import zio.schema.{DeriveSchema, Schema}
-import zio.{Chunk, IO, ZIO}
+import zio.{Chunk, ZIO}
 
 @description("Command to create a new vocabulary entry.")
 final case class CreateEntryCommand(
@@ -37,4 +38,4 @@ object CreateEntryCommand:
 trait CreateEntryUseCase:
   def apply(
       command: CreateEntryCommand
-  ): IO[String, CreateEntryCommand.Response]
+  ): ZIO[UserContext, InfraFailure | NotAuthorized, CreateEntryCommand.Response]
