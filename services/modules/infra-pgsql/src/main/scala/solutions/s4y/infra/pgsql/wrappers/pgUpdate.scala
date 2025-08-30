@@ -27,7 +27,7 @@ def pgUpdate[R](
     rowsAffected <- ZIO
       .attempt(st.executeUpdate())
       .mapThrowable(t"""Failed to execute statement: "$sql"""")
-  } yield (rowsAffected)
+  } yield rowsAffected
 }
 
 /*
