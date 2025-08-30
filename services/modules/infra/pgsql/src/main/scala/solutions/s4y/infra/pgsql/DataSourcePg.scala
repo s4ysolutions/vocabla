@@ -1,31 +1,28 @@
 package solutions.s4y.infra.pgsql
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import solutions.s4y.zio.e
+import org.checkerframework.checker.units.qual.t
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
+import solutions.s4y.vocabla.app.repo.error.InfraFailure.mapThrowable
 import zio.{IO, ZIO, ZLayer}
 
 import java.sql.Connection
 import scala.util.Using
 
-class DataSourcePg(val dataSource: HikariDataSource) {
+class DataSourcePg(val dataSource: HikariDataSource): 
 
-  def getConnection: IO[String, Connection] = {
-    ZIO
-      .attemptBlocking(dataSource.getConnection)
-      .refineToOrDie[Throwable]
-      .e(th => th.getMessage)
-  }
+  def getConnection: IO[InfraFailure, Connection] = ZIO
+    .attemptBlocking(dataSource.getConnection)
+    .mapThrowable(t"Failed to get connection from DataSource")
 
-  def close(): IO[String, Unit] = {
-    ZIO
+  def close(): IO[InfraFailure, Unit] = ZIO
       .attemptBlocking(dataSource.close())
-      .refineToOrDie[Throwable]
-      .e(th => th.getMessage)
-  }
-}
+      .mapThrowable(t"Failed to close DataSource")
 
 object DataSourcePg {
-  val layer: ZLayer[PgSqlConfig, String, DataSourcePg] =
+  val layer: ZLayer[PgSqlConfig, InfraFailure, DataSourcePg] =
     ZLayer.scoped {
       for {
         _ <- ZIO.logDebug("Initializing DataSourcePg")

@@ -5,15 +5,8 @@ import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import zio.ZIO
 
 import java.sql.PreparedStatement
-
-def pgInsertOne[R](
+def pgDeleteMany[R](
     sql: String,
     setParams: PreparedStatement => Unit
-)(using TransactionContextPg): ZIO[R, InfraFailure, Boolean] =
-  pgUpdateOne[R](sql, setParams)
-/*
-def pgInsertOne[R](
-    sql: String
-): ZIO[TransactionContextPg & R, InfraFailure, Boolean] =
-  pgUpdateOne[R](sql, _ => ())
- */
+)(using TransactionContextPg): ZIO[R, InfraFailure, Int] =
+  pgUpdate[R](sql, setParams)

@@ -1,37 +1,31 @@
 package solutions.s4y.infra.pgsql.wrappers
 
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.vocabla.app.repo.tx.TransactionContext
-import solutions.s4y.zio.e
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import zio.ZIO
 
-import scala.util.Using
-
-def pgSelectOne[A](
+def pgSelectOne[R, A](
     sql: String,
     setParams: java.sql.PreparedStatement => Unit,
     mapResult: java.sql.ResultSet => A
-): ZIO[TransactionContextPg, String, Option[A]] = pgWithConnection { connection =>
-  ZIO.scoped {
-    ZIO
-      .fromAutoCloseable(
-        ZIO
-          .attempt(connection.prepareStatement(sql))
-          .e(th => s"Failed to prepare statement \"$sql\": ${th.getMessage}")
+)(using TransactionContextPg): ZIO[R, InfraFailure, Option[A]] =
+  pgSelectMany(sql, setParams, mapResult).flatMap { results =>
+    if results.size == 1 then ZIO.some(results.head)
+    else if results.isEmpty then ZIO.none
+    else
+      ZIO.fail(
+        InfraFailure(
+          t"""Expected exactly one row in result, but got ${results.size} rows. SQL: "$sql""""
+        )
       )
-      .flatMap { st =>
-        ZIO
-          .attempt {
-            setParams(st)
-            Using.resource(st.executeQuery()) { rs =>
-              if (rs.next()) {
-                Some(mapResult(rs))
-              } else {
-                None
-              }
-            }
-          }
-          .e(th => s"Failed to execute query: ${th.getMessage}")
-      }
   }
-}
+/*
+def pgSelectOne[R, A](
+    ctx: TransactionContextPg,
+    sql: String,
+    mapResult: java.sql.ResultSet => A
+): ZIO[R, InfraFailure, Option[A]] =
+  pgSelectOne(ctx, sql, _ => (), mapResult)
+ */

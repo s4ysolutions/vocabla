@@ -1,4 +1,4 @@
-package solutions.s4y.scala
+package solutions.s4y.infra.pgsql.provide
 
 import zio.{Scope, ZIO, ZLayer}
 import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}

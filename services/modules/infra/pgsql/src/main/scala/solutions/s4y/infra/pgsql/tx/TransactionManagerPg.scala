@@ -1,41 +1,55 @@
 package solutions.s4y.infra.pgsql.tx
 
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
 import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
+import solutions.s4y.vocabla.app.repo.error.InfraFailure.mapThrowable
 import solutions.s4y.vocabla.app.repo.tx.TransactionManager
-import solutions.s4y.zio.e
-import zio.{IO, ZIO, ZLayer}
+import zio.{Exit, ZIO, ZLayer}
 
 case class TransactionManagerPg(private val ds: DataSourcePg)
-    extends TransactionManager[TransactionPg, TransactionContextPg]:
+    extends TransactionManager[TransactionContextPg]:
 
   override def transaction[R, A](
-      unitOfWork: ZIO[R & TransactionPg & TransactionContextPg, String, A]
-  ): ZIO[R, String, A] =
+      effect: TransactionContextPg ?=> ZIO[R, InfraFailure, A]
+  ): ZIO[R, InfraFailure, A] =
+    transactionE[R, A](ctx => {
+      given TransactionContextPg = ctx
+      effect
+    })
+
+  private def transactionE[R, A](
+      effect: TransactionContextPg => ZIO[R, InfraFailure, A]
+  ): ZIO[R, InfraFailure, A] =
     ZIO
-      .scoped {
+      .scoped(
         ZIO
-          .acquireRelease(
+          .acquireReleaseExitWith(
             ds.getConnection.flatMap(connection =>
               ZIO
                 .attempt {
                   connection.setAutoCommit(false)
-                  (TransactionPg(connection), TransactionContextPg(connection))
+                  TransactionContextPg(connection)
                 }
-                .e(th => th.getMessage)
+                .mapThrowable(t"Failed to start transaction")
             )
-          )(tx => ZIO.attempt(tx._2.connection.close()).orDie)
-          .flatMap(tx =>
-            unitOfWork
-              .provideSomeLayer(ZLayer.succeed(tx._1) ++ ZLayer.succeed(tx._2))
-              .tapBoth(
-                err => ZIO.attempt(tx._1.rollback()).orDie,
-                _ => ZIO.attempt(tx._2.connection.commit()).orDie
-              )
-          )
-      }
+          )((tx, exit) =>
+            (exit match {
+              case Exit.Success(_) =>
+                ZIO
+                  .attempt(tx.connection.commit())
+                  .mapThrowable(t"Failed to commit transaction")
+              case Exit.Failure(cause) =>
+                ZIO
+                  .attempt(tx.connection.rollback())
+                  .mapThrowable(t"Failed to rollback transaction")
+            }).ignore.as(tx.connection.close()).ignore
+          )(effect)
+      )
 
 object TransactionManagerPg:
-  val layer: ZLayer[DataSourcePg, String, TransactionManagerPg] =
+  val layer: ZLayer[DataSourcePg, InfraFailure, TransactionManagerPg] =
     ZLayer.fromZIO(
       ZIO.config(PgSqlConfig.pgSqlConfig).orDie
     ) >>> DataSourcePg.layer >>>
