@@ -13,13 +13,12 @@ class ResourcesStringsResolver(baseName: String, defaultLocale: Locale)
     mutable.Map.empty
 
   private def translation(key: TranslationKey, locale: Locale): String =
-    if locale == defaultLocale then
-      defaultTranslation.getOrElse(key, key.toString + "(not found)")
-    else {
+    if locale == defaultLocale then defaultTranslation.getOrElse(key, key.value)
+    else
       translations
         .getOrElseUpdate(locale, ResourcesStringsTranslations(baseName, locale))
-        .getOrElse(key, defaultTranslation.getOrElse(key, key.toString))
-    }
+        .getOrElse(key, defaultTranslation.getOrElse(key, key.value))
+  end translation
 
   override def resolve(
       locale: Locale,
@@ -29,6 +28,7 @@ class ResourcesStringsResolver(baseName: String, defaultLocale: Locale)
     val pattern = translation(key, locale)
     if args.isEmpty then return pattern
     MessageFormat.format(pattern, args*)
+  end resolve
 end ResourcesStringsResolver
 
 object ResourcesStringsResolver:
