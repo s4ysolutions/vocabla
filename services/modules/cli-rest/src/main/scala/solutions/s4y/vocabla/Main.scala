@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla
 
 import solutions.s4y.vocabla.app.VocablaApp
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.endpoint.http.RESTService
 import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
 import solutions.s4y.zio.consoleColorTraceLogger
@@ -17,7 +18,7 @@ object Main extends ZIOAppDefault:
 
   private val program: ZIO[
     Scope & RESTService,
-    String,
+    Nothing,
     Unit
   ] = {
     for {
@@ -29,8 +30,8 @@ object Main extends ZIOAppDefault:
     } yield ()
   }
 
-  override def run: ZIO[Scope, String, Unit] = {
-    ZIO.logDebug("Running Main program") *> ZIO.addFinalizer(
-      ZIO.logInfo("Exit Main program")
-    ) *> program.provideSome[Scope](layer)
-  }.catchAllCause(err => ZIO.logError(s"Main program died: " + err.prettyPrint))
+  override def run: ZIO[Scope, InfraFailure, Unit] = {
+    ZIO.logDebug("Running Main program")
+      *> ZIO.addFinalizer(ZIO.logInfo("Exit Main program"))
+      *> program.provideSome[Scope](layer)
+  }
