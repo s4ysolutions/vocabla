@@ -1,7 +1,5 @@
 package solutions.s4y.i18n
 
-import zio.schema.Schema
-
 import java.util.Locale
 
 case class TranslationTemplate(
@@ -18,6 +16,9 @@ case class TranslationTemplate(
   def toString(using locale: Locale): String =
     resolver.resolve(locale, key, args*)
 
+  override def toString: String =
+    toString(using Locale.ENGLISH)
+
 object TranslationTemplate:
   extension (tt: TranslationTemplate)
     def render(using locale: Locale): String =
@@ -27,5 +28,5 @@ object TranslationTemplate:
     string => ???,
     template => template.toString
   )
-*/
+ */
 end TranslationTemplate
