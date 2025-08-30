@@ -7,7 +7,10 @@ import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.BearerUserContext.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.browserLocale
+import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
+import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
@@ -29,11 +32,11 @@ final class RESTService(
 
   private val endpoints =
     Seq(
-      Ping.endpoint /*,
-      CreateEntry.endpoint,
+      Ping.endpoint,
       CreateTag.endpoint,
-      GetEntry.endpoint,
-      GetTag.endpoint*/
+      GetTag.endpoint,
+      CreateEntry.endpoint,
+      GetEntry.endpoint
     )
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
@@ -49,17 +52,16 @@ final class RESTService(
     Response
   ] = {
     (Routes(Ping.route)
-      /*++
+      ++
         Routes(
-          CreateEntry.route,
           CreateTag.route,
-          GetEntry.route,
-          GetTag.route
-        ) @@ bearerAuthWithContext*/
-    ) @@ Middleware.cors(
+          GetTag.route,
+          CreateEntry.route,
+          GetEntry.route
+        ) @@ bearerAuthWithContext) @@ Middleware.cors(
       corsConfig
     ) @@ browserLocale
-      ++ SwaggerUI.routes("/openapi", openAPI) @@ Middleware
+      ++ SwaggerUI.routes("/swagger-ui", openAPI) @@ Middleware
         .requestLogging(level =
           status =>
             if (status.isSuccess) {

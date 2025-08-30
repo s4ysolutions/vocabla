@@ -18,13 +18,8 @@ object BrowserLocale:
       }
     )
 
-  def withLocale[R, E, A](
-      effect: Locale ?=> ZIO[R, E, A]
-  ): ZIO[R & Locale, E, A] =
-    ZIO.serviceWithZIO[Locale](locale =>
-      given Locale = locale
-      effect
-    )
+  def withLocale[R, E, A](f: Locale ?=> ZIO[R, E, A]): ZIO[R & Locale, E, A] =
+    ZIO.serviceWithZIO[Locale](locale => f(using locale))
 
   private def extractLocale(request: Request): Locale =
     request
