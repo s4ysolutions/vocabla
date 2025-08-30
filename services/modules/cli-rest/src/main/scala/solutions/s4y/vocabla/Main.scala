@@ -1,16 +1,16 @@
 package solutions.s4y.vocabla
 
 import solutions.s4y.vocabla.app.VocablaApp
-import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.endpoint.http.RESTService
 import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
 import solutions.s4y.zio.consoleColorTraceLogger
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 object Main extends ZIOAppDefault:
-  private val layer = InfraPgLive.layer >>> VocablaApp
-    .layer[InfraPgLive.TX]() >>> RESTService.layer
+  private val layer =
+    InfraPgLive.layer
+      >>> VocablaApp.layer[InfraPgLive.TX]()
+      >>> RESTService.layer
 
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Unit] =
     consoleColorTraceLogger
@@ -21,7 +21,6 @@ object Main extends ZIOAppDefault:
     Unit
   ] = {
     for {
-      _ <- ZIO.logDebug("Starting Main program with dependencies")
       restService <- ZIO.service[RESTService]
       startedPromise <- restService.start()
       _ <- startedPromise.await
