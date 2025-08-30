@@ -1,8 +1,11 @@
 package solutions.s4y.vocabla.domain
 
-import solutions.s4y.i18n.ResourcesStringsResolver.default
-import solutions.s4y.i18n.{TranslationTemplate, t}
-import solutions.s4y.vocabla.domain.errors.{NeitherAdminNotStudent, NotAuthorized, NotTheOwner}
+import solutions.s4y.vocabla.domain.errors.{
+  NeitherAdminNotStudent,
+  NotAuthorized,
+  NotTheOwner
+}
+import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.owner.Owned
 import zio.prelude.Validation
 
@@ -46,11 +49,29 @@ object authorizationService:
   ): Validation[NotAuthorized, Unit] =
     isOwned(tag, userContext, "CreateTag")
 
+  def canGetTag(
+      tagId: Identifier[Tag],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("GetTag"))
+    Validation.succeed(())
+
   def canCreateEntry(
       entry: Entry,
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
     isOwned(entry, userContext, "CreateEntry")
+
+  def canGetEntry(
+      entryId: Identifier[Entry],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("GetEntry"))
+    Validation.succeed(())
 
   private def isOwned(
       owned: Owned[User.Student],

@@ -53,13 +53,30 @@ final class VocablaApp[TX <: TransactionContext](
     ServiceFailure | NotAuthorized,
     CreateEntryCommand.Response
   ] =
-    authorized {
+    authorized(
       authorizationService.canCreateEntry(command.entry, _)
-    } *> transaction { entriesRepository.create(command.entry) }
-      .map {
+    ) *> transaction(entriesRepository.create(command.entry))
+      .map(
         CreateEntryCommand.Response(_)
-      }
+      )
 
+  override def apply(
+      command: GetEntryCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    GetEntryCommand.Response
+  ] =
+    authorized(
+      authorizationService.canGetEntry(command.entryId, _)
+    ) *> transaction(
+      entriesRepository
+        .get(command.entryId)
+    ).map(entry => GetEntryCommand.Response(entry))
+
+  /** **************************************************************************
+    * Tags
+    */
   override def apply(
       command: CreateTagCommand
   ): ZIO[
@@ -72,40 +89,29 @@ final class VocablaApp[TX <: TransactionContext](
     )
 
   override def apply(
-      command: GetEntryCommand
-  ): IO[ServiceFailure, GetEntryCommand.Response] =
-    transaction {
-      entriesRepository
-        .get(command.entryId)
-        .map(entry => GetEntryCommand.Response(entry))
-    }
+      command: GetTagCommand
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagCommand.Response] =
+    authorized(authorizationService.canGetTag(command.tagId, _)) *>
+      transaction(
+        tagsRepository.get(command.tagId)
+      ).map(tag => GetTagCommand.Response(tag))
 
   /** **************************************************************************
-    * Tags
+    * Users
     */
   override def apply(
-      command: GetTagCommand
-  ): IO[ServiceFailure, GetTagCommand.Response] =
-    transaction {
-      tagsRepository
-        .get(command.tagId)
-        .map(tag => GetTagCommand.Response(tag))
-    }
-
-  override def apply(
       command: GetUserCommand
-  ): IO[ServiceFailure, GetUserCommand.Response] = {
+  ): IO[ServiceFailure, GetUserCommand.Response] =
     apply(command.userId)
       .map(
         GetUserCommand.Response(_)
       )
-  }
 
   override def apply(
       id: Identifier[User]
-  ): IO[ServiceFailure, Option[User]] = transaction {
+  ): IO[ServiceFailure, Option[User]] = transaction(
     userRepository.get(id)
-  }.mapError(f => ServiceFailure(f.message, f.cause))
+  ).mapError(f => ServiceFailure(f.message, f.cause))
 
   /** **************************************************************************
     * privates
