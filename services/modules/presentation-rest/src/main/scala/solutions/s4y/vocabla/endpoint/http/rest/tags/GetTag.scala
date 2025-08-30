@@ -12,7 +12,7 @@ import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
 import zio.http.{Response, Route, Status, long}
 import zio.ZIO
-
+/*
 object GetTag:
 
   def endpoint(using
@@ -37,3 +37,4 @@ object GetTag:
         }
         .mapError(error => ErrorService(error))
     }
+*/

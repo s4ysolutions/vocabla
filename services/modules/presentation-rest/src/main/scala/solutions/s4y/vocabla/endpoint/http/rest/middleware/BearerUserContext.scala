@@ -1,14 +1,22 @@
 package solutions.s4y.vocabla.endpoint.http.rest.middleware
 
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.GetUserUseCase
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{User, UserContext}
+import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
+import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.*
+import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.*
 
+import java.util.Locale
+
 object BearerUserContext:
-  val bearerAuthWithContext: HandlerAspect[GetUserUseCase, UserContext] =
+  val bearerAuthWithContext
+      : HandlerAspect[GetUserUseCase & Locale, UserContext] =
     HandlerAspect.interceptIncomingHandler(Handler.fromFunctionZIO[Request] {
       request =>
         (request.header(Header.Authorization) match {
@@ -18,32 +26,34 @@ object BearerUserContext:
                 .attempt(token.stringValue.toLong)
                 .tapErrorCause(th => ZIO.logWarning(th.prettyPrint))
                 .mapError(th =>
-                  AuthenticationError(
+                  NotAuthorized401(
                     s"Invalid token: ${token.stringValue} (${th.toString})"
                   )
                 )
               userOpt <- ZIO
                 .serviceWithZIO[GetUserUseCase](_(id.identifier[User]))
-                .mapError(err => ServiceFailure(err))
+                .mapError(err => InternalServerError500(err.toString))
               user <- ZIO
                 .fromOption(userOpt)
-                .orElseFail(AuthenticationError("User not found: " + id))
+                .orElseFail(
+                  NotFound404(s"User not found: $id")
+                )
             } yield (request, UserContext(id.identifier[User], user))
           case _ =>
-            ZIO.fail(AuthenticationError("Authorization header is missing"))
+            ZIO.fail(
+              NotAuthorized401(s"Authorization header is missing")
+            )
         }).mapError {
-          case AuthenticationError(message) =>
+          case NotAuthorized401(message) =>
             Response
               .unauthorized(message)
-              .contentType(MediaType.text.plain)
               .addHeader(
                 Header.WWWAuthenticate
                   .Bearer("vocabla", None, Some(message))
               )
-          case ServiceFailure(message) =>
-            Response
-              .internalServerError(message)
-              .contentType(MediaType.text.plain)
+          case NotFound404(message) =>
+            Response.error(Status.NotFound, message)
         }
     })
+
 end BearerUserContext

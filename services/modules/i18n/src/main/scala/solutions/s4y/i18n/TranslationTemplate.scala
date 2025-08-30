@@ -22,10 +22,10 @@ object TranslationTemplate:
   extension (tt: TranslationTemplate)
     def render(using locale: Locale): String =
       tt.toString
-
+/*
   given (using Locale): Schema[TranslationTemplate] = Schema[String].transform(
     string => ???,
     template => template.toString
   )
-
+*/
 end TranslationTemplate

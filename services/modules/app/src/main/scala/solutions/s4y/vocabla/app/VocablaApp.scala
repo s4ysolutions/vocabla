@@ -17,7 +17,6 @@ import solutions.s4y.vocabla.app.repo.{
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
-import solutions.s4y.vocabla.infra.pgsql.InfraPgLive
 import zio.prelude.Validation
 import zio.{IO, ZIO, ZLayer, durationInt}
 
@@ -123,17 +122,7 @@ final class VocablaApp[TX <: TransactionContext](
 end VocablaApp
 
 object VocablaApp:
-  val layer: ZLayer[
-    Any,
-    InfraFailure,
-    PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
-      GetEntryUseCase & GetTagUseCase
-  ] =
-    InfraPgLive.layer >>> ZLayer.fromFunction(
-      new VocablaApp[InfraPgLive.TX](_, _, _, _)
-    )
-
-  private def layer[TX <: TransactionContext: zio.Tag](): ZLayer[
+  def layer[TX <: TransactionContext: zio.Tag](): ZLayer[
     TransactionManager[TX] & UserRepository[TX] &
       (EntryRepository[TX] & TagRepository[TX]),
     Nothing,

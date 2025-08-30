@@ -20,7 +20,7 @@ import zio.schema.{DeriveSchema, Schema, TypeId}
 import zio.{Chunk, NonEmptyChunk, ZIO}
 
 import java.util.Locale
-
+/*
 object CreateEntry:
 
   def endpoint(using
@@ -66,3 +66,4 @@ object CreateEntry:
         )
       } yield r
     )
+*/

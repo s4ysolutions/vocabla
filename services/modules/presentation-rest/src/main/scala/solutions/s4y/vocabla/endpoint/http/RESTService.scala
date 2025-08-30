@@ -1,15 +1,13 @@
 package solutions.s4y.vocabla.endpoint.http
 
 import org.slf4j.LoggerFactory
-import solutions.s4y.vocabla.app.VocablaApp
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.domain.UserContext
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.rest.Ping
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BearerUserContext.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.browserLocale
-import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
-import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
@@ -31,11 +29,11 @@ final class RESTService(
 
   private val endpoints =
     Seq(
-      Ping.endpoint,
+      Ping.endpoint /*,
       CreateEntry.endpoint,
       CreateTag.endpoint,
       GetEntry.endpoint,
-      GetTag.endpoint
+      GetTag.endpoint*/
     )
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
@@ -51,13 +49,14 @@ final class RESTService(
     Response
   ] = {
     (Routes(Ping.route)
-      ++
+      /*++
         Routes(
           CreateEntry.route,
           CreateTag.route,
           GetEntry.route,
           GetTag.route
-        ) @@ bearerAuthWithContext) @@ Middleware.cors(
+        ) @@ bearerAuthWithContext*/
+    ) @@ Middleware.cors(
       corsConfig
     ) @@ browserLocale
       ++ SwaggerUI.routes("/openapi", openAPI) @@ Middleware
@@ -96,33 +95,15 @@ final class RESTService(
 end RESTService
 
 object RESTService:
-  //noinspection SimplifyMapBothInspection
-  val layer: ZLayer[Any, String, RESTService] = {
-    ZLayer.succeed("Constructing RESTService layer") >>>
-      VocablaApp.layer.flatMap(app =>
-        ZLayer.succeed(ZIO.logDebug("Constructing HTTP server...")) >>>
-          Server.default
-            .mapError(th => th.getMessage)
-            .map(server => app ++ server)
-      ) >>> ZLayer.fromZIO(for {
-        server <- ZIO.service[Server]
-        pingUseCase <- ZIO.service[PingUseCase]
-        getUserUseCase <- ZIO.service[GetUserUseCase]
-        createEntryUseCase <- ZIO.service[CreateEntryUseCase]
-        createTagUseCase <- ZIO.service[CreateTagUseCase]
-        getEntryUseCase <- ZIO.service[GetEntryUseCase]
-        getTagUseCase <- ZIO.service[GetTagUseCase]
-        restService = new RESTService(
-          server,
-          pingUseCase,
-          getUserUseCase,
-          createEntryUseCase,
-          createTagUseCase,
-          getEntryUseCase,
-          getTagUseCase
-        )
-        _ <- ZIO.logInfo("RESTService layer constructed")
-      } yield restService)
-  }
+  val layer: ZLayer[
+    CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
+      CreateTagUseCase & GetTagUseCase,
+    InfraFailure,
+    RESTService
+  ] =
+    ZLayer.succeed(ZIO.logDebug("Constructing HTTP server...")) >>>
+      Server.default
+        .mapError(th => InfraFailure(t"Failed to start HTTP server", th))
+      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _))
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

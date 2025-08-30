@@ -18,6 +18,14 @@ object BrowserLocale:
       }
     )
 
+  def withLocale[R, E, A](
+      effect: Locale ?=> ZIO[R, E, A]
+  ): ZIO[R & Locale, E, A] =
+    ZIO.serviceWithZIO[Locale](locale =>
+      given Locale = locale
+      effect
+    )
+
   private def extractLocale(request: Request): Locale =
     request
       .header(AcceptLanguage)
@@ -40,5 +48,4 @@ object BrowserLocale:
         NonEmptyChunk(single)
       case Any => Chunk.empty
     }
-
 end BrowserLocale

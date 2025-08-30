@@ -15,6 +15,8 @@ case class InfraFailure(message: TranslationTemplate, cause: Option[Throwable]):
 object InfraFailure:
   def apply(message: TranslationTemplate): InfraFailure =
     InfraFailure(message, None);
+  def apply(message: TranslationTemplate, throwable: Throwable): InfraFailure =
+    InfraFailure(message, Some(throwable));
   extension [R, A](self: zio.ZIO[R, Throwable, A])
     def mapThrowable(
         message: TranslationTemplate

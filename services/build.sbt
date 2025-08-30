@@ -42,6 +42,7 @@ lazy val domain = (project in file("modules/domain"))
 **************** zio effect dependent modules *****************
  */
 lazy val zio = (project in file("modules/zio"))
+  .dependsOn(i18n)
   .settings(
     name := "zio",
     libraryDependencies += "dev.zio" %% "zio" % zioVersion,
@@ -102,10 +103,10 @@ lazy val lang = (project in file("modules/infra-lang"))
   )
 
 lazy val app = (project in file("modules/app"))
+  .dependsOn(zio)
   .dependsOn(appPorts)
   .dependsOn(appRepos)
   .dependsOn(domain)
-  .dependsOn(pgSqlVocabla)
   .settings(
     name := "app"
   )
@@ -130,9 +131,9 @@ lazy val mvStore = (project in file("modules/infra/mv-store"))
 
 lazy val rest =
   (project in file("modules/presentation-rest"))
+    .dependsOn(i18n)
     .dependsOn(zio)
     .dependsOn(appPorts)
-    .dependsOn(pgSQL)
     .dependsOn(lang)
     .settings(
       name := "presentation-rest",
@@ -145,6 +146,7 @@ lazy val cliRest =
   (project in file("modules/cli-rest"))
     .dependsOn(rest)
     .dependsOn(app)
+    .dependsOn(pgSqlVocabla)
     .settings(
       name := "cli-rest"
     )
