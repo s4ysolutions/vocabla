@@ -1,12 +1,13 @@
 package solutions.s4y.vocabla.app.ports
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import solutions.s4y.vocabla.domain.Tag
+import solutions.s4y.vocabla.domain.{Tag, UserContext}
+import zio.ZIO
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema}
-import zio.{IO, ZIO}
 
 @description("Command to get a tag by ID.")
 final case class GetTagCommand(
@@ -30,4 +31,4 @@ object GetTagCommand:
 trait GetTagUseCase:
   def apply(
       command: GetTagCommand
-  ): IO[ServiceFailure, GetTagCommand.Response]
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagCommand.Response]

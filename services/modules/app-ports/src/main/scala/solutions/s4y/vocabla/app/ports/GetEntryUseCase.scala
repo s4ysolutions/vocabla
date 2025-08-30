@@ -1,10 +1,11 @@
 package solutions.s4y.vocabla.app.ports
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.domain.Entry
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import zio.IO
+import solutions.s4y.vocabla.domain.{Entry, UserContext}
+import zio.ZIO
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema}
 
@@ -30,4 +31,4 @@ object GetEntryCommand:
 trait GetEntryUseCase:
   def apply(
       command: GetEntryCommand
-  ): IO[ServiceFailure, GetEntryCommand.Response]
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetEntryCommand.Response]

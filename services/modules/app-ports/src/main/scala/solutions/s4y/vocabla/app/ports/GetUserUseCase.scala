@@ -2,9 +2,10 @@ package solutions.s4y.vocabla.app.ports
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.User
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import zio.{IO, ZIO}
+import zio.IO
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema, derived}
 
@@ -30,4 +31,4 @@ trait GetUserUseCase:
   ): IO[ServiceFailure, GetUserCommand.Response]
   def apply(
       id: Identifier[User]
-  ): IO[ServiceFailure, Option[User]]
+  ): IO[ServiceFailure | NotAuthorized, Option[User]]
