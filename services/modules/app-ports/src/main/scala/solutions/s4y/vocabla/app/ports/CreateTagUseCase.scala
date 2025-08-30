@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla.app.ports
 
-import solutions.s4y.vocabla.app.ports.errors.{InfraFailure, NotAuthorized}
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Tag, UserContext}
@@ -32,6 +33,6 @@ trait CreateTagUseCase:
       command: CreateTagCommand
   ): ZIO[
     UserContext,
-    InfraFailure | NotAuthorized,
+    ServiceFailure | NotAuthorized,
     CreateTagCommand.Response
   ]

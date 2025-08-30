@@ -1,7 +1,8 @@
 package solutions.s4y.vocabla.app.ports
 
 import solutions.s4y.vocabla.app.ports
-import solutions.s4y.vocabla.app.ports.errors.{InfraFailure, NotAuthorized}
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, Tag, User, UserContext}
@@ -38,4 +39,4 @@ object CreateEntryCommand:
 trait CreateEntryUseCase:
   def apply(
       command: CreateEntryCommand
-  ): ZIO[UserContext, InfraFailure | NotAuthorized, CreateEntryCommand.Response]
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, CreateEntryCommand.Response]
