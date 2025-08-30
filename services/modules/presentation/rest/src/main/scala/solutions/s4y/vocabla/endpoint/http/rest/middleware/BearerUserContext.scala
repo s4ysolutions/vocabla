@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.endpoint.http.rest.middleware
 
 import solutions.s4y.vocabla.app.ports.GetUserUseCase
-import solutions.s4y.vocabla.app.ports.errors.InfraFailure
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{User, UserContext}
 import zio.ZIO
@@ -24,7 +24,7 @@ object BearerUserContext:
                 )
               userOpt <- ZIO
                 .serviceWithZIO[GetUserUseCase](_(id.identifier[User]))
-                .mapError(err => InfraFailure(err))
+                .mapError(err => ServiceFailure(err))
               user <- ZIO
                 .fromOption(userOpt)
                 .orElseFail(AuthenticationError("User not found: " + id))
@@ -40,7 +40,7 @@ object BearerUserContext:
                 Header.WWWAuthenticate
                   .Bearer("vocabla", None, Some(message))
               )
-          case InfraFailure(message) =>
+          case ServiceFailure(message) =>
             Response
               .internalServerError(message)
               .contentType(MediaType.text.plain)
