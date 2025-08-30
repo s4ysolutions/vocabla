@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.app.ports
 
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.Tag
@@ -29,4 +30,4 @@ object GetTagCommand:
 trait GetTagUseCase:
   def apply(
       command: GetTagCommand
-  ): IO[String, GetTagCommand.Response]
+  ): IO[ServiceFailure, GetTagCommand.Response]

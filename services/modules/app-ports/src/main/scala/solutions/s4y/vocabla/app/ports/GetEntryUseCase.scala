@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.app.ports
 
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.Identifier.given
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
@@ -29,4 +30,4 @@ object GetEntryCommand:
 trait GetEntryUseCase:
   def apply(
       command: GetEntryCommand
-  ): IO[String, GetEntryCommand.Response]
+  ): IO[ServiceFailure, GetEntryCommand.Response]

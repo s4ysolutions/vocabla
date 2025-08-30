@@ -21,7 +21,6 @@ object GetUserCommand:
       user: Option[User]
   )
   given (using IdentifierSchema): Schema[GetUserCommand] = Schema.derived
-
   given (using IdentifierSchema): Schema[Response] = Schema.derived
 
 @description("Use case for retrieving an user by ID.")
@@ -31,4 +30,4 @@ trait GetUserUseCase:
   ): IO[ServiceFailure, GetUserCommand.Response]
   def apply(
       id: Identifier[User]
-  ): IO[String, Option[User]]
+  ): IO[ServiceFailure, Option[User]]
