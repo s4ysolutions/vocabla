@@ -1,8 +1,19 @@
 package solutions.s4y.vocabla.app.repo.tx
 
-import zio.{IO, ZIO}
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
+import zio.ZIO
 
-trait TransactionManager[TR <: Transaction, TX <: TransactionContext]:
+trait TransactionManager[TX <: TransactionContext: zio.Tag]:
   def transaction[R, A](
-      unitOfWork: ZIO[R & TR & TX, String, A]
-  ): ZIO[R, String, A]
+      effect: TX ?=> ZIO[R, InfraFailure, A]
+  ): ZIO[R, InfraFailure, A]
+
+/*
+  def transaction[R, A](
+                         effect: TX => ZIO[R, InfraFailure, A]
+                       ): ZIO[R, InfraFailure, A]
+  def transaction[R, A](
+      zio: ZIO[TX & R, InfraFailure, A]
+  ): ZIO[TX & R, InfraFailure, A] =
+    transaction[R, A](ctx => effect.provideSomeEnvironment(env => env.add(ctx))
+ */

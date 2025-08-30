@@ -1,38 +1,38 @@
 package solutions.s4y.vocabla.app.repo
 
-import solutions.s4y.vocabla.app.repo.tx.{Transaction, TransactionContext}
+import solutions.s4y.vocabla.app.repo.error.InfraFailure
+import solutions.s4y.vocabla.app.repo.tx.TransactionContext
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.identity.Identifier
 import zio.{Chunk, ZIO}
 
 trait TagAssociationRepository[
     TaggedT,
-    TR <: Transaction,
     TX <: TransactionContext
 ]:
 
-  def associateTagWithEntry(
+  def associateTagWithEntry[R](
       tagId: Identifier[Tag],
       taggedId: Identifier[TaggedT]
-  ): ZIO[TR & TX, String, Boolean]
+  )(using TX): ZIO[R, InfraFailure, Boolean]
 
-  def disassociateTagFromEntry(
+  def disassociateTagFromEntry[R](
       tagId: Identifier[Tag],
       taggId: Identifier[TaggedT]
-  ): ZIO[TR & TX, String, Boolean]
+  )(using TX): ZIO[R, InfraFailure, Boolean]
 
-  def disassociateTagFromAll(
+  def disassociateTagFromAll[R](
       tagId: Identifier[Tag]
-  ): ZIO[TR & TX, String, Boolean]
+  )(using TX): ZIO[R, InfraFailure, Boolean]
 
-  def disassociateTaggedFromAll(
+  def disassociateTaggedFromAll[R](
       taggedId: Identifier[TaggedT]
-  ): ZIO[TR & TX, String, Boolean]
+  )(using TX): ZIO[R, InfraFailure, Boolean]
 
-  def getTagged(
+  def getTagged[R](
       tagId: Identifier[Tag]
-  ): ZIO[TR & TX, String, Chunk[Identifier[TaggedT]]]
+  )(using TX): ZIO[R, InfraFailure, Chunk[Identifier[TaggedT]]]
 
-  def getTags(
+  def getTags[R](
       taggedId: Identifier[TaggedT]
-  ): ZIO[TR & TX, String, Chunk[Identifier[Tag]]]
+  )(using TX): ZIO[R, InfraFailure, Chunk[Identifier[Tag]]]
