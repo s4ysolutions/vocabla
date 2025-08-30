@@ -19,6 +19,8 @@ lazy val i18n = (project in file("modules/i18n"))
   .settings(
     name := "i18n",
     libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
     libraryDependencies += "org.scalameta" %% "munit" % munitVersion % Test
   )
 
@@ -62,8 +64,8 @@ lazy val appPorts = (project in file("modules/app-ports"))
 
 lazy val pgSQL = (project in file("modules/infra/pgsql"))
   .dependsOn(zio)
-  .dependsOn(appRepos)
-  .dependsOn(domain)
+  .dependsOn(i18n)
+  .dependsOn(appRepos) // for sake of errors expected by app layer
   .settings(
     name := "pgsql",
     libraryDependencies += "org.postgresql" % "postgresql" % "42.7.7",
@@ -72,6 +74,17 @@ lazy val pgSQL = (project in file("modules/infra/pgsql"))
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
     libraryDependencies += "io.github.cdimascio" % "java-dotenv" % dotenvVersion % Test
+  )
+
+lazy val pgSqlVocable = (project in file("modules/infra/pgsql-vocabla"))
+  .dependsOn(zio)
+  .dependsOn(pgSQL)
+  .dependsOn(appRepos)
+  .dependsOn(domain)
+  .settings(
+    name := "pgsql-vocabla",
+    libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
   )
 
 lazy val app = (project in file("modules/app"))
