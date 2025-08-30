@@ -29,11 +29,3 @@ def pgUpdate[R](
       .mapThrowable(t"""Failed to execute statement: "$sql"""")
   } yield rowsAffected
 }
-
-/*
-def pgUpdate[R](
-    sql: String,
-    setParams: PreparedStatement => Unit
-): ZIO[TransactionContextPg & R, InfraFailure, Int] =
-  pgWithCtx { ctx => pgUpdate(ctx, sql, setParams) }
- */

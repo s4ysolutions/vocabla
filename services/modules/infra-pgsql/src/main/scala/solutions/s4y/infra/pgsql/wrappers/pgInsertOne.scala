@@ -11,9 +11,3 @@ def pgInsertOne[R](
     setParams: PreparedStatement => Unit
 )(using TransactionContextPg): ZIO[R, InfraFailure, Boolean] =
   pgUpdateOne[R](sql, setParams)
-/*
-def pgInsertOne[R](
-    sql: String
-): ZIO[TransactionContextPg & R, InfraFailure, Boolean] =
-  pgUpdateOne[R](sql, _ => ())
- */

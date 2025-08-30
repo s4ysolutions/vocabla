@@ -21,11 +21,3 @@ def pgSelectOne[R, A](
         )
       )
   }
-/*
-def pgSelectOne[R, A](
-    ctx: TransactionContextPg,
-    sql: String,
-    mapResult: java.sql.ResultSet => A
-): ZIO[R, InfraFailure, Option[A]] =
-  pgSelectOne(ctx, sql, _ => (), mapResult)
- */

@@ -14,10 +14,7 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
   override def transaction[R, A](
       effect: TransactionContextPg ?=> ZIO[R, InfraFailure, A]
   ): ZIO[R, InfraFailure, A] =
-    transactionE[R, A](ctx => {
-      given TransactionContextPg = ctx
-      effect
-    })
+    transactionE[R, A](ctx => effect(using ctx))
 
   private def transactionE[R, A](
       effect: TransactionContextPg => ZIO[R, InfraFailure, A]

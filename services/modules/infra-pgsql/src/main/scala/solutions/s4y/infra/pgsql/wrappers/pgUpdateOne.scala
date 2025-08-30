@@ -23,12 +23,3 @@ def pgUpdateOne[R](
           )
         )
     )
-/*
-def pgUpdateOne[R](
-    sql: String,
-    setParams: PreparedStatement => Unit
-): ZIO[TransactionContextPg & R, InfraFailure, Boolean] =
-  ZIO.serviceWithZIO[TransactionContextPg](ctx =>
-    pgUpdateOne[R](ctx, sql, setParams)
-  )
- */
