@@ -84,7 +84,8 @@ lazy val pgSqlVocable = (project in file("modules/infra/pgsql-vocabla"))
   .settings(
     name := "pgsql-vocabla",
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+    libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+    libraryDependencies += "io.github.cdimascio" % "java-dotenv" % dotenvVersion % Test
   )
 
 lazy val app = (project in file("modules/app"))
