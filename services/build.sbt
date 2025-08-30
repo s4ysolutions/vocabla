@@ -6,7 +6,7 @@ ThisBuild / scalaVersion := "3.7.2"
 
 val zioVersion = "2.1.20"
 val zioConfigVersion = "4.0.4"
-val zioHttpVersion = "3.3.3"
+val zioHttpVersion = "3.4.0"
 val zioLoggingVersion = "2.5.1"
 val zioPreludeVersion = "1.0.0-RC41"
 val zioSchemaVersion = "1.7.4"
