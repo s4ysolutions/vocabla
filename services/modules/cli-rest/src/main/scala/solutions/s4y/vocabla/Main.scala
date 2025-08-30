@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint
+package solutions.s4y.vocabla
 
 import solutions.s4y.vocabla.endpoint.http.RESTService
 import solutions.s4y.zio.consoleColorTraceLogger
