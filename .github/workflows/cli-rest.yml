@@ -29,3 +29,4 @@ jobs:
           echo 'PGSQL_PASSWORD=${{ secrets.PGSQL_PASSWORD }}' > .env_test
           echo 'PGSQL_HOST=127.0.0.1' >> .env_test
           sbt clean test cliRest/assembly
+          sudo deploy modules/cli-rest/target/scala-3.7.2/cli-rest-assembly-0.1.0-SNAPSHOT.jar
