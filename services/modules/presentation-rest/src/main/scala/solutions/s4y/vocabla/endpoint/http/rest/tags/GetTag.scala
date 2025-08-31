@@ -1,12 +1,20 @@
 package solutions.s4y.vocabla.endpoint.http.rest.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.{GetEntryCommand, GetTagCommand, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.{
+  GetEntryCommand,
+  GetTagCommand,
+  GetTagUseCase
+}
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.domain.{Entry, Tag, UserContext}
 import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{
+  Forbidden403,
+  InternalServerError500
+}
 import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.rest.prefix
 import zio.ZIO
@@ -35,8 +43,8 @@ object GetTag:
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
-      .transformIn(id => GetTagCommand(id.identifier[Tag]))(
-        command => command.tagId.as[Long]
+      .transformIn(id => GetTagCommand(id.identifier[Tag]))(command =>
+        command.tagId.as[Long]
       )
       .auth(AuthType.Bearer)
 
@@ -47,9 +55,9 @@ object GetTag:
       withLocale {
         ZIO.serviceWithZIO[GetTagUseCase] { useCase =>
           useCase(command).mapError {
-            // case e: NotAuthorized => Forbidden403(e.message.toString)
+            case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
-              InternalServerError500(e.message.toString)
+              InternalServerError500(e.message.localized)
           }
         }
       }

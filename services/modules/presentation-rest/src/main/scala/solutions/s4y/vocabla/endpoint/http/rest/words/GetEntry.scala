@@ -2,14 +2,12 @@ package solutions.s4y.vocabla.endpoint.http.rest.words
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.{GetEntryCommand, GetEntryUseCase}
+import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, UserContext}
 import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{
-  Forbidden403,
-  InternalServerError500
-}
+import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{Forbidden403, InternalServerError500}
 import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.rest.prefix
 import zio.ZIO
@@ -47,9 +45,9 @@ object GetEntry:
       withLocale {
         ZIO.serviceWithZIO[GetEntryUseCase] { useCase =>
           useCase(command).mapError {
-            //case e: NotAuthorized => Forbidden403(e.message.toString)
+            case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
-              InternalServerError500(e.message.toString)
+              InternalServerError500(e.message.localized)
           }
         }
       }

@@ -47,9 +47,9 @@ object CreateTag:
       withLocale {
         ZIO.serviceWithZIO[CreateTagUseCase] { useCase =>
           useCase(command).mapError {
-            case e: NotAuthorized => Forbidden403(e.message.toString)
+            case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
-              InternalServerError500(e.message.toString)
+              InternalServerError500(e.message.localized)
           }
         }
       }
