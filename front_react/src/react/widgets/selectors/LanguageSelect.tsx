@@ -1,6 +1,6 @@
 import React from "react";
 import Select from ".";
-import Lang from "../../../domain/lang";
+import Lang from "../../../domain/Lang.ts";
 import ProgressInfinity from "../progress-infinity";
 
 interface props {

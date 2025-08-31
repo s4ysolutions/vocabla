@@ -1,4 +1,4 @@
-import Lang from "../../../../domain/lang";
+import Lang from "../../../../domain/Lang.ts";
 import Localized from "./localized";
 import Source from "./source";
 

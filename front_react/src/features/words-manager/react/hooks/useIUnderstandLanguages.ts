@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Lang from "../../../../domain/lang";
+import Lang from "../../../../domain/Lang.ts";
 
 const mockLanguages: Array<Lang> = [
     { code: "en", name: "English", flag: "🇬🇧" },

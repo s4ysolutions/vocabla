@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import { Id } from "../../../../domain/id";
+import { Id } from "../../../../domain/id/Id.ts";
 import { WordsRepositoryTag, EntryDTO } from "../repo/words-repository";
 import Entry from "../../domain/models/entry";
 import Definition from "../../domain/models/definition";

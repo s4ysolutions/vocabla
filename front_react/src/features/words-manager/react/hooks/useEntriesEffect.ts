@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Entry from "../../domain/models/entry";
-import { id } from "../../../../domain/id";
+import { id } from "../../../../domain/id/Id.ts";
 import getEntriesUseCase from "../../application/use_cases/getEntriesUseCase";
 import addEntryUseCase from "../../application/use_cases/addEntryUseCase";
 import { runAppEffect } from "../../../../infra/effect-runtime";

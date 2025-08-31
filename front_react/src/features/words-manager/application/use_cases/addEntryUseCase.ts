@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import { Id, id } from "../../../../domain/id";
+import { Id, id } from "../../../../domain/id/Id.ts";
 import { WordsRepositoryTag } from "../repo/words-repository";
 
 const addEntryUseCase = (

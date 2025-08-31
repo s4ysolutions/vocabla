@@ -58,7 +58,7 @@ const handleHTTPError = (
 ): Effect.Effect<Response, string, never> =>
   Effect.gen(function* () {
     if (!response.ok) {
-      const errorText = yield* converResponseToJson<{ message: string }>(
+      const errorText = yield* convertResponseToJson<{ message: string }>(
         response
       )
       const errorMessage = errorText.message || "no error message in response";
@@ -69,7 +69,7 @@ const handleHTTPError = (
     return response;
   });
 
-const converResponseToJson = <J>(
+const convertResponseToJson = <J>(
   response: Response
 ): Effect.Effect<J, string, never> =>
   Effect.tryPromise(() => response.json().then((json: J) => json as J)).pipe(
@@ -99,7 +99,7 @@ const fetchJsonEffect = <B, J, R>(
   Effect.gen(function* () {
     const response = yield* fetchResult<B>(method, uri, body);
     yield* handleHTTPError(method, uri, response);
-    const json = yield* converResponseToJson<J>(response);
+    const json = yield* convertResponseToJson<J>(response);
     const result = yield* transformJson<J, R>(json, transform);
     return result;
   });

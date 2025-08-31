@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Entry from "../../domain/models/entry";
-import Lang from "../../../../domain/lang";
+import Lang from "../../../../domain/Lang.ts";
 import Source from "../../domain/models/source";
 
 const en: Lang = {
