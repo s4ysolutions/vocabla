@@ -24,9 +24,11 @@ jobs:
             ${{ runner.os }}-sbt-
 
       - name: Compile
-        env:
+        with:
           PGSQL_PASSWORD: ${{ secrets.PGSQL_PASSWORD }}
+        env:
           PGSQL_HOST: ${{ env.PGSQL_HOST }}
         run: |
+          set
           cd services
           sbt clean test cliRest/assembly
