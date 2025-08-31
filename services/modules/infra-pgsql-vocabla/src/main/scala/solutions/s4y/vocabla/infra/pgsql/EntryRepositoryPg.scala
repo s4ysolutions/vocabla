@@ -2,9 +2,10 @@ package solutions.s4y.vocabla.infra.pgsql
 
 import org.postgresql.jdbc.PgArray
 import org.postgresql.util.PGobject
+import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
-import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionManagerPg}
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.infra.pgsql.wrappers.{
   pgDeleteOne,
   pgInsertWithId,
@@ -17,6 +18,8 @@ import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Entry, User}
 import zio.{Chunk, IO, ZIO, ZLayer}
+
+import scala.util.Using
 
 class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
 
@@ -97,18 +100,24 @@ object EntryRepositoryPg:
   )
   val layer: ZLayer[DataSourcePg, InfraFailure, EntryRepositoryPg] =
     ZLayer {
-      ZIO
-        .serviceWithZIO[DataSourcePg] { ds =>
-          ZIO.attempt {
-            val connection = ds.dataSource.getConnection
-            val statement = connection.createStatement()
-            init.foreach { sql =>
-              statement.execute(sql)
-            }
-            statement.close()
-            connection.close()
-          }.orDie *> ZIO.logDebug("EntryRepositoryPg initialized")
-        }
-        .as(new EntryRepositoryPg)
+      ZIO.logDebug("Initializing EntryRepositoryPg...") *>
+        ZIO
+          .serviceWithZIO[DataSourcePg] { ds =>
+            ZIO.attempt {
+              Using.Manager { use =>
+                val connection = use(ds.dataSource.getConnection)
+                val statement = use(connection.createStatement())
+
+                init.foreach { sql =>
+                  log.info(s"Executing SQL: $sql")
+                  statement.execute(sql)
+                }
+              }
+            }.orDie
+          }
+          .as(new EntryRepositoryPg) <* ZIO.logDebug(
+          "EntryRepositoryPg initialized"
+        )
     }
+  private val log = LoggerFactory.getLogger(EntryRepositoryPg.getClass)
 end EntryRepositoryPg

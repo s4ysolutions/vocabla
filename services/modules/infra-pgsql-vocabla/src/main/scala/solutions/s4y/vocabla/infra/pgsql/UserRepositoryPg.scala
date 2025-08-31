@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.infra.pgsql
 
+import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.infra.pgsql.wrappers.pgSelectOne
@@ -7,7 +8,9 @@ import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.User
 import solutions.s4y.vocabla.domain.identity.Identifier
-import zio.{IO, ZIO, ZLayer}
+import zio.{ZIO, ZLayer}
+
+import scala.util.Using
 
 class UserRepositoryPg extends UserRepository[TransactionContextPg]:
   override def get[R](
@@ -62,23 +65,28 @@ object UserRepositoryPg:
       ZIO
         .serviceWithZIO[DataSourcePg] { ds =>
           ZIO.attempt {
-            val connection = ds.dataSource.getConnection
-            val statement = connection.createStatement()
-            init.foreach { sql =>
-              statement.execute(sql)
+            Using.Manager { use =>
+              val connection = use(ds.dataSource.getConnection)
+              val statement = use(connection.createStatement())
+
+              init.foreach { sql =>
+                log.info(s"Executing SQL: $sql")
+                statement.execute(sql)
+              }
+              statement.execute("select count(*) from users")
+              val rs = statement.getResultSet
+              rs.next()
+              val count = rs.getInt(1)
+              if count == 0 then {
+                log.info("Inserting default user")
+                statement.execute(
+                  "INSERT INTO users (student) VALUES (ROW('default_student'))"
+                )
+              }
             }
-            statement.execute("select count(*) from users")
-            val rs = statement.getResultSet
-            rs.next()
-            val count = rs.getInt(1)
-            if count == 0 then
-              statement.execute(
-                "INSERT INTO users (student) VALUES (ROW('default_student'))"
-              )
-            statement.close()
-            connection.close()
           }.orDie *> ZIO.logDebug("UserRepositoryPg initialized")
         }
         .as(new UserRepositoryPg)
     }
+  private val log = LoggerFactory.getLogger(UserRepositoryPg.getClass)
 end UserRepositoryPg

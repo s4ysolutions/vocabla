@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.infra.pgsql
 
+import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionManagerPg}
 import solutions.s4y.infra.pgsql.wrappers.{
@@ -13,12 +14,15 @@ import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Tag, User}
+import solutions.s4y.vocabla.infra.pgsql.TagAssociationRepositoryPg.{init, log}
 import zio.{IO, ZIO, ZLayer}
+
+import scala.util.Using
 
 class TagRepositoryPg extends TagRepository[TransactionContextPg]:
   override def create[R](
       tag: Tag
-  )(using TransactionContextPg): ZIO[R,InfraFailure, Identifier[Tag]] =
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Identifier[Tag]] =
     pgInsertWithId(
       "INSERT INTO tags (label, ownerId) VALUES (?, ?)",
       st => {
@@ -30,7 +34,7 @@ class TagRepositoryPg extends TagRepository[TransactionContextPg]:
   override def updateLabel[R](
       id: Identifier[Tag],
       label: String
-  )(using TransactionContextPg): ZIO[R,InfraFailure, Boolean] =
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Boolean] =
     pgUpdateOne(
       "UPDATE tags SET label=? WHERE id=?",
       st => {
@@ -41,7 +45,7 @@ class TagRepositoryPg extends TagRepository[TransactionContextPg]:
 
   override def delete[R](
       tagId: Identifier[Tag]
-  )(using TransactionContextPg): ZIO[R,InfraFailure, Boolean] =
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Boolean] =
     pgDeleteOne(
       "DELETE FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long])
@@ -49,7 +53,7 @@ class TagRepositoryPg extends TagRepository[TransactionContextPg]:
 
   override def get[R](
       tagId: Identifier[Tag]
-  )(using TransactionContextPg): ZIO[R,InfraFailure, Option[Tag]] =
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Option[Tag]] =
     pgSelectOne(
       "SELECT label, ownerId FROM tags WHERE id = ?",
       st => st.setLong(1, tagId.as[Long]),
@@ -63,20 +67,27 @@ object TagRepositoryPg:
     "DROP TABLE IF EXISTS tags CASCADE",
     "CREATE TABLE tags (id SERIAL PRIMARY KEY, label TEXT NOT NULL, ownerId BIGINT NOT NULL)"
   )
-  val layer: ZLayer[DataSourcePg, InfraFailure, TagRepositoryPg] =
+  val layer: ZLayer[DataSourcePg, InfraFailure, TagRepositoryPg] = {
     ZLayer {
-      ZIO
-        .serviceWithZIO[DataSourcePg] { ds =>
-          ZIO.attempt {
-            val connection = ds.dataSource.getConnection
-            val statement = connection.createStatement()
-            init.foreach { sql =>
-              statement.execute(sql)
-            }
-            statement.close()
-            connection.close()
-          }.orDie *> ZIO.logDebug("TagRepositoryPg initialized")
-        }
-        .as(new TagRepositoryPg)
+      ZIO.logDebug("Initializing TagRepositoryPg...") *>
+        ZIO
+          .serviceWithZIO[DataSourcePg] { ds =>
+            ZIO.attempt {
+              Using.Manager { use =>
+                val connection = use(ds.dataSource.getConnection)
+                val statement = use(connection.createStatement())
+
+                init.foreach { sql =>
+                  log.info(s"Executing SQL: $sql")
+                  statement.execute(sql)
+                }
+              }
+            }.orDie
+          }
+          .as(new TagRepositoryPg) <* ZIO.logDebug(
+          "TagRepositoryPg initialized"
+        )
     }
+  }
+  private val log = LoggerFactory.getLogger(TagRepositoryPg.getClass)
 end TagRepositoryPg

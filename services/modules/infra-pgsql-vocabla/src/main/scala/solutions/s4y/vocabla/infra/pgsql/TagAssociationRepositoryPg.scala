@@ -1,14 +1,22 @@
 package solutions.s4y.vocabla.infra.pgsql
 
+import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
-import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionManagerPg}
-import solutions.s4y.infra.pgsql.wrappers.{pgDeleteMany, pgDeleteOne, pgInsertOne, pgSelectMany}
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
+import solutions.s4y.infra.pgsql.wrappers.{
+  pgDeleteMany,
+  pgDeleteOne,
+  pgInsertOne,
+  pgSelectMany
+}
 import solutions.s4y.vocabla.app.repo.TagAssociationRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Entry, Tag}
-import zio.{Chunk, IO, ZIO, ZLayer}
+import zio.{Chunk, ZIO, ZLayer}
+
+import scala.util.Using
 
 class TagAssociationRepositoryPg
     extends TagAssociationRepository[
@@ -92,18 +100,24 @@ object TagAssociationRepositoryPg:
 
   val layer: ZLayer[DataSourcePg, InfraFailure, TagAssociationRepositoryPg] =
     ZLayer {
-      ZIO
-        .serviceWithZIO[DataSourcePg] { ds =>
-          ZIO.attempt {
-            val connection = ds.dataSource.getConnection
-            val statement = connection.createStatement()
-            init.foreach { sql =>
-              statement.execute(sql)
-            }
-            statement.close()
-            connection.close()
-          }.orDie *> ZIO.logDebug("TagAssociationRepositoryPg initialized")
-        }
-        .as(new TagAssociationRepositoryPg)
+      ZIO.logDebug("Initializing TagAssociationRepositoryPg...") *>
+        ZIO
+          .serviceWithZIO[DataSourcePg] { ds =>
+            ZIO.attempt {
+              Using.Manager { use =>
+                val connection = use(ds.dataSource.getConnection)
+                val statement = use(connection.createStatement())
+
+                init.foreach { sql =>
+                  log.info(s"Executing SQL: $sql")
+                  statement.execute(sql)
+                }
+              }
+            }.orDie
+          }
+          .as(new TagAssociationRepositoryPg) <* ZIO.logDebug(
+          "TagAssociationRepositoryPg initialized"
+        )
     }
+  private val log = LoggerFactory.getLogger(TagAssociationRepositoryPg.getClass)
 end TagAssociationRepositoryPg
