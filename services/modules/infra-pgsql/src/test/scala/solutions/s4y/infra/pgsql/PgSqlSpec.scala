@@ -361,6 +361,7 @@ object PgSqlSpec extends ZIOSpecDefault {
     ) @@ TestAspect.before((for {
       dotenv <- ZIO.attempt(DotenvBuilder().filename(".env_test").load())
       _ <- TestSystem.putEnv("PGSQL_PASSWORD", dotenv.get("PGSQL_PASSWORD"))
+      _ <- TestSystem.putEnv("PGSQL_HOST", dotenv.get("PGSQL_HOST"))
     } yield ()).ignore)
 
   private def props(config: PgSqlConfig): Properties = {

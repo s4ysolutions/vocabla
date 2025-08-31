@@ -39,7 +39,8 @@ object Fixture:
     .attempt(DotenvBuilder().filename(".env_test").load())
     .flatMap(dotenv =>
       TestSystem.putEnv("PGSQL_PASSWORD", dotenv.get("PGSQL_PASSWORD")) *>
-        TestSystem.putEnv("PGSQL_SCHEMA", "vocabla_test")
+        TestSystem.putEnv("PGSQL_SCHEMA", "vocabla_test") *>
+        TestSystem.putEnv("PGSQL_HOST", dotenv.get("PGSQL_HOST"))
     )
     .ignore
 end Fixture
