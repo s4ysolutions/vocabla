@@ -1,4 +1,5 @@
 import sbt.Keys.libraryDependencies
+import sbtassembly.AssemblyPlugin
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
@@ -12,8 +13,14 @@ val zioPreludeVersion = "1.0.0-RC41"
 val zioSchemaVersion = "1.7.4"
 val dotenvVersion = "5.2.2"
 val munitVersion = "1.1.1"
-ThisBuild / assemblyMergeStrategy := { _ =>
-  MergeStrategy.first
+
+ThisBuild / assemblyMergeStrategy := {
+  case x if x.endsWith("module-info.class") => sbtassembly.MergeStrategy.discard
+  case x if x.endsWith("io.netty.versions.properties") =>
+    sbtassembly.MergeStrategy.discard
+  case x =>
+    val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
+    oldStrategy(x)
 }
 
 Test / testOptions += Tests.Argument("-v")
@@ -149,9 +156,12 @@ lazy val rest =
 
 lazy val cliRest =
   (project in file("modules/cli-rest"))
+    .enablePlugins(AssemblyPlugin)
     .dependsOn(rest)
     .dependsOn(app)
     .dependsOn(pgSqlVocabla)
     .settings(
-      name := "cli-rest"
+      name := "cli-rest",
+      Compile / mainClass := Some("solutions.s4y.vocabla.Main"),
+      assembly / mainClass := Some("solutions.s4y.vocabla.Main")
     )
