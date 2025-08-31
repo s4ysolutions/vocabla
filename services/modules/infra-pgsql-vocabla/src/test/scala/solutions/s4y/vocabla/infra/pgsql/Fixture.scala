@@ -41,4 +41,5 @@ object Fixture:
       TestSystem.putEnv("PGSQL_PASSWORD", dotenv.get("PGSQL_PASSWORD")) *>
         TestSystem.putEnv("PGSQL_SCHEMA", "vocabla_test")
     )
+    .ignore
 end Fixture

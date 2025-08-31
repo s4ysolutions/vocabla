@@ -352,16 +352,16 @@ object PgSqlSpec extends ZIOSpecDefault {
             } yield assertTrue(
               deleted.isLeft
                 && deleted.left
-                .getOrElse("")
-                .toString == """Expected exactly one row to be affected, but got 2 rows. SQL: "delete from test where text = ?""""
+                  .getOrElse("")
+                  .toString == """Expected exactly one row to be affected, but got 2 rows. SQL: "delete from test where text = ?""""
             )
           }
         }
       ).provideLayer(transactionManagerLayer)
-    ) @@ TestAspect.before(for {
+    ) @@ TestAspect.before((for {
       dotenv <- ZIO.attempt(DotenvBuilder().filename(".env_test").load())
       _ <- TestSystem.putEnv("PGSQL_PASSWORD", dotenv.get("PGSQL_PASSWORD"))
-    } yield ())
+    } yield ()).ignore)
 
   private def props(config: PgSqlConfig): Properties = {
     val props = new Properties()
