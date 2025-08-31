@@ -26,9 +26,7 @@ object Ping:
       .query(
         HttpCodec
           .query[PingCommand]
-          .examples("example" -> PingCommand("a payload")) ?? Doc.p(
-          "The payload message to echo back. Must be at least 2 characters long."
-        )
+          .examples("example" -> PingCommand("a payload"))
       )
       .out[PingCommand.Response](Doc.p("The echoed payload"))
       .outError[HttpError.BadRequest400](Status.BadRequest)
