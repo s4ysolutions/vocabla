@@ -41,7 +41,7 @@ final class VocablaApp[TX <: TransactionContext](
   ): IO[String, PingCommand.Response] =
     ZIO
       .succeed("PONG from VocablaApp: " + pingCommand.payload)
-      .delay(200.millis)
+    // .delay(200.millis)
 
   /** **************************************************************************
     * Entries
