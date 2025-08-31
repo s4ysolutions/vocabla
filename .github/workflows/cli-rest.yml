@@ -25,9 +25,7 @@ jobs:
 
       - name: Compile
         run: |
-          set
           cd services
           echo 'PGSQL_PASSWORD=${{ secrets.PGSQL_PASSWORD }}' > .env_test
           echo 'PGSQL_HOST=127.0.0.1' >> .env_test
-          cat .env_test
           sbt clean test cliRest/assembly
