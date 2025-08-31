@@ -29,6 +29,9 @@ object DataSourcePg {
         config <- ZIO.service[PgSqlConfig]
         hikariConfig = {
           val hc = new HikariConfig()
+          hc.setDriverClassName("org.postgresql.Driver")
+          // hc.setLeakDetectionThreshold(2000) // TODO: test only
+          hc.setMaximumPoolSize(1) // TODO: adjust pool size as needed
           hc.setJdbcUrl(config.url)
           hc.setUsername(config.user)
           hc.setPassword(config.password)
