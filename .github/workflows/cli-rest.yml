@@ -24,10 +24,11 @@ jobs:
             ${{ runner.os }}-sbt-
 
       - name: Compile
-        env:
-          PGSQL_PASSWORD: ${{ secrets.PGSQL_PASSWORD }}
-          PGSQL_HOST: ${{ env.PGSQL_HOST }}
         run: |
           set
           cd services
+          echo 'PGSQL_PASSWORD=${{ secrets.PGSQL_PASSWORD }}' > .env_test
+          echo 'PGSQL_HOST=${{ env.HOST }}' >> .env_test
+          echo 'PGSQL_HOST=${{ secrets.HOST }}' >> .env_test
+          cat .env_test
           sbt clean test cliRest/assembly
