@@ -1,7 +1,6 @@
 package solutions.s4y.infra.pgsql
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import org.checkerframework.checker.units.qual.t
 import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
@@ -11,15 +10,15 @@ import zio.{IO, ZIO, ZLayer}
 import java.sql.Connection
 import scala.util.Using
 
-class DataSourcePg(val dataSource: HikariDataSource): 
+class DataSourcePg(val dataSource: HikariDataSource):
 
   def getConnection: IO[InfraFailure, Connection] = ZIO
     .attemptBlocking(dataSource.getConnection)
     .mapThrowable(t"Failed to get connection from DataSource")
 
   def close(): IO[InfraFailure, Unit] = ZIO
-      .attemptBlocking(dataSource.close())
-      .mapThrowable(t"Failed to close DataSource")
+    .attemptBlocking(dataSource.close())
+    .mapThrowable(t"Failed to close DataSource")
 
 object DataSourcePg {
   val layer: ZLayer[PgSqlConfig, InfraFailure, DataSourcePg] =
@@ -49,7 +48,11 @@ object DataSourcePg {
             }
             ds
           }.orDie <* ZIO.logDebug("DataSourcePg initialized")
-        )(ds => ZIO.attemptBlocking(ds.close()).orDie)
+        )(ds =>
+          ZIO.logDebug("Closing DataSourcePg") *>
+            ZIO.attemptBlocking(ds.close()).orDie
+            <* ZIO.logDebug("DataSourcePg closed")
+        )
       } yield ds
     }
 

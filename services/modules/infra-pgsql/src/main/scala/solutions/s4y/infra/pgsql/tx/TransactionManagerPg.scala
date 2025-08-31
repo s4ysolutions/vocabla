@@ -30,7 +30,7 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
                   TransactionContextPg(connection)
                 }
                 .mapThrowable(t"Failed to start transaction")
-            )
+            ) <* ZIO.logTrace("Transaction started")
           )((tx, exit) =>
             (exit match {
               case Exit.Success(_) =>
@@ -41,7 +41,11 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
                 ZIO
                   .attempt(tx.connection.rollback())
                   .mapThrowable(t"Failed to rollback transaction")
-            }).ignore.as(tx.connection.close()).ignore
+            }).ignore
+              .as(tx.connection.close())
+              .mapThrowable(t"Failed to close transaction")
+              .ignore *>
+              ZIO.logTrace("Transaction closed")
           )(effect)
       )
 
@@ -51,4 +55,6 @@ object TransactionManagerPg:
       ZIO.config(PgSqlConfig.pgSqlConfig).orDie
     ) >>> DataSourcePg.layer >>>
       ZLayer.fromFunction(TransactionManagerPg(_))
+
+  private val logger = org.slf4j.LoggerFactory.getLogger(this.getClass)
 end TransactionManagerPg
