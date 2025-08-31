@@ -148,6 +148,7 @@ lazy val rest =
     .dependsOn(lang)
     .settings(
       name := "presentation-rest",
+      libraryDependencies += "dev.zio" %% "zio-config" % zioConfigVersion,
       libraryDependencies += "dev.zio" %% "zio-http" % zioHttpVersion,
       libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
       libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,

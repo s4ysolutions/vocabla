@@ -1,10 +1,10 @@
-package solutions.s4y.vocabla.endpoint.http.rest.usecases
+package solutions.s4y.vocabla.endpoint.http.usecases
 
 import solutions.s4y.vocabla.domain.UserContext
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
-import zio.http.{Response, Route}
 import zio.http.endpoint.Endpoint
+import zio.http.{Response, Route}
 
 import java.util.Locale
 

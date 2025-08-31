@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint.http.rest.words
+package solutions.s4y.vocabla.endpoint.http.routes.entries
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.{GetEntryCommand, GetEntryUseCase}
@@ -6,10 +6,9 @@ import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, UserContext}
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{Forbidden403, InternalServerError500}
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
-import solutions.s4y.vocabla.endpoint.http.rest.prefix
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
+import HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.Method.GET
 import zio.http.codec.{HttpCodec, PathCodec}
@@ -29,7 +28,7 @@ object GetEntry:
     GetEntryCommand.Response,
     None
   ] =
-    Endpoint(GET / prefix / "words" / "entries" / long("entryId"))
+    Endpoint(GET / prefix / long("entryId"))
       .tag("Vocabulary Entries")
       .out[GetEntryCommand.Response]
       .outErrors[HttpError](
@@ -40,7 +39,9 @@ object GetEntry:
         command => command.entryId.as[Long]
       )
 
-  def route(using IdentifierSchema): Route[GetEntryUseCase & Locale & UserContext, Response] =
+  def route(using
+      IdentifierSchema
+  ): Route[GetEntryUseCase & Locale & UserContext, Response] =
     endpoint.implement { command =>
       withLocale {
         ZIO.serviceWithZIO[GetEntryUseCase] { useCase =>

@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint.http.rest.error
+package solutions.s4y.vocabla.endpoint.http.error
 
 import zio.NonEmptyChunk
 import zio.schema.annotation.description

@@ -1,16 +1,16 @@
-package solutions.s4y.vocabla.endpoint.http.rest.words
+package solutions.s4y.vocabla.endpoint.http.routes.entries
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.{CreateEntryCommand, CreateEntryUseCase}
 import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
   InternalServerError500
 }
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.Method.POST
 import zio.http.codec.{HttpCodec, HttpContentCodec}
@@ -30,7 +30,7 @@ object CreateEntry:
     CreateEntryCommand.Response,
     AuthType.Bearer.type
   ] =
-    Endpoint(POST / prefix / "entries")
+    Endpoint(POST / prefix)
       .tag("Vocabulary Entries")
       .in[CreateEntryCommand]
       .out[CreateEntryCommand.Response]

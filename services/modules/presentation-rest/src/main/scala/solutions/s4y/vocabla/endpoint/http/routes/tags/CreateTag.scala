@@ -1,17 +1,16 @@
-package solutions.s4y.vocabla.endpoint.http.rest.tags
+package solutions.s4y.vocabla.endpoint.http.routes.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.{CreateTagCommand, CreateTagUseCase}
 import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
   InternalServerError500
 }
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
-import solutions.s4y.vocabla.endpoint.http.rest.prefix
 import zio.ZIO
 import zio.http.*
 import zio.http.Method.POST
@@ -30,7 +29,7 @@ object CreateTag:
     HttpError,
     CreateTagCommand.Response,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / "tags")
+  ] = Endpoint(POST / prefix)
     .tag("Tags")
     .in[CreateTagCommand]
     .out[CreateTagCommand.Response]

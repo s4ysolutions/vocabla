@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint.http.rest
+package solutions.s4y.vocabla.endpoint.http.routes
 
 import zio.http.codec.PathCodec
 

@@ -1,11 +1,15 @@
-package solutions.s4y.vocabla.endpoint.http.rest.words
+package solutions.s4y.vocabla.endpoint.http.routes.entries
+
+
+
+
 /*
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.{Identified, IdentifierSchema}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.endpoint.http.rest.error.ErrorResponse.{ErrorParseID, ErrorService}
-import solutions.s4y.vocabla.words.app.ports.EntryService
-import solutions.s4y.vocabla.words.domain.model.Owner
+import solutions.s4y.vocabla.entries.app.ports.EntryService
+import solutions.s4y.vocabla.entries.domain.model.Owner
 import zio.http.Method.GET
 import zio.http.codec.PathCodec
 import zio.http.endpoint.AuthType.None
@@ -56,7 +60,7 @@ object Entries:
   private given (using IdentifierSchema): Schema[EntriesResponse] =
     DeriveSchema.gen[EntriesResponse]
 
-val words = Seq(
+val entries = Seq(
   "abandon",
   "ability",
   "able",

@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint.http.rest.middleware
+package solutions.s4y.vocabla.endpoint.http.middleware
 
 import zio.http.Header.AcceptLanguage
 import zio.http.Header.AcceptLanguage.Any

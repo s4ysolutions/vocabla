@@ -1,7 +1,7 @@
-package solutions.s4y.vocabla.endpoint.http.rest
+package solutions.s4y.vocabla.endpoint.http.routes
 
 import solutions.s4y.vocabla.app.ports.{PingCommand, PingUseCase}
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import zio.ZIO
 import zio.http.codec.{Doc, HttpCodec}
 import zio.http.endpoint.AuthType.None

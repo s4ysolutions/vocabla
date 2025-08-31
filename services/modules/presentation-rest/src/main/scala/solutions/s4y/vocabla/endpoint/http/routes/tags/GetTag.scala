@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.endpoint.http.rest.tags
+package solutions.s4y.vocabla.endpoint.http.routes.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.{
@@ -10,13 +10,12 @@ import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.domain.{Entry, Tag, UserContext}
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.{
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
   InternalServerError500
 }
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.withLocale
-import solutions.s4y.vocabla.endpoint.http.rest.prefix
 import zio.ZIO
 import zio.http.Method.GET
 import zio.http.codec.{HttpCodec, PathCodec}
@@ -36,7 +35,7 @@ object GetTag:
     GetTagCommand.Response,
     AuthType.Bearer.type
   ] =
-    Endpoint(GET / prefix / "tags" / long("tagId"))
+    Endpoint(GET / prefix / long("tagId"))
       .tag("Tags")
       .out[GetTagCommand.Response]
       .outErrors[HttpError](

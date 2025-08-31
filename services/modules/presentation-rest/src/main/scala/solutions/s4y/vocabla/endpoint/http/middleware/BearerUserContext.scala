@@ -1,10 +1,10 @@
-package solutions.s4y.vocabla.endpoint.http.rest.middleware
+package solutions.s4y.vocabla.endpoint.http.middleware
 
 import solutions.s4y.vocabla.app.ports.GetUserUseCase
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{User, UserContext}
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.rest.error.HttpError.*
+import solutions.s4y.vocabla.endpoint.http.error.HttpError
+import HttpError.*
 import zio.ZIO
 import zio.http.*
 

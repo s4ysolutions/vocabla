@@ -6,11 +6,14 @@ import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.endpoint.http.rest.Ping
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BearerUserContext.bearerAuthWithContext
-import solutions.s4y.vocabla.endpoint.http.rest.middleware.BrowserLocale.browserLocale
-import solutions.s4y.vocabla.endpoint.http.rest.tags.{CreateTag, GetTag}
-import solutions.s4y.vocabla.endpoint.http.rest.words.{CreateEntry, GetEntry}
+import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.browserLocale
+import solutions.s4y.vocabla.endpoint.http.routes.Ping
+import solutions.s4y.vocabla.endpoint.http.routes.entries.{
+  CreateEntry,
+  GetEntry
+}
+import solutions.s4y.vocabla.endpoint.http.routes.tags.{CreateTag, GetTag}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
@@ -97,15 +100,24 @@ final class RESTService(
 end RESTService
 
 object RESTService:
+  val httpServerLayer: ZLayer[RestConfig, InfraFailure, Server] =
+    ZLayer.fromZIO {
+      ZIO.logDebug("Constructing HTTP server...") *>
+        ZIO.serviceWith[RestConfig](restConfig =>
+          Server.Config.default.port(restConfig.port)
+        )
+    } >>> Server.live.mapError(th =>
+      InfraFailure(t"Failed to start HTTP server", th)
+    )
+
   val layer: ZLayer[
     CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
       CreateTagUseCase & GetTagUseCase,
     InfraFailure,
     RESTService
   ] =
-    ZLayer.succeed(ZIO.logDebug("Constructing HTTP server...")) >>>
-      Server.default
-        .mapError(th => InfraFailure(t"Failed to start HTTP server", th))
+    RestConfig.layer
+      >>> httpServerLayer
       >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _))
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)
