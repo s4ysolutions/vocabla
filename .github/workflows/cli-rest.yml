@@ -13,15 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Ivy2 and SBT
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.ivy2/cache
-            ~/.sbt
-          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-          restore-keys: |
-            ${{ runner.os }}-sbt-
+#      - name: Cache Ivy2 and SBT
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ~/.ivy2/cache
+#            ~/.sbt
+#          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
+#          restore-keys: |
+#            ${{ runner.os }}-sbt-
 
       - name: Compile
         run: |
