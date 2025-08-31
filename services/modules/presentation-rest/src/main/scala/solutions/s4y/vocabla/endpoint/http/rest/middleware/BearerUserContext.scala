@@ -46,6 +46,8 @@ object BearerUserContext:
               )
           case NotFound404(message) =>
             Response.error(Status.NotFound, message)
+          case other =>
+            Response.error(Status.BadRequest, other.toString)
         }
     })
 
