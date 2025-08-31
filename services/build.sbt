@@ -12,9 +12,11 @@ val zioPreludeVersion = "1.0.0-RC41"
 val zioSchemaVersion = "1.7.4"
 val dotenvVersion = "5.2.2"
 val munitVersion = "1.1.1"
+ThisBuild / assemblyMergeStrategy := { _ =>
+  MergeStrategy.first
+}
 
 Test / testOptions += Tests.Argument("-v")
-
 /*
 **************** effect free pure modules *****************
  */
@@ -76,6 +78,7 @@ lazy val pgSQL = (project in file("modules/infra-pgsql"))
   .dependsOn(appRepos) // for sake of errors expected by app layer
   .settings(
     name := "infra-pgsql",
+    Test / parallelExecution := false,
     libraryDependencies += "org.postgresql" % "postgresql" % "42.7.7",
     libraryDependencies += "dev.zio" %% "zio-config" % zioConfigVersion,
     libraryDependencies += "com.zaxxer" % "HikariCP" % "7.0.2",
@@ -91,6 +94,7 @@ lazy val pgSqlVocabla = (project in file("modules/infra-pgsql-vocabla"))
   .dependsOn(domain)
   .settings(
     name := "infra-pgsql-vocabla",
+    parallelExecution := false,
     libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
     libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
     libraryDependencies += "io.github.cdimascio" % "java-dotenv" % dotenvVersion % Test
@@ -139,7 +143,8 @@ lazy val rest =
       name := "presentation-rest",
       libraryDependencies += "dev.zio" %% "zio-http" % zioHttpVersion,
       libraryDependencies += "dev.zio" %% "zio-test" % zioVersion % Test,
-      libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+      libraryDependencies += "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+      libraryDependencies += "org.postgresql" % "postgresql" % "42.7.7" % Test
     )
 
 lazy val cliRest =
