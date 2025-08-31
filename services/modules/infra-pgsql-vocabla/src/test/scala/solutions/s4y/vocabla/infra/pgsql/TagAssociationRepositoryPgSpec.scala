@@ -49,7 +49,9 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
                 assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and entry
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
+                tagId <- tagRepo.create(
+                  Tag("Test Tag", 1L.identifier[User.Student])
+                )
                 entryId <- entryRepo.create(
                   Entry(
                     Entry.Headword("Test Entry", "en"),
@@ -80,7 +82,9 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
                 assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and entry
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
+                tagId <- tagRepo.create(
+                  Tag("Test Tag", 1L.identifier[User.Student])
+                )
                 entryId <- entryRepo.create(
                   Entry(
                     Entry.Headword("Test Entry", "en"),
@@ -110,7 +114,9 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
                 assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create and associate
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
+                tagId <- tagRepo.create(
+                  Tag("Test Tag", 1L.identifier[User.Student])
+                )
                 entryId <- entryRepo.create(
                   Entry(
                     Entry.Headword("Test Entry", "en"),
@@ -139,7 +145,9 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
                 assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create tag and multiple entries
-                tagId <- tagRepo.create(Tag("Test Tag", 1L.identifier[User.Student]))
+                tagId <- tagRepo.create(
+                  Tag("Test Tag", 1L.identifier[User.Student])
+                )
                 entryId1 <- entryRepo.create(
                   Entry(
                     Entry.Headword("Test Entry 1", "en"),
@@ -215,8 +223,12 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
                 assocRepo <- ZIO.service[TagAssociationRepositoryPg]
 
                 // Create 2 tags and 2 entries
-                tagId1 <- tagRepo.create(Tag("Tag 1", 1L.identifier[User.Student]))
-                tagId2 <- tagRepo.create(Tag("Tag 2", 1L.identifier[User.Student]))
+                tagId1 <- tagRepo.create(
+                  Tag("Tag 1", 1L.identifier[User.Student])
+                )
+                tagId2 <- tagRepo.create(
+                  Tag("Tag 2", 1L.identifier[User.Student])
+                )
                 entryId1 <- entryRepo.create(
                   Entry(
                     Entry.Headword("Entry 1", "en"),
@@ -259,5 +271,7 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
       )
     ).provideLayer(
       consoleColorDebugLogger >>> Fixture.layerWithTagAssociationRepository
-    ) @@ TestAspect.before(Fixture.testSystem) @@ TestAspect.sequential
+    ) @@ TestAspect.before(
+      Fixture.testSystem
+    ) @@ TestAspect.sequential// @@ TestAspect.ignore
 }

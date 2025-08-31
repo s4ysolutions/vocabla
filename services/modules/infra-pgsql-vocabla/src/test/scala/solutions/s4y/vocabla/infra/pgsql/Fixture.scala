@@ -17,30 +17,23 @@ object Fixture:
   val layerWithEntryRepository: ZLayer[
     Any,
     InfraFailure,
-    TransactionManagerPg & TagRepositoryPg & EntryRepositoryPg
-  ] = {
-    ZLayer(
-      ZIO.logDebug("Init")
-    ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer)
-  }
+    TransactionManagerPg & EntryRepositoryPg
+  ] =
+    ZLayer.succeed(
+      ZIO.logDebug("create layerWithEntryRepository")
+    ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ EntryRepositoryPg.layer)
+
+  val layerWithTagRepository
+      : ZLayer[Any, InfraFailure, TransactionManagerPg & TagRepositoryPg] =
+    layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer)
 
   val layerWithTagAssociationRepository: ZLayer[
     Any,
     InfraFailure,
     TransactionManagerPg & TagRepositoryPg & EntryRepositoryPg &
       TagAssociationRepositoryPg
-  ] = {
-    ZLayer(
-      ZIO.logDebug("Init")
-    ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer)
-  }
-
-  val layer
-      : ZLayer[Any, InfraFailure, TransactionManagerPg & TagRepositoryPg] = {
-    ZLayer(
-      ZIO.logDebug("Init")
-    ) >>> layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer)
-  }
+  ] =
+    layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer)
 
   val testSystem: ZIO[Any, Throwable, Unit] = ZIO
     .attempt(DotenvBuilder().filename(".env_test").load())

@@ -50,7 +50,9 @@ object TagRepositoryPgSpec extends ZIOSpecDefault {
         }
       )
     ).provide {
-      consoleColorDebugLogger >>> Fixture.layer
-    } @@ TestAspect.before(Fixture.testSystem) @@ TestAspect.sequential
+      consoleColorDebugLogger >>> Fixture.layerWithTagRepository
+    } @@ TestAspect.before(
+      Fixture.testSystem
+    ) @@ TestAspect.sequential // @@ TestAspect.ignore
   }
 }
