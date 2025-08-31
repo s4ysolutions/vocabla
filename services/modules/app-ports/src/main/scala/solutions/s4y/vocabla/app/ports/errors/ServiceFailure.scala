@@ -9,4 +9,4 @@ final case class ServiceFailure(
     cause: Option[Throwable] = None
 ):
   override def toString: String =
-    message.toString(using Locale.ENGLISH)
+    message.localized(using Locale.ENGLISH)

@@ -10,30 +10,30 @@ class InterpolatorStringTest extends munit.FunSuite {
   test("Hello, World!") {
     given locale: Locale = Locale.ENGLISH
     val greeting = t"Hello, World!"
-    assertEquals(greeting.toString, "Hello, World!(en)")
+    assertEquals(greeting.localized, "Hello, World!(en)")
   }
   test("Hello, $user") {
     given locale: Locale = Locale.ENGLISH
     val name = "John"
     val greeting = t"Hello, $name!"
-    assertEquals(greeting.toString, "Hello, John!(en)")
+    assertEquals(greeting.localized, "Hello, John!(en)")
   }
   test("Hello, $user and another") {
     given locale: Locale = Locale.ENGLISH
     val name = "John"
     val name2 = "Bob"
     val greeting = t"Hello, $name and $name2!"
-    assertEquals(greeting.toString, "Hello, John and Bob!(en)")
+    assertEquals(greeting.localized, "Hello, John and Bob!(en)")
   }
   test("Hello, World!(sr)") {
     given locale: Locale = Locale.forLanguageTag("sr")
     val greeting = t"Hello, World!"
-    assertEquals(greeting.toString, "Здраво, свете!")
+    assertEquals(greeting.localized, "Здраво, свете!")
   }
   test("Hello, $user(sr)") {
     given locale: Locale = Locale.forLanguageTag("sr")
     val name = "John"
     val greeting = t"Hello, $name!"
-    assertEquals(greeting.toString, "Здраво, John!")
+    assertEquals(greeting.localized, "Здраво, John!")
   }
 }

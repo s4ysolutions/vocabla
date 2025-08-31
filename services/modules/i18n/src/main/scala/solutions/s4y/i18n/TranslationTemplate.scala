@@ -13,20 +13,20 @@ case class TranslationTemplate(
   def apply(newArgs: Any*): TranslationTemplate =
     copy(args = args ++ newArgs.toVector)
 
-  def toString(using locale: Locale): String =
+  def localized(using locale: Locale): String =
     resolver.resolve(locale, key, args*)
 
   override def toString: String =
-    toString(using Locale.ENGLISH)
+    localized(using Locale.ENGLISH)
 
 object TranslationTemplate:
   extension (tt: TranslationTemplate)
     def render(using locale: Locale): String =
-      tt.toString
+      tt.localized
 /*
   given (using Locale): Schema[TranslationTemplate] = Schema[String].transform(
     string => ???,
-    template => template.toString
+    template => template.localized
   )
  */
 end TranslationTemplate

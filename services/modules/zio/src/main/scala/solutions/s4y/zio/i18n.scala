@@ -8,5 +8,5 @@ import java.util.Locale
 extension (tt: TranslationTemplate)
   def toStringZIO: ZIO[Locale, Nothing, String] = ZIO.serviceWith[Locale] {
     locale =>
-      tt.toString(using locale)
+      tt.localized(using locale)
   }

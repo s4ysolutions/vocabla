@@ -9,8 +9,8 @@ case class InfraFailure(message: TranslationTemplate, cause: Option[Throwable]):
   override def toString: String =
     cause match
       case Some(th) =>
-        s"${message.toString(using Locale.ENGLISH)}: ${th.printStackTrace()}"
-      case None => message.toString(using Locale.ENGLISH)
+        s"${message.localized(using Locale.ENGLISH)}: ${th.printStackTrace()}"
+      case None => message.localized(using Locale.ENGLISH)
 
 object InfraFailure:
   def apply(message: TranslationTemplate): InfraFailure =
@@ -23,6 +23,6 @@ object InfraFailure:
     ): zio.ZIO[R, InfraFailure, A] =
       self
         .tapErrorCause { cause =>
-          ZIO.logErrorCause(message.toString(using Locale.ENGLISH), cause);
+          ZIO.logErrorCause(message.localized(using Locale.ENGLISH), cause);
         }
         .mapError(th => InfraFailure(message, Option(th)))
