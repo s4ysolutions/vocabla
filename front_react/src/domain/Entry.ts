@@ -1,31 +1,36 @@
-import type {Localized} from "./Localized.ts";
-import type {Owned} from "./mixins/Owned.ts";
-import type { Student } from "./Student.ts";
+import {Schema} from 'effect';
+import {type Localized, schemaLocalized} from './Localized.ts';
+import type {Student} from './Student.ts';
+import {schemaOwned} from './mixins/Owned.ts';
+import type {Identifier} from './identity/Identifier.ts';
 
-export type Entry = {
-  readonly word: Localized
-  readonly definitions: Array<Entry.Definition>
-} & Owned<Student>
+export const schemaSource = Schema.Struct({
+  title: Schema.String,
+  url: Schema.optional(Schema.String)
+})
+export type Source = typeof schemaSource.Type
+export const source = (title: string, url?: string): Source =>
+  Schema.decodeSync(schemaSource)({title, url})
 
-export namespace Entry {
-  export type Definition = {
-    readonly localized: Localized
-    readonly source: Source
-  }
-  export type Source = {
-    readonly title: string,
-    readonly url?: string,
-  }
-}
+export const schemaDefinition = Schema.Struct({
+  localized: schemaLocalized,
+  source: Schema.optional(schemaSource)
+});
+export type Definition = Schema.Schema.Type<typeof schemaDefinition>;
+export const definition = (localized: Localized) =>
+  Schema.decodeSync(schemaDefinition)({localized})
 
-export const isEntryDefinition = (obj: unknown): obj is Entry.Definition =>
-  obj != null &&
-  typeof obj === "object" &&
-  "localized" in obj &&
-  "source" in obj &&
-  typeof obj.localized === "object" &&
-  typeof obj.source === "object" &&
-  obj.source !== null &&
-  "title" in obj.source &&
-  typeof obj.source.title === "string" &&
-  ("url" in obj.source ? typeof obj.source.url === "string" || obj.source.url === undefined : true)
+export const schemaEntry = Schema.Struct({
+  word: schemaLocalized,
+  definitions: Schema.Array(schemaDefinition)
+}).pipe(
+  Schema.extend(schemaOwned<Student>())
+)
+export type Entry = Schema.Schema.Type<typeof schemaEntry>
+export const entry = (
+  word: Localized,
+  definitions: Definition[],
+  ownerId: Identifier<Student>
+): Entry =>
+  Schema.decodeSync(schemaEntry)({word, definitions, ownerId})
+

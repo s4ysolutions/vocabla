@@ -1,5 +1,9 @@
-import type {Identifier} from "../id/Identifier.ts";
+import {type Identifier, schemaIdentifier} from '../identity/Identifier.ts';
+import {Schema} from 'effect';
 
-export type Owned<E> = {
-    readonly ownerId: Identifier<E>
-}
+export const schemaOwned = <E>() => Schema.Struct({
+  ownerId: schemaIdentifier<E>()
+})
+export type OwnerId<E> = Schema.Schema.Type<ReturnType<typeof schemaOwned<E>>>
+export const ownerId = <E>(owner: Identifier<E>): OwnerId<E> =>
+  Schema.decodeSync(schemaOwned<E>())({ownerId: owner})

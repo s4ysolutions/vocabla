@@ -9,7 +9,7 @@ const en: Lang = {
 }
 
 const sourceManual: Source = {
-    title: "Manual", 
+    title: "Manual",
 }
 
 const generateRandomEntries = (count: number): Array<Entry> => {
@@ -45,7 +45,7 @@ const mockVocab: Array<Entry> = generateRandomEntries(64);
 const useEntries = ():{entries: Array<Entry>, loading: boolean} => {
     const [entries, setEntries] = useState<Array<Entry>>([]);
     const [loading, setLoading] = useState<boolean>(true);
-  
+
     useEffect(() => {
       const fetchEntries = async () => {
         setLoading(true);
@@ -53,11 +53,11 @@ const useEntries = ():{entries: Array<Entry>, loading: boolean} => {
         setEntries(mockVocab);
         setLoading(false);
       };
-  
+
       fetchEntries();
     }, []);
-  
+
     return { entries, loading };
   };
-  
+
   export default useEntries;

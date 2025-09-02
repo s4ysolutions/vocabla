@@ -1,4 +1,5 @@
-import {type Lang, type LangCode} from './Lang.ts';
+import {type Lang} from './Lang.ts';
+import type {LangCode} from './LangCode.ts';
 
 const languages: Lang[] = [
   {code: 'en' as LangCode, name: 'English', flag: '🇬🇧'},

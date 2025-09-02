@@ -25,7 +25,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "isolatedDeclarations" : true,
-    "erasableSyntaxOnly" : true,
+  //  "erasableSyntaxOnly" : true,
   },
   "include": ["src"]
 }
