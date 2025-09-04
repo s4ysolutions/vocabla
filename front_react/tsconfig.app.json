@@ -25,6 +25,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "isolatedDeclarations" : true,
+    "exactOptionalPropertyTypes": true,
   //  "erasableSyntaxOnly" : true,
   },
   "include": ["src"]

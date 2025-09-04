@@ -14,7 +14,7 @@ export const source = (title: string, url?: string): Source =>
 
 export const schemaDefinition = Schema.Struct({
   localized: schemaLocalized,
-  source: Schema.optional(schemaSource)
+  source: Schema.optionalWith(schemaSource, {exact: true})
 });
 export type Definition = Schema.Schema.Type<typeof schemaDefinition>;
 export const definition = (localized: Localized) =>

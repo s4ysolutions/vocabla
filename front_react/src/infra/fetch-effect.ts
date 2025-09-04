@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-const proto = "http";
+const proto = "http" ;
 const host = "localhost";
 const port = 8080;
 const baseUrl = `${proto}://${host}:${port}`;

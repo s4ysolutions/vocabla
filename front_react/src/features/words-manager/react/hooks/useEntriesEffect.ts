@@ -3,7 +3,7 @@ import Entry from "../../domain/models/entry";
 import { id } from "../../../../domain/id/Id.ts";
 import getEntriesUseCase from "../../application/use_cases/getEntriesUseCase";
 import addEntryUseCase from "../../application/use_cases/addEntryUseCase";
-import { runAppEffect } from "../../../../infra/effect-runtime";
+import { runAppEffect } from "../../../../app/effect-runtime.ts";
 
 const useEntries = (
   ownerId: string

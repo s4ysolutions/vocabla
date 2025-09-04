@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as ManagedRuntime from "effect/ManagedRuntime";
-import { WordsAdapterRestLayer } from "./rest-adapter";
+import { WordsAdapterRestLayer } from "../infra/rest-adapter.ts";
 // import * as Layer from "effect/Layer"; // Uncomment when merging layers
 // import { UserServiceLayer } from "./example-services"; // Add when needed
 
@@ -19,7 +19,7 @@ export const runAppEffect = <A, E, R>(
 ): Promise<A> =>
   AppRuntime.runPromise(effect as Effect.Effect<A, E, never>);
 
-// For effects that need custom error handling  
+// For effects that need custom error handling
 export const runAppEffectExit = <A, E, R>(
   effect: Effect.Effect<A, E, R>
 ) =>

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import * as Effect from "effect/Effect";
-import { runAppEffect, runAppEffectExit } from "../../../infra/effect-runtime";
+import { runAppEffect, runAppEffectExit } from "../../../app/effect-runtime.ts";
 import { WordsRepositoryTag } from "../../words-manager/application/repo/words-repository";
 
 /**
