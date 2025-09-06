@@ -16,7 +16,7 @@ final case class GetTagCommand(
 )
 
 object GetTagCommand:
-  @description("Response containing the tag if found.")
+  @description("CreateTagResponse containing the tag if found.")
   final case class Response(
       @description("The retrieved tag.")
       tag: Option[Tag]

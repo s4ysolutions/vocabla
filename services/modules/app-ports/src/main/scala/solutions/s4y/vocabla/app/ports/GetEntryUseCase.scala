@@ -16,7 +16,7 @@ final case class GetEntryCommand(
 )
 
 object GetEntryCommand:
-  @description("Response containing the entry if found.")
+  @description("CreateTagResponse containing the entry if found.")
   final case class Response(
       @description("The retrieved entry.")
       entry: Option[Entry]

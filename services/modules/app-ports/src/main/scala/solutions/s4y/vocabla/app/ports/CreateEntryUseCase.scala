@@ -24,7 +24,7 @@ final case class CreateEntryCommand(
 )
 
 object CreateEntryCommand:
-  @description("Response containing the ID of the newly created entry.")
+  @description("CreateTagResponse containing the ID of the newly created entry.")
   final case class Response(
       @description("ID of the newly created entry.")
       entryId: Identifier[Entry]

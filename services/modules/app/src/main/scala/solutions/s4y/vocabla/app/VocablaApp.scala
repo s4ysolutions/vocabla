@@ -4,6 +4,11 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.app.ports.tag_create.{
+  CreateTagRequest,
+  CreateTagResponse,
+  CreateTagUseCase
+}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.app.repo.tx.{
   TransactionContext,
@@ -18,7 +23,7 @@ import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
 import zio.prelude.Validation
-import zio.{IO, ZIO, ZLayer, durationInt}
+import zio.{IO, ZIO, ZLayer}
 
 final class VocablaApp[TX <: TransactionContext](
     private val tm: TransactionManager[TX],
@@ -55,7 +60,7 @@ final class VocablaApp[TX <: TransactionContext](
   ] =
     authorized(
       authorizationService.canCreateEntry(command.entry, _)
-    ) *> transaction(entriesRepository.create(command.entry))
+    ) *> transaction("entryCreate", entriesRepository.create(command.entry))
       .map(
         CreateEntryCommand.Response(_)
       )
@@ -70,6 +75,7 @@ final class VocablaApp[TX <: TransactionContext](
     authorized(
       authorizationService.canGetEntry(command.entryId, _)
     ) *> transaction(
+      "entryGet",
       entriesRepository
         .get(command.entryId)
     ).map(entry => GetEntryCommand.Response(entry))
@@ -78,14 +84,14 @@ final class VocablaApp[TX <: TransactionContext](
     * Tags
     */
   override def apply(
-      command: CreateTagCommand
+      command: CreateTagRequest
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
-    CreateTagCommand.Response
+    CreateTagResponse
   ] = authorized(authorizationService.canCreateTag(command.tag, _)) *>
-    transaction(tagsRepository.create(command.tag)).map(tagId =>
-      CreateTagCommand.Response(tagId)
+    transaction("tagCreate", tagsRepository.create(command.tag)).map(tagId =>
+      CreateTagResponse(tagId)
     )
 
   override def apply(
@@ -93,6 +99,7 @@ final class VocablaApp[TX <: TransactionContext](
   ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagCommand.Response] =
     authorized(authorizationService.canGetTag(command.tagId, _)) *>
       transaction(
+        "tagGet",
         tagsRepository.get(command.tagId)
       ).map(tag => GetTagCommand.Response(tag))
 
@@ -110,6 +117,7 @@ final class VocablaApp[TX <: TransactionContext](
   override def apply(
       id: Identifier[User]
   ): IO[ServiceFailure, Option[User]] = transaction(
+    "userGetById",
     userRepository.get(id)
   ).mapError(f => ServiceFailure(f.message, f.cause))
 
@@ -122,9 +130,10 @@ final class VocablaApp[TX <: TransactionContext](
     ZIO.serviceWithZIO[UserContext](validate(_).toZIO)
 
   private def transaction[R, T](
+      log: String,
       unitOfWork: TX ?=> ZIO[R, InfraFailure, T]
   ): ZIO[R, ServiceFailure, T] =
-    tm.transaction(unitOfWork).mapInfraFailure
+    tm.transaction(log, unitOfWork).mapInfraFailure
 end VocablaApp
 
 object VocablaApp:

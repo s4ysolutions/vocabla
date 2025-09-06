@@ -13,7 +13,8 @@ import scala.util.Using
 class DataSourcePg(val dataSource: HikariDataSource):
 
   def getConnection: IO[InfraFailure, Connection] = ZIO
-    .attemptBlocking(dataSource.getConnection)
+    .attemptBlocking(
+      dataSource.getConnection)
     .mapThrowable(t"Failed to get connection from DataSource")
 
   def close(): IO[InfraFailure, Unit] = ZIO

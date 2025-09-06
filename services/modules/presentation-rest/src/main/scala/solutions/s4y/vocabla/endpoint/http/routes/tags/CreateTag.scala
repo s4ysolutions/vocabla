@@ -1,16 +1,13 @@
 package solutions.s4y.vocabla.endpoint.http.routes.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.{CreateTagCommand, CreateTagUseCase}
+import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagRequest, CreateTagResponse, CreateTagUseCase}
 import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
-import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
-  Forbidden403,
-  InternalServerError500
-}
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{Forbidden403, InternalServerError500}
 import zio.ZIO
 import zio.http.*
 import zio.http.Method.POST
@@ -25,14 +22,14 @@ object CreateTag:
       IdentifierSchema
   ): Endpoint[
     Unit,
-    CreateTagCommand,
+    CreateTagRequest,
     HttpError,
-    CreateTagCommand.Response,
+    CreateTagResponse,
     AuthType.Bearer.type
   ] = Endpoint(POST / prefix)
     .tag("Tags")
-    .in[CreateTagCommand]
-    .out[CreateTagCommand.Response]
+    .in[CreateTagRequest]
+    .out[CreateTagResponse]
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
       HttpCodec.error[Forbidden403](Status.Forbidden)

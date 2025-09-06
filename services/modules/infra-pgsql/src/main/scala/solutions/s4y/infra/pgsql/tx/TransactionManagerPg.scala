@@ -12,11 +12,13 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
     extends TransactionManager[TransactionContextPg]:
 
   override def transaction[R, A](
+      log: String,
       effect: TransactionContextPg ?=> ZIO[R, InfraFailure, A]
   ): ZIO[R, InfraFailure, A] =
-    transactionE[R, A](ctx => effect(using ctx))
+    transactionE[R, A](log, ctx => effect(using ctx))
 
   private def transactionE[R, A](
+      log: String,
       effect: TransactionContextPg => ZIO[R, InfraFailure, A]
   ): ZIO[R, InfraFailure, A] =
     ZIO
@@ -29,23 +31,23 @@ case class TransactionManagerPg(private val ds: DataSourcePg)
                   connection.setAutoCommit(false)
                   TransactionContextPg(connection)
                 }
-                .mapThrowable(t"Failed to start transaction")
-            ) <* ZIO.logTrace("Transaction started")
+                .mapThrowable(t"Failed to start transaction: $log")
+            ) <* ZIO.logTrace(s"Transaction started: $log")
           )((tx, exit) =>
             (exit match {
               case Exit.Success(_) =>
                 ZIO
                   .attempt(tx.connection.commit())
-                  .mapThrowable(t"Failed to commit transaction")
+                  .mapThrowable(t"Failed to commit transaction: $log")
               case Exit.Failure(cause) =>
                 ZIO
                   .attempt(tx.connection.rollback())
-                  .mapThrowable(t"Failed to rollback transaction")
+                  .mapThrowable(t"Failed to rollback transaction: $log")
             }).ignore
               .as(tx.connection.close())
-              .mapThrowable(t"Failed to close transaction")
+              .mapThrowable(t"Failed to close transaction: $log")
               .ignore *>
-              ZIO.logTrace("Transaction closed")
+              ZIO.logTrace(s"Transaction closed: $log")
           )(effect)
       )
 

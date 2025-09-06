@@ -4,15 +4,13 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.app.ports.tag_create.CreateTagUseCase
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.browserLocale
 import solutions.s4y.vocabla.endpoint.http.routes.Ping
-import solutions.s4y.vocabla.endpoint.http.routes.entries.{
-  CreateEntry,
-  GetEntry
-}
+import solutions.s4y.vocabla.endpoint.http.routes.entries.{CreateEntry, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.routes.tags.{CreateTag, GetTag}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*

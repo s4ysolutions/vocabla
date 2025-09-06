@@ -16,7 +16,7 @@ final case class GetUserCommand(
 )
 
 object GetUserCommand:
-  @description("Response containing the entry if found.")
+  @description("CreateTagResponse containing the entry if found.")
   final case class Response(
       @description("The retrieved entry.")
       user: Option[User]

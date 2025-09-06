@@ -5,6 +5,7 @@ import zio.ZIO
 
 trait TransactionManager[TX <: TransactionContext: zio.Tag]:
   def transaction[R, A](
+      log: String,
       effect: TX ?=> ZIO[R, InfraFailure, A]
   ): ZIO[R, InfraFailure, A]
 
