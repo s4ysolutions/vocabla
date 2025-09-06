@@ -18,6 +18,7 @@ ThisBuild / assemblyMergeStrategy := {
   case x if x.endsWith("module-info.class") => sbtassembly.MergeStrategy.discard
   case x if x.endsWith("io.netty.versions.properties") =>
     sbtassembly.MergeStrategy.discard
+  case x if x.matches(".*messages_.*\\.properties") => sbtassembly.MergeStrategy.concat
   case x =>
     val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
     oldStrategy(x)

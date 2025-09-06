@@ -9,6 +9,11 @@ trait TransactionManager[TX <: TransactionContext: zio.Tag]:
       effect: TX ?=> ZIO[R, InfraFailure, A]
   ): ZIO[R, InfraFailure, A]
 
+  def transaction[R, A](
+                         effect: TX ?=> ZIO[R, InfraFailure, A]
+                       ): ZIO[R, InfraFailure, A] =
+    transaction[R, A]("", effect)
+
 /*
   def transaction[R, A](
                          effect: TX => ZIO[R, InfraFailure, A]
