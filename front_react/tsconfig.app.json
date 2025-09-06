@@ -24,8 +24,8 @@
     /* Interop */
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "isolatedDeclarations" : true,
-    "composite": true,
+    //"isolatedDeclarations" : true,
+    //"composite": true,
     "exactOptionalPropertyTypes": true,
     "downlevelIteration": true, // enables Effect yield syntax
     //  "erasableSyntaxOnly" : true,
