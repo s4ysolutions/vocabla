@@ -1,10 +1,10 @@
 import {Effect, Layer} from 'effect';
-import HttpClient from './HttpClient.ts';
 import type {Method} from './Method.ts';
-import type {HTTPError} from './HTTPError.ts';
-import {infraError, type InfraError} from '../../app-repo/infraError.ts';
+import type {HTTPError} from './errors/HTTPError.ts';
 import {tt} from '../../translable/Translatable.ts';
-import type {JsonDecodingError} from './JsonDecodingError.ts';
+import type {JsonDecodingError} from './errors/JsonDecodingError.ts';
+import {HttpClientTag} from './HttpClient.ts';
+import {clientError, type ClientError} from './errors/ClientError.ts';
 
 const _handleOk = (response: Response): Effect.Effect<unknown, JsonDecodingError> =>
   Effect.tryPromise(() => response.json() as Promise<unknown>).pipe(
@@ -59,19 +59,38 @@ const _httpRequestWithFetch = (
   method: Method,
   url: string,
   body?: unknown
-): Effect.Effect<unknown, HTTPError | InfraError | JsonDecodingError> =>
+): Effect.Effect<unknown, HTTPError | ClientError | JsonDecodingError> =>
   Effect.tryPromise(() =>
     fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: 'Bearer ' + 1,
       },
       body: body ? JSON.stringify(body) : null,
     })
   ).pipe(
-    Effect.mapError((error): InfraError =>
-      infraError(tt`Failed to call fetch`, error)
+    Effect.mapError((error): ClientError => {
+        if (error._tag === 'UnknownException' && 'cause' in error) {
+          const cause0 = error.cause;
+          if (cause0 instanceof TypeError && 'cause' in cause0) {
+            const cause = cause0.cause;
+            if (cause instanceof AggregateError) {
+              let message = '';
+              for (const innerErr of cause.errors) {
+                if ('message' in innerErr) {
+                  message += innerErr.message + ';\n';
+                }
+              }
+              if (message) {
+                return clientError(tt`Failed to call fetch:\n ${message}`, error);
+              }
+            }
+          }
+        }
+        return clientError(tt`Failed to call fetch`, error)
+      }
     ),
     Effect.flatMap((response): Effect.Effect<unknown, HTTPError | JsonDecodingError> => {
       if (response.ok) {
@@ -90,11 +109,11 @@ const _httpRequestWithFetch = (
  * Live implementation of HttpClient using Fetch API
  */
 
-const httpClientLive = Layer.succeed(
-  HttpClient,
-  HttpClient.of({
+const httpClientLayer = Layer.succeed(
+  HttpClientTag,
+  HttpClientTag.of({
     execute: _httpRequestWithFetch
   })
 )
 
-export default httpClientLive
+export default httpClientLayer

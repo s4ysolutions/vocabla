@@ -25,8 +25,11 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "isolatedDeclarations" : true,
+    "composite": true,
     "exactOptionalPropertyTypes": true,
-  //  "erasableSyntaxOnly" : true,
+    "downlevelIteration": true, // enables Effect yield syntax
+    //  "erasableSyntaxOnly" : true,
+    "noUncheckedIndexedAccess": true, // openapi-typescript requires this
   },
   "include": ["src"]
 }

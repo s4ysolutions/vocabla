@@ -2,7 +2,7 @@ interface Error {
   statusText: string;
   body?: unknown;
   bodyReadError?: unknown;
-  __brand?: 'HTTPError';
+  _tag?: 'HTTPError';
 }
 
 type BadRequestError400 = Error & { status: 400 }

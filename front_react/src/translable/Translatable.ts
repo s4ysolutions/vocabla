@@ -1,6 +1,6 @@
 export type Translatable = {
   parts: TemplateStringsArray,
-  values: string[]
+  values: unknown[]
 }
 
 export const tt = (parts: TemplateStringsArray, ...values: unknown[]): Translatable => ({

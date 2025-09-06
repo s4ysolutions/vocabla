@@ -7,9 +7,9 @@ describe('Identifier', () => {
     type User = { name: string }
     type Tag = { label: string }
 
-    const userId: Identifier<User> = {value: 1234} // { value: 1234, __phantom: undefined }
+    const userId: Identifier<User> = {value: 1234}
     const userI2: Identifier<User> = userId
-    const tagId: Identifier<Tag> = {value: 1234} //{ value: 1234, __phantom: undefined }
+    const tagId: Identifier<Tag> = {value: 1234}
 
     expect(userId.value).toBe(1234)
     expect(tagId.value).toBe(1234)

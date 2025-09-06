@@ -1,23 +1,23 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Effect, Layer, Schema} from 'effect';
-import {REST} from './REST.ts';
-import {restLive} from './restLive.ts';
-import httpClientLive from '../http/httpClientLive.ts';
+import {RestClientTag} from './restClient.ts';
+import httpClientLayer from '../http/httpClientLive.ts';
+import {restClientLayer} from './restClientLive.ts';
 
 describe('REST', () => {
-  const restLiveProvider = restLive.pipe(
-    Layer.provide(httpClientLive)
-  )//Layer.provide(restLive, httpClientLive)
+  const restLiveProvider = restClientLayer.pipe(Layer.provide(httpClientLayer))
+
   describe('Unit tests', () => {
     it.effect('Live instance can be instantiated', () =>
       Effect.gen(function* () {
-        const rest = yield* REST;
+        const rest = yield* RestClientTag;
         expect(rest).not.toBeNull()
         expect(rest).toHaveProperty('post')
       }).pipe(
         Effect.provide(restLiveProvider),
       ))
   });
+
   describe('Integration tests', () => {
     const querySchema = Schema.Struct({
       author: Schema.String
@@ -27,8 +27,12 @@ describe('REST', () => {
     })
     it.effect('post request should success', () =>
       Effect.gen(function* () {
-        const rest = yield* REST;
-        const response = yield* rest.post('https://echo.free.beeceptor.com/sample-request?author=beeceptor', {'author': 'beeceptor'}, querySchema, responseSchema);
+        const rest = yield* RestClientTag;
+        const response = yield* rest.post({
+          url: 'https://echo.free.beeceptor.com/sample-request?author=beeceptor',
+          body: {'author': 'beeceptor'},
+          schemaOut: responseSchema
+        });
         expect(response).not.toBeNull()
         expect(response).toEqual({parsedQueryParams: {author: 'beeceptor'}});
       }).pipe(

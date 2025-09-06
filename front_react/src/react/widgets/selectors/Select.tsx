@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode } from 'react'
+import React, {ReactElement, type ReactNode} from 'react'
 
 interface Props extends React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> {
     children?: ReactNode
