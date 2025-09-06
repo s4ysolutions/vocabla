@@ -9,7 +9,7 @@ import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';
 import {type Tag} from '../../domain/Tag.ts';
 import {type Identifier, schemaIdentifier} from '../../domain/identity/Identifier.ts';
 import type {components} from '../rest/types.ts';
-import type {ParseError} from 'effect/ParseResult';
+import {ParseError} from 'effect/ParseResult';
 
 type CreateTagRequest = components['schemas']['CreateTagRequest']
 type CreateTagResponse = components['schemas']['CreateTagResponse']
@@ -40,6 +40,9 @@ const repositoryRest = (rest: RestClient): TagsRepository => ({
 })
 
 const _error2infraError = (error: ClientError | HTTPError | JsonDecodingError | ParseError): InfraError => {
+  if (error instanceof ParseError) {
+    return infraError(tt`Parsing error: ${error.message}`, error)
+  }
   switch (error._tag) {
     case 'ClientError':
       return infraError(error.message, error)
@@ -48,8 +51,8 @@ const _error2infraError = (error: ClientError | HTTPError | JsonDecodingError | 
     case 'JsonDecodingError':
       return infraError(tt`Decoding error`, error)
     default: {
-      // noinspection UnnecessaryLocalVariableJS
       const _exhaustive: never = error as never
+      void _exhaustive;
       return _exhaustive
     }
   }
