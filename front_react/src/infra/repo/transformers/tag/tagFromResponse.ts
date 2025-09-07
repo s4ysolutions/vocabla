@@ -1,8 +1,8 @@
 import {ParseResult, Schema} from 'effect';
-import type {components} from '../../rest/types.ts';
-import {schemaTag, type Tag} from '../../../domain/Tag.ts';
-import {ownedFromNumber} from './ownedFromNumber.ts';
-import type {Student} from '../../../domain/Student.ts';
+import type {components} from '../../../rest/types.ts';
+import {schemaTag, type Tag} from '../../../../domain/Tag.ts';
+import {ownedFromNumber} from '../ownedFromNumber.ts';
+import type {Student} from '../../../../domain/Student.ts';
 
 type TagDTO = components['schemas']['Tag']
 const schemaOwnedByStudent = ownedFromNumber<Student>()

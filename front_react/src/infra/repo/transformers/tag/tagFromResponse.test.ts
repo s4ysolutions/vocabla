@@ -1,5 +1,5 @@
 import {describe, it, expect} from '@effect/vitest';
-import type {components} from '../../rest/types.ts';
+import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
 import {tagFromResponse} from './tagFromResponse.ts';
 
