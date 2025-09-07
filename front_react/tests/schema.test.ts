@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {Effect, Schema} from 'effect';
+import {Effect, Schema, Option} from 'effect';
 import {ParseError} from 'effect/ParseResult';
 
 
@@ -156,6 +156,71 @@ describe('schema', () => {
         payload: null
       }
       expect(() => Schema.decodeSync(transformer)(dto1)).toThrow()
+    });
+  });
+  describe('optionalTo*', () => {
+    type DTO = {
+      payload?: string
+    }
+    it('optionalToOptional', () => {
+      const schema = Schema.Struct({
+        payload: Schema.optionalToOptional(
+          Schema.String,
+          Schema.String,
+          {
+            decode: (mayBeString) => {
+              if (Option.isNone(mayBeString)) {
+                return Option.none()
+              }
+              const someString = mayBeString as Option.Some<string>
+              const s = someString.value
+              const r= Option.some('decoded: '+ s)
+              return r;
+            },
+            encode: (mayBeString) => {
+              if (Option.isNone(mayBeString)) {
+                return Option.none()
+              }
+              const s = mayBeString as Option.Some<string>
+              return Option.some(`encode: ${s.value}`)
+            }
+          }
+        )
+      })
+      const dto1: DTO = {
+        payload: 'data'
+      }
+      const decoded = Schema.decodeSync(schema)(dto1)
+      expect(decoded).toEqual({payload: 'decoded: data'})
+      const decoded2 = Schema.decodeSync(schema)({})
+      expect(decoded2).toEqual({})
+    });
+    it('Schema.optionalToRequired',()=>{
+      const schema = Schema.Struct({
+        payload: Schema.optionalToRequired(
+          Schema.String,
+          Schema.String,
+          {
+            decode: (mayBeString) => {
+              if (Option.isNone(mayBeString)) {
+                return 'default'
+              }
+              const someString = mayBeString as Option.Some<string>
+              const s = someString.value
+              const r= 'decoded: '+ s
+              return r;
+            },
+            encode: (s) => `encode: ${s}`
+          }
+        )
+      })
+      const dto1: DTO = {
+        payload: 'data'
+      }
+      const decoded = Schema.decodeSync(schema)(dto1)
+      expect(decoded).toEqual({payload: 'decoded: data'})
+      const decoded2 = Schema.decodeSync(schema)({})
+      expect(decoded2).toEqual({payload: 'default'})
     })
   });
   describe('optional nullable fields', () => {
