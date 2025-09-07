@@ -4,21 +4,11 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.tag_create.{
-  CreateTagRequest,
-  CreateTagResponse,
-  CreateTagUseCase
-}
+import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagRequest, CreateTagResponse, CreateTagUseCase}
+import solutions.s4y.vocabla.app.ports.tag_get.{GetTagRequest, GetTagResponse, GetTagUseCase}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.app.repo.tx.{
-  TransactionContext,
-  TransactionManager
-}
-import solutions.s4y.vocabla.app.repo.{
-  EntryRepository,
-  TagRepository,
-  UserRepository
-}
+import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
+import solutions.s4y.vocabla.app.repo.{EntryRepository, TagRepository, UserRepository}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
@@ -95,13 +85,13 @@ final class VocablaApp[TX <: TransactionContext](
     )
 
   override def apply(
-      command: GetTagCommand
-  ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagCommand.Response] =
+      command: GetTagRequest
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagResponse] =
     authorized(authorizationService.canGetTag(command.tagId, _)) *>
       transaction(
         "tagGet",
         tagsRepository.get(command.tagId)
-      ).map(tag => GetTagCommand.Response(tag))
+      ).map(tag => GetTagResponse(tag))
 
   /** **************************************************************************
     * Users
