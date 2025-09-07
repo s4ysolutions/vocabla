@@ -251,7 +251,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Response"];
+                        "application/json": components["schemas"]["GetTagResponse"];
                     };
                 };
                 403: {
@@ -326,6 +326,11 @@ export interface components {
         /** @description You do not have permission to access this resource. */
         Forbidden403: {
             message: string;
+        };
+        /** @description CreateTagResponse containing the tag if found. */
+        GetTagResponse: {
+            /** @description The retrieved tag. */
+            tag?: null | components["schemas"]["Tag"];
         };
         Headword: {
             word: string;

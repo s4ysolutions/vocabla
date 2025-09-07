@@ -1,10 +1,14 @@
 import {describe, expect, it} from '@effect/vitest';
-import {makeTag} from './Tag.ts';
-import {id} from './identity/Identifier.ts';
+import {Schema} from 'effect';
+import {schemaTag} from './Tag.ts';
 
 describe('domain model Tag', () => {
-  it('tag can be created', () => {
-    const t = makeTag('example', id(123));
+  it('tag can be created from valid object', () => {
+    const t = Schema.decodeSync(schemaTag)({label: 'example', ownerId: {value: 123}})
     expect(t).toEqual({label: 'example', ownerId: {value: 123}})
+  })
+  it('tag can not be created from inval valid ownerId', () => {
+    const dto = {label: 'example', ownerId: {value: '123'}}
+    expect(() => Schema.decodeUnknownSync(schemaTag)(dto)).toThrowError();
   })
 })
