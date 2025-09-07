@@ -1,7 +1,7 @@
 import {describe, it, expect} from '@effect/vitest';
 import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
-import {tagFromResponse} from './tagFromResponse.ts';
+import {tagFromDto} from './tagFromDto.ts';
 
 type TagDTO = components['schemas']['Tag']
 
@@ -12,7 +12,7 @@ describe('TagFromResponse', () => {
       ownerId: 42
     }
     // act
-    const domain = Schema.decodeSync(tagFromResponse)(dto)
+    const domain = Schema.decodeSync(tagFromDto)(dto)
     // assert
     expect(domain).toEqual({
       label: 'tag1',
@@ -25,6 +25,6 @@ describe('TagFromResponse', () => {
       ownerId: 'not-a-number'
     }
     // act & assert
-    expect(() => Schema.decodeUnknownSync(tagFromResponse)(dto)).toThrow()
+    expect(() => Schema.decodeUnknownSync(tagFromDto)(dto)).toThrow()
   })
 })
