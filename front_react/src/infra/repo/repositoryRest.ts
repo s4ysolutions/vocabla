@@ -6,57 +6,24 @@ import {tt} from '../../translable/Translatable.ts';
 import type {ClientError} from '../http/errors/ClientError.ts';
 import type {HTTPError} from '../http/errors/HTTPError.ts';
 import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';
-import {schemaTag, type Tag} from '../../domain/Tag.ts';
-import {type Identifier, schemaIdentifier} from '../../domain/identity/Identifier.ts';
+import {type Tag} from '../../domain/Tag.ts';
+import {type Identifier} from '../../domain/identity/Identifier.ts';
 import type {components} from '../rest/types.ts';
 import {ParseError} from 'effect/ParseResult';
+import {typeFromProp} from './transformers/typeFromProp.ts';
+import {identifierFromNumber} from './transformers/identifierFromNumber.ts';
+import {tagFromDto} from './transformers/tag/tagFromDto.ts';
+import {nullOrFromProp} from './transformers/nullOrFromProp.ts';
 
 type CreateTagRequest = components['schemas']['CreateTagRequest']
-type CreateTagResponse = components['schemas']['CreateTagResponse']
+export type CreateTagResponse = components['schemas']['CreateTagResponse'];
+export const decodeCreateTagResponse = Schema.decodeUnknown(
+  typeFromProp('tagId',
+    identifierFromNumber<Tag>()))
 
-type GetTagResponse = components['schemas']['GetTagResponse']
-
-const schemaCreateTagResponse: Schema.Schema<Identifier<Tag>, CreateTagResponse> = Schema.transform(
-  Schema.Struct({tagId: Schema.Number}),
-  schemaIdentifier<Tag>(),
-  {
-    strict: true,
-    decode: (res) => ({value: res.tagId}),
-    encode: () => {
-      throw new Error('Not implemented')
-    }
-  }
-)
-
-const schemaTagDTO = Schema.transform(
-  Schema.Struct({
-    label: Schema.String,
-    ownerId: Schema.Number
-  }),
-  schemaTag,
-  {
-    strict: true,
-    decode: (dto) => ({
-      label: dto.label,
-      ownerId: { value: dto.ownerId }
-    }),
-    encode: () => { throw new Error('Not implemented') }
-  }
-);
-
-const schemaGetTagResponse: Schema.Schema<Option.Option<Tag>, GetTagResponse> = Schema.transform(
-  Schema.Struct({
-    tag: Schema.optional(Schema.NullOr(schemaTagDTO))
-  }),
-  Schema.Option(schemaTag),
-  {
-    strict: true,
-    decode: (dto) => dto.tag === null || dto.tag === undefined
-      ? Option.none()
-      : Option.some(dto.tag), // dto.tag уже Tag после schemaTagDTO
-    encode: () => { throw new Error('Not implemented') }
-  }
-);
+export type GetTagResponse = components['schemas']['GetTagResponse']
+export const decodeGetTagResponse = Schema.decodeUnknown(
+  nullOrFromProp('tag', tagFromDto))
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
@@ -65,17 +32,17 @@ const repositoryRest = (rest: RestClient): TagsRepository => ({
   createTag: (tag) => {
     const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId.value}}
     return Effect.mapError(
-      rest.post<CreateTagRequest, Identifier<Tag>, CreateTagResponse>({
+      rest.post<CreateTagRequest, Identifier<Tag>>({
         url: `${urlBase}/tags`,
         body: request,
-        schemaOut: schemaCreateTagResponse,
+        decoder: decodeCreateTagResponse,
       }), _error2infraError)
   },// end createTag
   getTag: (tagId) => {
     return Effect.mapError(
-      rest.get<Option.Option<Tag>, GetTagResponse>({
+      rest.get<Option.Option<Tag>>({
         url: `${urlBase}/tags/${tagId.value}`,
-        schemaOut: schemaGetTagResponse,
+        decoder: decodeGetTagResponse,
       }), _error2infraError)
   } // end getTag
 })

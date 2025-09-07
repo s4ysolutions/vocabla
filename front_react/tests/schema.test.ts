@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {Effect, Schema, Option} from 'effect';
+import {Effect, Option, Schema} from 'effect';
 import {ParseError} from 'effect/ParseResult';
 
 
@@ -34,7 +34,6 @@ describe('schema', () => {
   describe('SchemaAI', () => {
     type DECODED = boolean //A, decoded (from outer), can be validated, the target of decoding
     type ENCODED = 'on' | 'off' //I, encoded (to outer), the target of encoding
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const schemaAI: Schema.Schema<DECODED, ENCODED, never> = Schema.transform(
       Schema.Literal('on', 'off'), // I, ENCODED, DTO
       Schema.Boolean,//A, DECODED, DOMAIN
@@ -158,6 +157,38 @@ describe('schema', () => {
       expect(() => Schema.decodeSync(transformer)(dto1)).toThrow()
     });
   });
+  describe('NullOr', () => {
+    type DTO = {
+      payload: string | null
+    }
+    it ('NullOr(not null)', () => {
+      const schema = Schema.Struct({
+        payload: Schema.NullOr(Schema.String)
+      })
+      const dto1: DTO = {
+        payload: 'data'
+      }
+      const decoded = Schema.decodeSync(schema)(dto1)
+      expect(decoded).toEqual({payload: 'data'})
+    })
+    it ('NullOr(null)', () => {
+      const schema = Schema.Struct({
+        payload: Schema.NullOr(Schema.String)
+      })
+      const dto: DTO = {
+        payload: null
+      }
+      const decoded = Schema.decodeSync(schema)(dto)
+      expect(decoded).toEqual({payload: null})
+    })
+    it ('NullOr(absent)', () => {
+      const schema = Schema.Struct({
+        payload: Schema.NullOr(Schema.String)
+      })
+      const dto: DTO = {} as unknown as DTO
+      expect(() => Schema.decodeSync(schema)(dto)).toThrow()
+    })
+  });
   describe('optionalTo*', () => {
     type DTO = {
       payload?: string
@@ -174,8 +205,7 @@ describe('schema', () => {
               }
               const someString = mayBeString as Option.Some<string>
               const s = someString.value
-              const r= Option.some('decoded: '+ s)
-              return r;
+              return Option.some('decoded: ' + s);
             },
             encode: (mayBeString) => {
               if (Option.isNone(mayBeString)) {
@@ -195,7 +225,7 @@ describe('schema', () => {
       const decoded2 = Schema.decodeSync(schema)({})
       expect(decoded2).toEqual({})
     });
-    it('Schema.optionalToRequired',()=>{
+    it('Schema.optionalToRequired', () => {
       const schema = Schema.Struct({
         payload: Schema.optionalToRequired(
           Schema.String,
@@ -207,10 +237,9 @@ describe('schema', () => {
               }
               const someString = mayBeString as Option.Some<string>
               const s = someString.value
-              const r= 'decoded: '+ s
-              return r;
+              return 'decoded: ' + s;
             },
-            encode: (s) => `encode: ${s}`
+            encode: (s) => Option.some(`encode: ${s}`)
           }
         )
       })

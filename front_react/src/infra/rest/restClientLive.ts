@@ -1,20 +1,19 @@
-import {Effect, Layer, Schema} from 'effect';
+import {Effect, Layer} from 'effect';
 import {type HttpClient, HttpClientTag} from '../http/HttpClient.ts';
 import {type Get, type Post, type RestClient, RestClientTag} from './restClient.ts';
 
 export const restClientLive = (httpClient: HttpClient): RestClient => ({
-  post: <IN, OUT, Odto>({url, body, schemaOut}: Post<IN, OUT, Odto>) =>
+  post: <IN, OUT>({url, body, decoder}: Post<IN, OUT>) =>
     Effect.flatMap(
       // get unknown response from http client
       httpClient.execute('POST', url, body),
-      // decode unknown response to OUT
-      Schema.decodeUnknown(schemaOut)),
-  get: <OUT, Odto>({url, schemaOut}: Get<OUT, Odto>) =>
+      decoder),
+  get: <OUT>({url, decoder}: Get<OUT>) =>
     Effect.flatMap(
       // get unknown response from http client
       httpClient.execute('GET', url),
       // decode unknown response to OUT
-      Schema.decodeUnknown(schemaOut)
+      decoder
     )
 })
 

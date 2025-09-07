@@ -31,7 +31,7 @@ describe('REST', () => {
         const response = yield* rest.post({
           url: 'https://echo.free.beeceptor.com/sample-request?author=beeceptor',
           body: {'author': 'beeceptor'},
-          schemaOut: responseSchema
+          decoder: Schema.decodeUnknown(responseSchema)
         });
         expect(response).not.toBeNull()
         expect(response).toEqual({parsedQueryParams: {author: 'beeceptor'}});
