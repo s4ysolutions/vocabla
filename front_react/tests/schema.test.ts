@@ -120,5 +120,79 @@ describe('schema', () => {
       const domain: DOMAIN = Effect.runSync(effectDecode)
       expect(domain).toEqual({value: 42});
     })
+  });
+  describe('JSON optional fields', () => {
+    type DTO = {
+      payload?: string
+    }
+    const transformer: Schema.Schema<string, DTO> = Schema.transform(
+      Schema.Struct({
+        payload: Schema.optional(Schema.String)
+      }),
+      Schema.String,
+      {
+        decode: (dto) => {
+          if (dto.payload !== undefined)
+            return dto.payload;
+          else
+            return 'default';
+        },
+        encode: (domain) => ({payload: domain}),
+        strict: true,
+      })
+
+    it('optional payload defined', () => {
+      const dto1: DTO = {
+        payload: 'data'
+      }
+      expect(Schema.decodeSync(transformer)(dto1)).toEqual('data')
+    });
+    it('optional payload not defined', () => {
+      const dto1: DTO = {}
+      expect(Schema.decodeSync(transformer)(dto1)).toEqual('default')
+    });
+    it('optional payload is null throws', () => {
+      const dto1: DTO = {
+        payload: null
+      }
+      expect(() => Schema.decodeSync(transformer)(dto1)).toThrow()
+    })
+  });
+  describe('optional nullable fields', () => {
+    type DTO = {
+      payload?: string | null
+    }
+    const transformer: Schema.Schema<string | null, DTO> = Schema.transform(
+      Schema.Struct({
+        payload: Schema.optional(Schema.UndefinedOr(Schema.NullOr(Schema.String)))
+      }),
+      Schema.NullOr(Schema.String),
+      {
+        decode: (dto) => {
+          if (dto.payload !== undefined)
+            return dto.payload;
+          else
+            return 'default';
+        },
+        encode: (domain) => ({payload: domain}),
+        strict: true,
+      })
+
+    it('optional payload defined', () => {
+      const dto1: DTO = {
+        payload: 'data'
+      }
+      expect(Schema.decodeSync(transformer)(dto1)).toEqual('data')
+    });
+    it('optional payload not defined', () => {
+      const dto1: DTO = {}
+      expect(Schema.decodeSync(transformer)(dto1)).toEqual('default')
+    });
+    it('optional payload is null', () => {
+      const dto1: DTO = {
+        payload: null
+      }
+      expect(Schema.decodeSync(transformer)(dto1)).toEqual(null)
+    })
   })
 })
