@@ -1,12 +1,20 @@
-import * as Effect from "effect/Effect";
-import * as ManagedRuntime from "effect/ManagedRuntime";
-import { WordsAdapterRestLayer } from "../infra/rest-adapter.ts";
+import * as Effect from 'effect/Effect';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import {VocablaAppLayer} from './VocablaApp.ts';
+import {Layer} from 'effect';
+import {repositoryRestLayer} from '../infra/repo/repositoryRest.ts';
+import {restClientLayer} from '../infra/rest/restClientLive.ts';
+import httpClientLayer from '../infra/http/httpClientLive.ts';
 // import * as Layer from "effect/Layer"; // Uncomment when merging layers
 // import { UserServiceLayer } from "./example-services"; // Add when needed
 
 // Combine all application layers here
 // Currently only WordsAdapter, but you can easily add more:
-const AppLayer = WordsAdapterRestLayer;
+const AppLayer = VocablaAppLayer.pipe(
+  Layer.provide(repositoryRestLayer),
+  Layer.provide(restClientLayer),
+  Layer.provide(httpClientLayer)
+)
 // Later when you need more services:
 // const AppLayer = Layer.merge(WordsAdapterRestLayer, UserServiceLayer, ConfigLayer);
 

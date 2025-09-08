@@ -17,7 +17,7 @@ const vocablaApp = (tagsRepository: TagsRepository): CreateTagUseCase => ({
 const _infra2appError = (error: InfraError): AppError =>
   appError(error.message)
 
-export const VocablaAppLive: Layer.Layer<CreateTagUseCaseTag, never, TagsRepositoryTag> = Layer.effect(
+export const VocablaAppLayer: Layer.Layer<CreateTagUseCaseTag, never, TagsRepositoryTag> = Layer.effect(
   CreateTagUseCaseTag,
   Effect.map(TagsRepositoryTag, vocablaApp)
 );
