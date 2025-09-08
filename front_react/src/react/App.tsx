@@ -1,6 +1,6 @@
-import Screen from "./layotus/screen";
+import Screen from './layotus/screen';
 //import WordManager from "../features/word-manager/react";
-import Me from "../features/me/react";
+import Me from './features/me';
 
 const App = () =>
     <Screen>
