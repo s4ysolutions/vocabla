@@ -8,27 +8,18 @@ import type {HTTPError} from '../http/errors/HTTPError.ts';
 import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';
 import {type Tag} from '../../domain/Tag.ts';
 import {type Identifier} from '../../domain/identity/Identifier.ts';
-import type {components} from '../rest/types.ts';
 import {ParseError} from 'effect/ParseResult';
-import {typeFromProp} from './transformers/typeFromProp.ts';
-import {identifierFromNumber} from './transformers/identifierFromNumber.ts';
-import {tagFromDto} from './transformers/tag/tagFromDto.ts';
-import {nullOrFromProp} from './transformers/nullOrFromProp.ts';
-
-type CreateTagRequest = components['schemas']['CreateTagRequest']
-export type CreateTagResponse = components['schemas']['CreateTagResponse'];
-export const decodeCreateTagResponse = Schema.decodeUnknown(
-  typeFromProp('tagId',
-    identifierFromNumber<Tag>()))
-
-export type GetTagResponse = components['schemas']['GetTagResponse']
-export const decodeGetTagResponse = Schema.decodeUnknown(
-  nullOrFromProp('tag', tagFromDto))
+import type {EntriesRepository} from '../../app-repo/EntriesRepository.ts';
+import type {CreateTagRequest} from './dto/tag/CreateTagRequest.ts';
+import {decodeCreateTagResponse} from './dto/entry/CreateTagResponse.ts';
+import {decodeGetTagResponse} from './dto/tag/GetTagResponse.ts';
+import type {CreateEntryRequest} from './dto/entry/CreateEntryRequest.ts';
+import {definition, type Entry} from '../../domain/Entry.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
 
-const repositoryRest = (rest: RestClient): TagsRepository => ({
+const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository => ({
   createTag: (tag) => {
     const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId.value}}
     return Effect.mapError(
@@ -44,7 +35,33 @@ const repositoryRest = (rest: RestClient): TagsRepository => ({
         url: `${urlBase}/tags/${tagId.value}`,
         decoder: decodeGetTagResponse,
       }), _error2infraError)
-  } // end getTag
+  }, // end getTag
+  createEntry: (entry, tagIds) => {
+    const request: CreateEntryRequest = {
+      entry: {
+        headword: {word: entry.word.s, langCode: entry.word.langCode},
+        definitions: entry.definitions.map(definition => ({
+          definition: definition.localized.s,
+          langCode: definition.localized.langCode
+        })),
+        ownerId: entry.ownerId.value,
+      },
+      tagIds: tagIds.map(t => t.value)
+    }
+    return Effect.mapError(
+      rest.post<CreateEntryRequest, Identifier<Entry>>({
+        url: `${urlBase}/entries`,
+        body: request,
+        decoder: Schema.number.pipe(Schema.int).transform(
+          id => new Identifier(id),
+          id => id.value
+        ),
+      }), _error2infraError
+    )
+  },
+  getEntry: (entryId) => {
+    throw new Error('Method not implemented.');
+  }
 })
 
 const _error2infraError = (error: ClientError | HTTPError | JsonDecodingError | ParseError): InfraError => {

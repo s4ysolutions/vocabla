@@ -1,8 +1,8 @@
-import * as Effect from "effect/Effect";
-import { Id } from "../../../../../domain/id/Id.ts";
-import { WordsRepositoryTag, EntryDTO } from "../repo/words-repository.ts";
-import Entry from "../../domain/models/entry.ts";
-import Definition from "../../domain/models/definition.ts";
+import * as Effect from 'effect/Effect';
+import { Id } from '../../../../../domain/id/Id.ts';
+import { WordsRepositoryTag, EntryDTO } from '../repo/words-repository.ts';
+import Entry from '../../domain/models/entry.ts';
+import Definition from '../../domain/models/definition.ts';
 
 // Helper function to convert EntryDTO to Entry (moved from UI layer)
 const convertEntryDTOToEntry = (entryDTO: EntryDTO): Entry => ({
@@ -13,7 +13,7 @@ const convertEntryDTOToEntry = (entryDTO: EntryDTO): Entry => ({
       lang: { code: def.language, name: def.language },
       s: def.definition
     },
-    source: { title: "Manual" }
+    source: { title: 'Manual' }
   } as Definition))
 });
 

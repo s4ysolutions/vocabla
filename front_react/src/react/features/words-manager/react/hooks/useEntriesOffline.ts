@@ -1,27 +1,29 @@
-import { useEffect, useState } from "react";
-import Entry from "../../domain/models/entry.ts";
-import Lang from "../../../../../domain/Lang.ts";
-import Source from "../../domain/models/source.ts";
+import { useEffect, useState } from 'react';
+import type {Lang} from '../../../../../domain/Lang.ts';
+import {langCode} from '../../../../../domain/LangCode.ts';
+import type Source from '../../domain/models/source.ts';
+import type {Entry} from '../../../../../domain/Entry.ts';
 
 const en: Lang = {
-    code: "en",
-    name: "English",
+    code: langCode('en'),
+    name: 'English',
+    flag: '🇬🇧',
 }
 
 const sourceManual: Source = {
-    title: "Manual",
+    title: 'Manual',
 }
 
 const generateRandomEntries = (count: number): Array<Entry> => {
     const words = [
-        "abandon", "ability", "able", "about", "above", "accept", "access", "accident",
-        "account", "achieve", "acquire", "across", "action", "active", "activity", "actor",
-        "actual", "adapt", "add", "address", "adjust", "admit", "adult", "advance", "advice",
-        "affect", "afford", "after", "again", "against", "agency", "agent", "agree", "ahead",
-        "allow", "almost", "alone", "along", "already", "also", "although", "always", "amaze",
-        "among", "amount", "analysis", "ancient", "anger", "animal", "announce", "annual",
-        "another", "answer", "anxiety", "anyone", "anything", "anyway", "apart", "apology",
-        "appeal", "appear", "apply", "appoint", "approach", "approve", "argue", "arise",
+        'abandon', 'ability', 'able', 'about', 'above', 'accept', 'access', 'accident',
+        'account', 'achieve', 'acquire', 'across', 'action', 'active', 'activity', 'actor',
+        'actual', 'adapt', 'add', 'address', 'adjust', 'admit', 'adult', 'advance', 'advice',
+        'affect', 'afford', 'after', 'again', 'against', 'agency', 'agent', 'agree', 'ahead',
+        'allow', 'almost', 'alone', 'along', 'already', 'also', 'although', 'always', 'amaze',
+        'among', 'amount', 'analysis', 'ancient', 'anger', 'animal', 'announce', 'annual',
+        'another', 'answer', 'anxiety', 'anyone', 'anything', 'anyway', 'apart', 'apology',
+        'appeal', 'appear', 'apply', 'appoint', 'approach', 'approve', 'argue', 'arise',
     ];
 
     return Array.from({ length: count }, (_, i) => ({

@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import Lang from "../../../../../domain/Lang.ts";
+import {langCode} from '../../../../../domain/LangCode.ts';
+import type {Lang} from '../../../../../domain/Lang.ts';
 
 const mockLanguages: Array<Lang> = [
-    { code: "en", name: "English", flag: "🇬🇧" },
-    { code: "es", name: "Spanish", flag: "🇪🇸" },
-    { code: "fr", name: "French", flag: "🇫🇷" },
-    { code: "de", name: "German", flag: "🇩🇪" },
-    { code: "it", name: "Italian", flag: "🇮🇹" },
-    { code: "pt", name: "Portuguese", flag: "🇧🇷" },
-    { code: "zh", name: "Chinese", flag: "🇨🇳" },
-    { code: "ja", name: "Japanese", flag: "🇯🇵" },
-    { code: "ru", name: "Russian", flag: "🇷🇺" },
-    { code: "ar", name: "Arabic", flag: "🇸🇦" },
+  {code: langCode('en'), name: 'English', flag: '🇬🇧'},
+  {code: langCode('es'), name: 'Spanish', flag: '🇪🇸'},
+  {code: langCode('fr'), name: 'French', flag: '🇫🇷'},
+  {code: langCode('de'), name: 'German', flag: '🇩🇪'},
+  {code: langCode('it'), name: 'Italian', flag: '🇮🇹'},
+  {code: langCode('pt'), name: 'Portuguese', flag: '🇧🇷'},
+  {code: langCode('zh'), name: 'Chinese', flag: '🇨🇳'},
+  {code: langCode('ja'), name: 'Japanese', flag: '🇯🇵'},
+  {code: langCode('ru'), name: 'Russian', flag: '🇷🇺'},
+  {code: langCode('ar'), name: 'Arabic', flag: '🇸🇦'},
 ];
 
 const useIUnderstandLanguages = (): { languages: Array<Lang>, loading: boolean } => {

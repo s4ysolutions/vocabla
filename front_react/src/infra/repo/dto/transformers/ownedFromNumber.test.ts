@@ -1,6 +1,6 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Schema} from 'effect';
-import {schemaOwned} from '../../../domain/mixins/Owned.ts';
+import {schemaOwned} from '../../../../domain/mixins/Owned.ts';
 import {ownedFromNumber} from './ownedFromNumber.ts';
 
 describe('OwnedFromOwnerId', () => {

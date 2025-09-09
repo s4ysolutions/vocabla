@@ -1,9 +1,8 @@
 import {describe, it, expect} from '@effect/vitest';
-import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
 import {tagFromDto} from './tagFromDto.ts';
+import type {TagDTO} from './tagDto.ts';
 
-type TagDTO = components['schemas']['Tag']
 
 describe('TagFromResponse', () => {
   it('decode success', () => {
