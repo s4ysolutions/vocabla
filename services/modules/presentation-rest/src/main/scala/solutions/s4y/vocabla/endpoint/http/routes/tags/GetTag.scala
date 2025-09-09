@@ -1,8 +1,8 @@
 package solutions.s4y.vocabla.endpoint.http.routes.tags
 
+import solutions.s4y.vocabla.app.ports.entry_get.GetEntryRequest
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.tag_get.{GetTagRequest, GetTagResponse, GetTagUseCase}
-import solutions.s4y.vocabla.app.ports.GetEntryCommand
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema

@@ -3,6 +3,8 @@ package solutions.s4y.vocabla.app
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.app.ports.entry_create.{CreateEntryRequest, CreateEntryResponse, CreateEntryUseCase}
+import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagRequest, CreateTagResponse, CreateTagUseCase}
 import solutions.s4y.vocabla.app.ports.tag_get.{GetTagRequest, GetTagResponse, GetTagUseCase}
@@ -42,25 +44,25 @@ final class VocablaApp[TX <: TransactionContext](
     * Entries
     */
   override def apply(
-      command: CreateEntryCommand
+      command: CreateEntryRequest
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
-    CreateEntryCommand.Response
+    CreateEntryResponse
   ] =
     authorized(
       authorizationService.canCreateEntry(command.entry, _)
     ) *> transaction("entryCreate", entriesRepository.create(command.entry))
       .map(
-        CreateEntryCommand.Response(_)
+        CreateEntryResponse(_)
       )
 
   override def apply(
-      command: GetEntryCommand
+      command: GetEntryRequest
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
-    GetEntryCommand.Response
+    GetEntryResponse
   ] =
     authorized(
       authorizationService.canGetEntry(command.entryId, _)
@@ -68,7 +70,7 @@ final class VocablaApp[TX <: TransactionContext](
       "entryGet",
       entriesRepository
         .get(command.entryId)
-    ).map(entry => GetEntryCommand.Response(entry))
+    ).map(entry => GetEntryResponse(entry))
 
   /** **************************************************************************
     * Tags

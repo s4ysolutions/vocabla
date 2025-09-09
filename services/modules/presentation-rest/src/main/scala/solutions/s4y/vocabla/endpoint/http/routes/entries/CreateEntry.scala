@@ -1,15 +1,12 @@
 package solutions.s4y.vocabla.endpoint.http.routes.entries
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.{CreateEntryCommand, CreateEntryUseCase}
+import solutions.s4y.vocabla.app.ports.entry_create.{CreateEntryRequest, CreateEntryResponse, CreateEntryUseCase}
 import solutions.s4y.vocabla.domain.UserContext
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
-  Forbidden403,
-  InternalServerError500
-}
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{Forbidden403, InternalServerError500}
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.Method.POST
@@ -25,15 +22,15 @@ object CreateEntry:
       IdentifierSchema
   ): Endpoint[
     Unit,
-    CreateEntryCommand,
+    CreateEntryRequest,
     HttpError,
-    CreateEntryCommand.Response,
+    CreateEntryResponse,
     AuthType.Bearer.type
   ] =
     Endpoint(POST / prefix)
       .tag("Vocabulary Entries")
-      .in[CreateEntryCommand]
-      .out[CreateEntryCommand.Response]
+      .in[CreateEntryRequest]
+      .out[CreateEntryResponse]
       .outErrors[HttpError](
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)

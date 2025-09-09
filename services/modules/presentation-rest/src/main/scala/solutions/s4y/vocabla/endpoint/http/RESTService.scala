@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
+import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.tag_create.CreateTagUseCase
 import solutions.s4y.vocabla.app.ports.tag_get.GetTagUseCase
 import solutions.s4y.vocabla.app.repo.error.InfraFailure

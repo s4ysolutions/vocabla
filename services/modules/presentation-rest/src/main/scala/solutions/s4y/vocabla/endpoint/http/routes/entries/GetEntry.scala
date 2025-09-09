@@ -1,13 +1,13 @@
 package solutions.s4y.vocabla.endpoint.http.routes.entries
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.{GetEntryCommand, GetEntryUseCase}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.Method.GET
@@ -23,19 +23,19 @@ object GetEntry:
       IdentifierSchema
   ): Endpoint[
     Long,
-    GetEntryCommand,
+    GetEntryRequest,
     HttpError,
-    GetEntryCommand.Response,
+    GetEntryResponse,
     None
   ] =
     Endpoint(GET / prefix / long("entryId"))
       .tag("Vocabulary Entries")
-      .out[GetEntryCommand.Response]
+      .out[GetEntryResponse]
       .outErrors[HttpError](
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
-      .transformIn(entryId => GetEntryCommand(entryId.identifier[Entry]))(
+      .transformIn(entryId => GetEntryRequest(entryId.identifier[Entry]))(
         command => command.entryId.as[Long]
       )
 
