@@ -14,8 +14,6 @@ final case class CreateEntryRequest(
     entry: Entry,
     @description("IDs of tags to be associated with the entry.")
     tagIds: Chunk[Identifier[Tag]],
-    @description("ID of the student who owns the entry.")
-    ownerId: Identifier[User.Student]
 )
 
 object CreateEntryRequest:
