@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {Effect, Option, Schema} from 'effect';
+import {Effect, Match, Option, Schema} from 'effect';
 import {ParseError} from 'effect/ParseResult';
 
 
@@ -161,7 +161,7 @@ describe('schema', () => {
     type DTO = {
       payload: string | null
     }
-    it ('NullOr(not null)', () => {
+    it('NullOr(not null)', () => {
       const schema = Schema.Struct({
         payload: Schema.NullOr(Schema.String)
       })
@@ -171,7 +171,7 @@ describe('schema', () => {
       const decoded = Schema.decodeSync(schema)(dto1)
       expect(decoded).toEqual({payload: 'data'})
     })
-    it ('NullOr(null)', () => {
+    it('NullOr(null)', () => {
       const schema = Schema.Struct({
         payload: Schema.NullOr(Schema.String)
       })
@@ -181,7 +181,7 @@ describe('schema', () => {
       const decoded = Schema.decodeSync(schema)(dto)
       expect(decoded).toEqual({payload: null})
     })
-    it ('NullOr(absent)', () => {
+    it('NullOr(absent)', () => {
       const schema = Schema.Struct({
         payload: Schema.NullOr(Schema.String)
       })
@@ -287,6 +287,199 @@ describe('schema', () => {
         payload: null
       }
       expect(Schema.decodeSync(transformer)(dto1)).toEqual(null)
+    })
+    it('optional transform{}', () => {
+      type Domain = {
+        label: string
+      }
+      const schemaDomain = Schema.Struct({
+        label: Schema.String
+      })
+      type Dto = {
+        domain?: { tag: number } | null
+      }
+      const schemaDto = Schema.Struct({
+        //domain: Schema.optionalWith(Schema.NullOr(Schema.Struct({tag: Schema.Number})),{})// {exact: true})
+        domain: Schema.optional(Schema.NullOr(Schema.Struct({tag: Schema.Number})))// {exact: true})
+      })
+
+      const schemaDomainFromDto: Schema.Schema<Domain, Dto> = Schema.transform(
+        schemaDto,
+        schemaDomain,
+        {
+          strict: true,
+          decode: (dto) => {
+            if (dto.domain === undefined || dto.domain === null) {
+              throw new Error('domain is required')
+            }
+            return {label: `tag:${dto.domain.tag}`}
+          },
+          encode: (domain) => {
+            return {domain: {tag: parseInt(domain.label.replace('tag:', ''))}}
+          }
+        }
+      )
+
+      const dto: Dto = {domain: {tag: 42}}
+      const domain: Domain = Schema.decodeSync(schemaDomainFromDto)(dto)
+      expect(domain).toEqual({label: 'tag:42'})
+
+      const dtoNull: Dto = {domain: null}
+      expect(() => Schema.decodeSync(schemaDomainFromDto)(dtoNull)).toThrow()
+
+      const dtoUndefined: Dto = {}
+      expect(() => Schema.decodeSync(schemaDomainFromDto)(dtoUndefined)).toThrow()
+
+      const dtoMissed: Dto = {}
+      expect(() => Schema.decodeSync(schemaDomainFromDto)(dtoMissed)).toThrow()
+    });
+  })
+  describe('pick', () => {
+    it('pick prop{}', () => {
+      const schema = Schema.Struct({
+        prop: Schema.optional(Schema.NullOr(Schema.String))
+      })
+      const schemaPicked = schema.pick('prop')
+      const decoded = Schema.decodeSync(schemaPicked)({})
+      expect(decoded).toEqual({})
+    })
+    it('pick prop (data)', () => {
+      const schema = Schema.Struct({
+        prop: Schema.optional(Schema.NullOr(Schema.String))
+      })
+      const schemaPicked = schema.pick('prop')
+      const decoded = Schema.decodeSync(schemaPicked)({prop: 'data'})
+      expect(decoded).toEqual({prop: 'data'})
+    })
+    it('pick prop (null)', () => {
+      const schema = Schema.Struct({
+        prop: Schema.optional(Schema.NullOr(Schema.String))
+      })
+      const schemaPicked = schema.pick('prop')
+      const decoded = Schema.decodeSync(schemaPicked)({prop: null})
+      expect(decoded).toEqual({prop: null})
+    })
+  });
+  describe('optionalWith', () => {
+    it('optionalWith ', () => {
+      const schemaDto = Schema.Struct({
+        domain: Schema.optionalWith(Schema.NullOr(Schema.Struct({tag: Schema.Number})), {})
+      })
+      //const schemaDtoAs = Schema.asSchema(schemaDto)
+      type DtoInexact = Schema.Schema.Type<typeof schemaDto>
+      const dto1: DtoInexact = {}
+      const dto2: DtoInexact = {domain: null}
+      const dto3: DtoInexact = {domain: {tag: 42}}
+      const dto4: DtoInexact = {domain: undefined}
+
+      const schemaDtoExact = Schema.Struct({
+        domain: Schema.optionalWith(Schema.NullOr(Schema.Struct({tag: Schema.Number})), {exact: true})
+      })
+      type DtoExact = Schema.Schema.Type<typeof schemaDtoExact>
+      const dtoE1: DtoExact = {}
+      const dtoE2: DtoExact = {domain: null}
+      const dtoE3: DtoExact = {domain: {tag: 42}}
+      const dtoE4: DtoExact = {domain: undefined}
+
+      expect(Schema.decodeSync(schemaDto)(dto1)).toEqual({})
+      expect(Schema.decodeSync(schemaDto)(dto2)).toEqual({domain: null})
+      expect(Schema.decodeSync(schemaDto)(dto3)).toEqual({domain: {tag: 42}})
+      expect(Schema.decodeSync(schemaDto)(dto4)).toEqual({domain: undefined})
+
+      expect(Schema.decodeSync(schemaDtoExact)(dtoE1)).toEqual({})
+      expect(Schema.decodeSync(schemaDtoExact)(dtoE2)).toEqual({domain: null})
+      expect(Schema.decodeSync(schemaDtoExact)(dtoE3)).toEqual({domain: {tag: 42}})
+      expect(() => Schema.decodeSync(schemaDtoExact)(dtoE4)).toThrow() // undefined is not allowed in exact mode
+    })
+  })
+  describe('Option', () => {
+    it('Option', () => {
+      const schemaOption = Schema.Option(Schema.String)
+      type OptionString = Schema.Schema.Type<typeof schemaOption>
+      expect(Schema.decodeSync(schemaOption)({_tag: 'None'})).toEqual(Option.none())
+      expect(Schema.decodeSync(schemaOption)({_tag: 'Some', value: 'data'})).toEqual(Option.some('data'))
+      expect(() => Schema.decodeSync(schemaOption)({} as OptionString)).toThrow()
+      expect(() => Schema.decodeSync(schemaOption)({type: 'Some', value: 42} as unknown as OptionString)).toThrow()
+    })
+    it('Option as transformation', () => {
+      const schemaOption: Schema.Schema<Option.Option<string>, string> = Schema.transform(
+        Schema.String,
+        Schema.Option(Schema.String),
+        {
+          decode: (fromA) => ({_tag: 'Some', value: fromA} as const),
+          encode: (toI) => {
+            const encoded: string = Match.value(toI).pipe(
+              Match.tag('None', () => 'none'),
+              Match.tag('Some', (some) => some.value),
+              Match.exhaustive
+            )
+            return encoded;
+          },
+          strict: true
+        }
+      )
+      const output = Schema.decodeSync(schemaOption)('data')
+      expect(Option.isSome(output))
+      expect(output).toEqual({value: 'data'})
+    })
+    it('OptionFromSelf ', () => {
+      const schemaTransformed: Schema.Schema<string, number> = Schema.transform(
+        Schema.Number,
+        Schema.String,
+        {
+          decode: (n) => n.toString(),
+          encode: (s) => parseInt(s),
+          strict: true
+        }
+      )
+      const schemaOptionFromSelf = Schema.OptionFromSelf(schemaTransformed)
+      const a = Option.some('42')
+      const i = Option.some(42)
+      expect(Schema.decodeSync(schemaOptionFromSelf)(i)).toEqual(a)
+      expect(Schema.encodeSync(schemaOptionFromSelf)(Option.none())).toEqual(Option.none())
+    })
+    it('OptionFromUndefined', () => {
+      type DTO = {
+        payload?: string | null
+      }
+      type Domain = Option.Option<string>
+      const domainSome: Domain = Option.some('data')
+      const domainNone: Domain = Option.none()
+
+      expect(domainSome).not.toBe(domainNone)
+      expect(domainSome).toEqual(Option.some('data'))
+      expect(domainNone).toEqual(Option.none())
+
+      const transformer: Schema.Schema<Domain, DTO> = Schema.transform(
+        Schema.Struct({
+          payload: Schema.optional(Schema.NullOr(Schema.String))
+        }),
+        Schema.Option(Schema.String),
+        {
+          decode: (dto) => {
+            if (dto.payload === undefined || dto.payload === null)
+              return Option.none()
+            else
+              return Option.some(dto.payload);
+          },
+          encode: (domain) => {
+            return Match.value(domain).pipe(
+              Match.when({_tag: 'None'}, () => ({payload: null})),
+              Match.when({_tag: 'Some'}, (s) => ({payload: s.value})),
+              Match.exhaustive
+            )
+          },
+          strict: true,
+        })
+
+      expect(Schema.decodeSync(transformer)({payload: 'data'})).toEqual(Option.some('data'))
+      /*
+      expect(Schema.decodeSync(transformer)({})).toEqual(Option.none())
+      expect(Schema.decodeSync(transformer)({payload: null})).toEqual(Option.none())
+
+      expect(Schema.encodeSync(transformer)(Option.some('data'))).toEqual({payload: 'data'})
+      expect(Schema.encodeSync(transformer)(Option.none())).toEqual({payload: null})
+       */
     })
   })
 })

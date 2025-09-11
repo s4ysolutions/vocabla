@@ -1,4 +1,11 @@
 {
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": [
+      "ES2021",
+    ],
+    "moduleResolution": "bundler"
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

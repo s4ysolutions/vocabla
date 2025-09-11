@@ -1,4 +1,3 @@
-//export type Id = number & { __brand: 'Id' }
 
 declare const IdBrand: unique symbol;
 export type Id = number & { [IdBrand]?: void }

@@ -11,10 +11,10 @@ import {type Identifier} from '../../domain/identity/Identifier.ts';
 import {ParseError} from 'effect/ParseResult';
 import type {EntriesRepository} from '../../app-repo/EntriesRepository.ts';
 import type {CreateTagRequest} from './dto/tag/CreateTagRequest.ts';
-import {decodeCreateTagResponse} from './dto/entry/CreateTagResponse.ts';
-import {decodeGetTagResponse} from './dto/tag/GetTagResponse.ts';
+import {decodeCreateTagResponse} from './dto/entry/CreateEntryResponse.ts';
+import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import type {CreateEntryRequest} from './dto/entry/CreateEntryRequest.ts';
-import {definition, type Entry} from '../../domain/Entry.ts';
+import {type Entry} from '../../domain/Entry.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
@@ -31,7 +31,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
   },// end createTag
   getTag: (tagId) => {
     return Effect.mapError(
-      rest.get<Option.Option<Tag>>({
+      rest.get<GetTagResponse, Option.Option<Tag>>({
         url: `${urlBase}/tags/${tagId.value}`,
         decoder: decodeGetTagResponse,
       }), _error2infraError)
@@ -52,15 +52,16 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
       rest.post<CreateEntryRequest, Identifier<Entry>>({
         url: `${urlBase}/entries`,
         body: request,
-        decoder: Schema.number.pipe(Schema.int).transform(
-          id => new Identifier(id),
-          id => id.value
-        ),
+        decoder: decodeCreateEntryResponse,
       }), _error2infraError
     )
   },
   getEntry: (entryId) => {
-    throw new Error('Method not implemented.');
+    return Effect.mapError(
+      rest.get<GetEntryResponse, Option.Option<Entry>>({
+        url: `${urlBase}/entries/${entryId.value}`,
+        decoder: decodeGetEntryResponse,
+      }), _error2infraError)
   }
 })
 

@@ -5,12 +5,10 @@ import {Effect} from 'effect';
 import {TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
 import {id} from '../../domain/identity/Identifier.ts';
 import {makeTag} from '../../domain/Tag.ts';
-import {
-  type CreateTagResponse, decodeCreateTagResponse, decodeGetTagResponse,
-  type GetTagResponse,
-  repositoryRestLayer,
-} from './repositoryRest.ts';
 import {restClientLayer} from '../rest/restClientLive.ts';
+import {repositoryRestLayer} from './repositoryRest.ts';
+import {type CreateEntryResponse, decodeCreateTagResponse} from './dto/entry/CreateEntryResponse.ts';
+import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 
 describe('repositoryRest', () => {
   const layer = repositoryRestLayer.pipe(
@@ -19,7 +17,7 @@ describe('repositoryRest', () => {
   )
   describe('schemas', () => {
     it('schemaCreateTagResponse', () => {
-      const response: CreateTagResponse = {tagId: 123};
+      const response: CreateEntryResponse = {tagId: 123};
       const tageId = Effect.runSync(decodeCreateTagResponse(response));
       expect(tageId).toEqual({value: 123});
     });
@@ -28,7 +26,7 @@ describe('repositoryRest', () => {
       const decode = decodeCreateTagResponse(response);
       expect(() => Effect.runSync(decode)).toThrowError();
     });
-    it('schemaGetTagResponse', () => {
+    it('schemaGetTagResponse data', () => {
       const response: GetTagResponse = {tag: {label: 'test', ownerId: 1}};
       const tag = Effect.runSync(decodeGetTagResponse(response));
       expect(Option.isSome(tag)).toBeTruthy();
@@ -40,8 +38,14 @@ describe('repositoryRest', () => {
       }
     });
     it('schemaGetTagResponse null', () => {
+      const response: GetTagResponse = {tag: null}
+      const tag = Effect.runSync(decodeGetTagResponse(response));
+      expect(Option.isNone(tag)).toBeTruthy();
+    })
+    it('schemaGetTagResponse absent', () => {
       const response: GetTagResponse = {tagx: {label: 'test', ownerId: 1}} as unknown as GetTagResponse;
-      expect(() => Effect.runSync(decodeGetTagResponse(response))).toThrowError();
+      const tag = Effect.runSync(decodeGetTagResponse(response));
+      expect(Option.isNone(tag)).toBeTruthy();
     })
   });
   describe('integration tests', () => {
