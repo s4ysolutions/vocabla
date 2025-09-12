@@ -7,18 +7,14 @@ export type GetTagResponse = components['schemas']['GetTagResponse']
 
 const schemaGetTagResponseDto =
   Schema.Struct({
-    tag: Schema.optionalWith(Schema.NullOr(Schema.Struct({
-      label: Schema.String,
-      ownerId: Schema.Number,
-    })), {exact: true})
+    //tag: Schema.optionalWith(Schema.NullOr(Schema.Struct({ label: Schema.String, ownerId: Schema.Number, })), {exact: true})
+    tag: Schema.optionalWith(Schema.NullOr(tagFromDto), {exact: true})
   })
 void (schemaGetTagResponseDto satisfies Schema.Schema<GetTagResponse>)
 
 const schemaGetTagResponse: Schema.Schema<Option.Option<Tag>, GetTagResponse> =
   Schema.transform(
-    Schema.Struct({
-      tag: Schema.optionalWith(Schema.NullOr(tagFromDto), {exact: true})
-    }),
+    schemaGetTagResponseDto,
     Schema.Option(schemaTag),
     {
       decode: ({tag}) => tag === null || tag === undefined

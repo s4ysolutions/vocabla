@@ -1,4 +1,4 @@
-import {Effect, Layer, Option, Schema} from 'effect';
+import {Effect, Layer, Option} from 'effect';
 import {type RestClient, RestClientTag} from '../rest/restClient.ts';
 import {type TagsRepository, TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
 import {infraError, type InfraError} from '../../app-repo/infraError.ts';
@@ -21,7 +21,7 @@ const urlBase = 'http://vocabla:3000/rest/v1'
 
 const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository => ({
   createTag: (tag) => {
-    const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId.value}}
+    const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId}}
     return Effect.mapError(
       rest.post<CreateTagRequest, Identifier<Tag>>({
         url: `${urlBase}/tags`,
@@ -32,7 +32,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
   getTag: (tagId) => {
     return Effect.mapError(
       rest.get<GetTagResponse, Option.Option<Tag>>({
-        url: `${urlBase}/tags/${tagId.value}`,
+        url: `${urlBase}/tags/${tagId}`,
         decoder: decodeGetTagResponse,
       }), _error2infraError)
   }, // end getTag
@@ -44,9 +44,9 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
           definition: definition.localized.s,
           langCode: definition.localized.langCode
         })),
-        ownerId: entry.ownerId.value,
+        ownerId: entry.ownerId,
       },
-      tagIds: tagIds.map(t => t.value)
+      tagIds: tagIds
     }
     return Effect.mapError(
       rest.post<CreateEntryRequest, Identifier<Entry>>({
@@ -59,7 +59,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
   getEntry: (entryId) => {
     return Effect.mapError(
       rest.get<GetEntryResponse, Option.Option<Entry>>({
-        url: `${urlBase}/entries/${entryId.value}`,
+        url: `${urlBase}/entries/${entryId}`,
         decoder: decodeGetEntryResponse,
       }), _error2infraError)
   }

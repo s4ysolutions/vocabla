@@ -7,6 +7,8 @@ export type Tag = {
   ownerId: Identifier<Student>
 }
 
+export const Tag = (label: string, ownerId: Identifier<Student>): Tag => ({label, ownerId})
+
 export const schemaTag = Schema.Struct({
   label: Schema.String,
   ownerId: schemaIdentifier<Student>()

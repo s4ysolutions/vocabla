@@ -11,9 +11,8 @@ export const schemaLangCode = Schema.String.pipe(
   Schema.brand('LangCode'),
 )
 
-export type LangCode = typeof schemaLangCode.Type
-export const langCode =
+export type LangCode = Schema.Schema.Type<typeof schemaLangCode>
+
+export const LangCode =
   (langCode: string) => schemaLangCode.make(langCode)
 export const isLangCode = Schema.is(schemaLangCode)
-//(value: unknown): value is LangCode =>
-//typeof value === 'string' && Schema.is(LangCode)(value)

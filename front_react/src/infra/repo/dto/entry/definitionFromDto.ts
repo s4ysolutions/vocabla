@@ -1,13 +1,19 @@
 import {Schema} from 'effect';
-import {schemaDefinitionDto} from './definitionDto.ts';
-import {schemaDefinition} from '../../../../domain/Entry.ts';
-import {schemaLocalized} from '../../../../domain/Localized.ts';
+import {type DefinitionDTO, schemaDefinitionDto} from './definitionDto.ts';
+import {Definition, schemaDefinition} from '../../../../domain/Entry.ts';
+import {Localized} from '../../../../domain/Localized.ts';
+import {LangCode} from '../../../../domain/LangCode.ts';
 
-export const definitionFromDto = Schema.transform(
-  schemaDefinition,
+export const definitionFromDto: Schema.Schema<Definition, DefinitionDTO> = Schema.transform(
   schemaDefinitionDto,
+  schemaDefinition,
   {
-    encode: dto => schemaDefinition.make(schemaLocalized.make({s: dto.text, langCode: dto.langCode}), {})
-    decode: domain => domain
+    decode: (dto) => {
+      const defintion = Definition(Localized(LangCode(dto.langCode), dto.definition))
+      return defintion
+    },
+    encode: domain =>
+      schemaDefinitionDto.make({langCode: domain.localized.langCode, definition: domain.localized.s}),
+    strict: true
   }
 )

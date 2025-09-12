@@ -1,13 +1,14 @@
 import {describe, it, expect} from '@effect/vitest';
 import {Option, Effect} from 'effect';
 import {decodeGetTagResponse, type GetTagResponse} from './GetTagResponse.ts';
+import type {Tag} from '../../../../domain/Tag.ts';
 
 describe('GetTagResponse', () => {
   it('tag present', () => {
     // arrange
     const response: GetTagResponse = {tag: {label: 'tag1', ownerId: 42}}
     // act
-    const domainOpt = Effect.runSync(decodeGetTagResponse(response))
+    const domainOpt: Option.Option<Tag> = Effect.runSync(decodeGetTagResponse(response))
 
     // assert
     expect(Option.isSome(domainOpt)).toBeTruthy()

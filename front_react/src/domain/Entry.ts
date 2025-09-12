@@ -3,34 +3,36 @@ import {type Localized, schemaLocalized} from './Localized.ts';
 import type {Student} from './Student.ts';
 import {schemaOwned} from './mixins/Owned.ts';
 import type {Identifier} from './identity/Identifier.ts';
+import localized from '../react/features/words-manager/domain/models/localized.ts';
 
 export const schemaSource = Schema.Struct({
   title: Schema.String,
   url: Schema.optional(Schema.String)
 })
 export type Source = typeof schemaSource.Type
-export const source = (title: string, url?: string): Source =>
-  Schema.decodeSync(schemaSource)({title, url})
+export const Source = (title: string, url?: string): Source =>
+  schemaSource.make({title, url})
 
 export const schemaDefinition = Schema.Struct({
   localized: schemaLocalized,
   source: Schema.optionalWith(schemaSource, {exact: true})
 });
 export type Definition = Schema.Schema.Type<typeof schemaDefinition>;
-export const definition = (localized: Localized) =>
-  Schema.decodeSync(schemaDefinition)({localized})
+export const Definition: (localized: Localized) => Definition = (localized: Localized) =>
+  schemaDefinition.make({localized});
 
 export const schemaEntry = Schema.Struct({
   word: schemaLocalized,
   definitions: Schema.Array(schemaDefinition)
 }).pipe(
-  Schema.extend(schemaOwned<Student>())
+  Schema.extend(schemaOwned<Student>()),
 )
 export type Entry = Schema.Schema.Type<typeof schemaEntry>
-export const entry = (
+export const Entry = (
   word: Localized,
-  definitions: Definition[],
+  definitions: Readonly<Definition[]>,
   ownerId: Identifier<Student>
-): Entry =>
-  Schema.decodeSync(schemaEntry)({word, definitions, ownerId})
+): Entry => ({
+  word, definitions, ownerId
+})
 
