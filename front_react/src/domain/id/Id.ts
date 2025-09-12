@@ -1,5 +1,9 @@
+import {Brand, Schema} from 'effect';
 
-declare const IdBrand: unique symbol;
-export type Id = number & { [IdBrand]?: void }
+export type Id<E extends string|symbol> = number & Brand.Brand<E>
 
-export const id = (id: number): Id => id as Id
+const schemaIdBase = Schema.Number
+
+export const schemaId = <E extends string | symbol>(brand: E) =>
+  schemaIdBase.pipe(Schema.brand(brand))
+

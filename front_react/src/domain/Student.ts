@@ -1,6 +1,8 @@
-import {Schema} from 'effect';
+import {Brand} from 'effect';
 
-export const schemaStudent = Schema.Struct({
-  nickname: Schema.String})
+type Brand = 'Student'
 
-export type Student = Schema.Schema.Type<typeof schemaStudent>
+export type Student = {
+  readonly nickname: string,
+} & Brand.Brand<Brand>
+

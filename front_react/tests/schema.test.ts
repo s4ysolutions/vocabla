@@ -482,4 +482,111 @@ describe('schema', () => {
        */
     })
   })
+  describe('Nested schemas', () => {
+    const domainA = Schema.Struct({
+      propA: Schema.String,
+      _tag: Schema.Literal('A')
+    })
+    type DomainA = { propA: string, _tag: 'A' }
+    const domainB = Schema.Struct({
+      propB: Schema.Number,
+      nestedA: domainA,
+      _tag: Schema.Literal('B')
+    })
+    type DomainB = { propB: number, nestedA: DomainA, _tag: 'B' }
+    const dto = Schema.Struct({
+      propA: Schema.String,
+      propB: Schema.Number
+    })
+    type Dto = { propA: string, propB: number }
+
+    it('Nested schema (plain)', () => {
+      const shemaDtoToDomainB: Schema.Schema<DomainB, Dto> = Schema.transform(
+        dto,
+        domainB,
+        {
+          strict: true,
+          decode: (d) => ({
+            _tag: 'B',
+            propB: d.propB,
+            nestedA: {
+              _tag: 'A',
+              propA: d.propA
+            } as const
+          } as const),
+          encode: (b) => ({
+            propA: b.nestedA.propA,
+            propB: b.propB
+          })
+        }
+      )
+      const dtoIn: Dto = {propA: 'data', propB: 42}
+      const domainOut: DomainB = Schema.decodeSync(shemaDtoToDomainB)(dtoIn)
+      expect(domainOut).toEqual({
+        _tag: 'B',
+        propB: 42,
+        nestedA: {
+          _tag: 'A',
+          propA: 'data'
+        } as const
+      } as const)
+      const dtoOut: Dto = Schema.encodeSync(shemaDtoToDomainB)(domainOut)
+      expect(dtoOut).toEqual({propA: 'data', propB: 42})
+    })
+    it('Nested schema (composable)', () => {
+      const shemaDtoToDomainB: Schema.Schema<DomainB, Dto> = Schema.compose(
+        Schema.transform(
+          dto,
+          Schema.Struct({
+            nestedA: domainA,
+            propB: Schema.Number
+          }),
+          {
+            decode: (d) => ({
+              nestedA: {
+                propA: d.propA,
+                _tag: 'A' as const
+              } as const,
+              propB: d.propB
+            }),
+            encode: (intermediate) => ({
+              propA: intermediate.nestedA.propA,
+              propB: intermediate.propB
+            } as const),
+            strict: true
+          }
+        ),
+        Schema.transform(
+          Schema.Struct({
+            nestedA: domainA,
+            propB: Schema.Number
+          }),
+          domainB,
+          {
+            decode: (intermediate) => ({
+              _tag: 'B' as const,
+              ...intermediate
+            } as const),
+            encode: (domain) => ({
+              nestedA: domain.nestedA,
+              propB: domain.propB
+            }),
+            strict: true
+          },
+        ),
+      )
+      const dtoIn: Dto = {propA: 'data', propB: 42}
+      const domainOut: DomainB = Schema.decodeSync(shemaDtoToDomainB)(dtoIn)
+      expect(domainOut).toEqual({
+        _tag: 'B',
+        propB: 42,
+        nestedA: {
+          _tag: 'A',
+          propA: 'data'
+        } as const
+      } as const)
+      const dtoOut: Dto = Schema.encodeSync(shemaDtoToDomainB)(domainOut)
+      expect(dtoOut).toEqual({propA: 'data', propB: 42})
+    })
+  })
 })

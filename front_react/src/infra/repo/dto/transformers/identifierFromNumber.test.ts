@@ -10,7 +10,7 @@ describe('IdentifierFromNumber', () => {
     it('42 should be decoded to {value: 42}', () => {
       // arrange
       const input: unknown = 42;
-      const expectedOutput = {value: 42};
+      const expectedOutput = 42;
 
       // act
       const result = Schema.decodeUnknownSync(identifierFromNumberE)(input);
@@ -29,7 +29,7 @@ describe('IdentifierFromNumber', () => {
   describe('encode', () => {
     it('{value: 42} should be encoded to 42', () => {
       // arrange
-      const input = {value: 42};
+      const input = 42;
       const expectedOutput = 42;
 
       // act

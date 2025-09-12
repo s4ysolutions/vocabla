@@ -12,7 +12,7 @@ describe('GetTagResponse', () => {
     // assert
     expect(Option.isSome(domainOpt)).toBeTruthy()
     if (Option.isSome(domainOpt)) {
-      expect(domainOpt.value).toEqual({label: 'tag1', ownerId: {value: 42}})
+      expect(domainOpt.value).toEqual({label: 'tag1', ownerId: 42})
     }
   })
   it('tag absent', () => {
