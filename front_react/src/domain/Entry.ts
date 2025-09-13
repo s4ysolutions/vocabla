@@ -3,13 +3,13 @@ import {type Localized, schemaLocalized} from './Localized.ts';
 import type {Student} from './Student.ts';
 import {schemaOwned} from './mixins/Owned.ts';
 import type {Identifier} from './identity/Identifier.ts';
-import localized from '../react/features/words-manager/domain/models/localized.ts';
 
 export const schemaSource = Schema.Struct({
   title: Schema.String,
   url: Schema.optional(Schema.String)
 })
 export type Source = typeof schemaSource.Type
+// noinspection JSUnusedGlobalSymbols
 export const Source = (title: string, url?: string): Source =>
   schemaSource.make({title, url})
 

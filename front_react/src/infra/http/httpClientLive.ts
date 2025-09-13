@@ -6,10 +6,8 @@ import type {JsonDecodingError} from './errors/JsonDecodingError.ts';
 import {HttpClientTag} from './HttpClient.ts';
 import {clientError, type ClientError} from './errors/ClientError.ts';
 
-const _handleOk = (response: Response): Effect.Effect<unknown, JsonDecodingError> =>
-  Effect.tryPromise(() => response.json() as Promise<unknown>).pipe(
-    Effect.map((body) =>
-      body),
+const _handleOk = <RESP>(response: Response): Effect.Effect<RESP, JsonDecodingError> =>
+  Effect.tryPromise(() => response.json() as Promise<RESP>).pipe(
     Effect.mapError((error): JsonDecodingError => ({
       error,
       response
@@ -55,11 +53,11 @@ const _prettyPrintError = (err: unknown, indent = 0): string => {
   return result;
 };
 
-const _httpRequestWithFetch = (
+const _httpRequestWithFetch = <REQ, RESP>(
   method: Method,
   url: string,
-  body?: unknown
-): Effect.Effect<unknown, HTTPError | ClientError | JsonDecodingError> =>
+  body?: REQ
+): Effect.Effect<RESP, HTTPError | ClientError | JsonDecodingError> =>
   Effect.tryPromise(() =>
     fetch(url, {
       method,
@@ -92,9 +90,9 @@ const _httpRequestWithFetch = (
         return clientError(tt`Failed to call fetch`, error)
       }
     ),
-    Effect.flatMap((response): Effect.Effect<unknown, HTTPError | JsonDecodingError> => {
+    Effect.flatMap((response): Effect.Effect<RESP, HTTPError | JsonDecodingError> => {
       if (response.ok) {
-        return _handleOk(response)
+        return _handleOk<RESP>(response)
       } else {
         return _handleHttpError(response)
       }
@@ -109,7 +107,7 @@ const _httpRequestWithFetch = (
  * Live implementation of HttpClient using Fetch API
  */
 
-const httpClientLayer = Layer.succeed(
+const httpClientLayer: Layer.Layer<HttpClientTag> = Layer.succeed(
   HttpClientTag,
   HttpClientTag.of({
     execute: _httpRequestWithFetch

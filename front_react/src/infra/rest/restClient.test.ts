@@ -2,7 +2,7 @@ import {describe, expect, it} from '@effect/vitest';
 import {Effect, Layer, Schema} from 'effect';
 import {RestClientTag} from './restClient.ts';
 import httpClientLayer from '../http/httpClientLive.ts';
-import {restClientLayer} from './restClientLive.ts';
+import {restClientLayer} from './restClientLayer.ts';
 
 describe('REST', () => {
   const restLiveProvider = restClientLayer.pipe(Layer.provide(httpClientLayer))

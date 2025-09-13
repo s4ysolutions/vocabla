@@ -3,7 +3,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import {VocablaAppLayer} from './VocablaApp.ts';
 import {Layer} from 'effect';
 import {repositoryRestLayer} from '../infra/repo/repositoryRest.ts';
-import {restClientLayer} from '../infra/rest/restClientLive.ts';
+import {restClientLayer} from '../infra/rest/restClientLayer.ts';
 import httpClientLayer from '../infra/http/httpClientLive.ts';
 // import * as Layer from "effect/Layer"; // Uncomment when merging layers
 // import { UserServiceLayer } from "./example-services"; // Add when needed

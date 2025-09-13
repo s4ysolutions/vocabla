@@ -1,6 +1,6 @@
-import {Effect, Layer, Option} from 'effect';
-import {type RestClient, RestClientTag} from '../rest/restClient.ts';
-import {type TagsRepository, TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
+import {Effect, Option} from 'effect';
+import {type RestClient} from '../rest/restClient.ts';
+import {type TagsRepository} from '../../app-repo/TagsRepository.ts';
 import {infraError, type InfraError} from '../../app-repo/infraError.ts';
 import {tt} from '../../translable/Translatable.ts';
 import type {ClientError} from '../http/errors/ClientError.ts';
@@ -11,19 +11,21 @@ import {type Identifier} from '../../domain/identity/Identifier.ts';
 import {ParseError} from 'effect/ParseResult';
 import type {EntriesRepository} from '../../app-repo/EntriesRepository.ts';
 import type {CreateTagRequest} from './dto/tag/CreateTagRequest.ts';
-import {decodeCreateTagResponse} from './dto/entry/CreateEntryResponse.ts';
 import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import type {CreateEntryRequest} from './dto/entry/CreateEntryRequest.ts';
 import {type Entry} from '../../domain/Entry.ts';
+import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
+import {type CreateEntryResponse, decodeCreateEntryResponse} from './dto/entry/CreateEntryResponse.ts';
+import {decodeGetEntryResponse, type GetEntryResponse} from './dto/entry/GetEntryResponse.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
 
-const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository => ({
+export const repositoryRest = (restClient: RestClient): TagsRepository & EntriesRepository => ({
   createTag: (tag) => {
     const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId}}
     return Effect.mapError(
-      rest.post<CreateTagRequest, Identifier<Tag>>({
+      restClient.post<CreateTagRequest, CreateTagResponse, Identifier<Tag>>({
         url: `${urlBase}/tags`,
         body: request,
         decoder: decodeCreateTagResponse,
@@ -31,7 +33,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
   },// end createTag
   getTag: (tagId) => {
     return Effect.mapError(
-      rest.get<GetTagResponse, Option.Option<Tag>>({
+      restClient.get<GetTagResponse, Option.Option<Tag>>({
         url: `${urlBase}/tags/${tagId}`,
         decoder: decodeGetTagResponse,
       }), _error2infraError)
@@ -49,7 +51,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
       tagIds: tagIds
     }
     return Effect.mapError(
-      rest.post<CreateEntryRequest, Identifier<Entry>>({
+      restClient.post<CreateEntryRequest, CreateEntryResponse, Identifier<Entry>>({
         url: `${urlBase}/entries`,
         body: request,
         decoder: decodeCreateEntryResponse,
@@ -58,7 +60,7 @@ const repositoryRest = (rest: RestClient): TagsRepository & EntriesRepository =>
   },
   getEntry: (entryId) => {
     return Effect.mapError(
-      rest.get<GetEntryResponse, Option.Option<Entry>>({
+      restClient.get<GetEntryResponse, Option.Option<Entry>>({
         url: `${urlBase}/entries/${entryId}`,
         decoder: decodeGetEntryResponse,
       }), _error2infraError)
@@ -83,8 +85,3 @@ const _error2infraError = (error: ClientError | HTTPError | JsonDecodingError | 
     }
   }
 }
-
-export const repositoryRestLayer: Layer.Layer<TagsRepositoryTag, never, RestClientTag> = Layer.effect(
-  TagsRepositoryTag,
-  Effect.map(RestClientTag, (rest) => repositoryRest(rest)
-  ))

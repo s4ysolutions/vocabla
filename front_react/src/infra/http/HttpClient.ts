@@ -5,7 +5,7 @@ import type {JsonDecodingError} from './errors/JsonDecodingError.ts';
 import type {ClientError} from './errors/ClientError.ts';
 
 export interface HttpClient {
-  execute: (method: Method, url: string, body?: unknown) => Effect.Effect<unknown, HTTPError | ClientError | JsonDecodingError>
+  execute: <REQ, RESP>(method: Method, url: string, body?: REQ) => Effect.Effect<RESP, HTTPError | ClientError | JsonDecodingError>
 }
 
 export class HttpClientTag extends Context.Tag('HttpClientTag')<

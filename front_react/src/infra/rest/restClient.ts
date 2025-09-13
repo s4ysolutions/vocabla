@@ -1,24 +1,27 @@
+/**
+ * Defines a REST client interface with methods for making POST and GET requests.
+ */
 import {Context, Effect} from 'effect';
 import type {HTTPError} from '../http/errors/HTTPError.ts';
 import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';
 import type {ClientError} from '../http/errors/ClientError.ts';
 import type {ParseError} from 'effect/ParseResult';
 
-export type Post<IN, OUT> = {
+export type Post<REQ, RESP, OUT> = {
   url: string;
-  body: IN;
-  decoder: (input: unknown) => Effect.Effect<OUT, ParseError>;
+  body: REQ;
+  decoder: (input: RESP) => Effect.Effect<OUT, ParseError>;
   //schemaOut: Schema.Schema<OUT, Odto>;
 }
 
-export type Get<DTO, OUT> = {
+export type Get<RESP, OUT> = {
   url: string;
-  decoder: (input: DTO) => Effect.Effect<OUT, ParseError>;
+  decoder: (input: RESP) => Effect.Effect<OUT, ParseError>;
 }
 
 export interface RestClient {
-  post: <IN, OUT>(args: Post<IN, OUT>) => Effect.Effect<OUT, ClientError | HTTPError | JsonDecodingError | ParseError>;
-  get: <DTO, OUT>(args: Get<DTO, OUT>) => Effect.Effect<OUT, ClientError | HTTPError | JsonDecodingError | ParseError>;
+  post: <REQ, RESP, OUT>(args: Post<REQ, RESP, OUT>) => Effect.Effect<OUT, ClientError | HTTPError | JsonDecodingError | ParseError>;
+  get: <RESP, OUT>(args: Get<RESP, OUT>) => Effect.Effect<OUT, ClientError | HTTPError | JsonDecodingError | ParseError>;
 }
 
 export class RestClientTag extends Context.Tag('RestTag')<
