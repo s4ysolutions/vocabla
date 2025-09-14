@@ -8,8 +8,9 @@ import {type TagsRepository, TagsRepositoryTag} from '../app-repo/TagsRepository
 import {appError, type AppError} from '../app-ports/errors/AppError.ts';
 import {Effect, Layer} from 'effect';
 import type {InfraError} from '../app-repo/infraError.ts';
+import type {GetTagResponse} from '../infra/repo/dto/tag/GetTagResponse.ts';
 
-const vocablaApp = (tagsRepository: TagsRepository): CreateTagUseCase => ({
+const vocablaApp = (tagsRepository: TagsRepository): CreateTagUseCase & GetTagResponse => ({
   createTag: (request: CreateTagRequest): Effect.Effect<CreateTagResponse, AppError> =>
     Effect.mapError(tagsRepository.createTag(request.tag), _infra2appError)
 })

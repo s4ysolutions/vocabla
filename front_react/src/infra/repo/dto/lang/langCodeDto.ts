@@ -1,4 +1,4 @@
 import {Schema} from 'effect';
 
-export const schemaLangCodeDto = Schema.String
+export const schemaLangCodeDto = Schema.mutable(Schema.String)
 export type LangCodeDto = Schema.Schema.Type<typeof schemaLangCodeDto>

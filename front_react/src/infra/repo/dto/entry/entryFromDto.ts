@@ -26,4 +26,17 @@ export const entryFromDto: Schema.Schema<Entry, EntryDTO> = Schema.transform(
   }
 )
 
+const _check1: Entry = {} as Schema.Schema.Type<typeof entryFromDto>;
+void _check1
+const _check2: Schema.Schema.Type<typeof entryFromDto> = {} as Entry;
+void _check2
+const _check3: EntryDTO = {} as Schema.Schema.Encoded<typeof schemaEntryDto>;
+void _check3
+const _check4: Schema.Schema.Encoded<typeof schemaEntryDto> = {} as EntryDTO;
+void _check4
+
 void (entryFromDto satisfies Schema.Schema<Entry, EntryDTO>)
+void ({} as Entry satisfies Schema.Schema.Type<typeof entryFromDto>)
+void ({} as Schema.Schema.Type<typeof entryFromDto> satisfies Entry)
+void ({} as EntryDTO satisfies Schema.Schema.Encoded<typeof schemaEntryDto>)
+void ({} as Schema.Schema.Encoded<typeof schemaEntryDto> satisfies EntryDTO)

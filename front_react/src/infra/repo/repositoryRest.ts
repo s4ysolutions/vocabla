@@ -17,6 +17,8 @@ import {type Entry} from '../../domain/Entry.ts';
 import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
 import {type CreateEntryResponse, decodeCreateEntryResponse} from './dto/entry/CreateEntryResponse.ts';
 import {decodeGetEntryResponse, type GetEntryResponse} from './dto/entry/GetEntryResponse.ts';
+import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
+import type {Identified} from '../../domain/identity/Identified.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
@@ -63,6 +65,30 @@ export const repositoryRest = (restClient: RestClient): TagsRepository & Entries
       restClient.get<GetEntryResponse, Option.Option<Entry>>({
         url: `${urlBase}/entries/${entryId}`,
         decoder: decodeGetEntryResponse,
+      }), _error2infraError)
+  },
+  getEntries: (ownerId, filter) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('ownerId', ownerId.toString());
+
+    if (filter.tagIds.length > 0) {
+      filter.tagIds.forEach(tagId => queryParams.append('tagId', tagId.toString()));
+    }
+
+    if (filter.langCodes.length > 0) {
+      filter.langCodes.forEach(langCode => queryParams.append('lang', langCode));
+    }
+
+    if (Option.isSome(filter.text)) {
+      if (filter.text.value.trim().length > 0) {
+        queryParams.append('text', filter.text.value);
+      }
+    }
+
+    return Effect.mapError(
+      restClient.get<GetEntriesResponse, {entries: Array<Identified<Entry>>}>({
+        url: `${urlBase}/entries?${queryParams.toString()}`,
+        decoder: decodeGetEntriesResponse,
       }), _error2infraError)
   }
 })

@@ -6,9 +6,9 @@ describe('Identified', () => {
     type User = { name: string }
 
     const user: Identified<User> = {
-      id: {value: 1234},
+      id: 1234,
       e: {name: 'Alice'}
     }
-    expect(user.id.value).toBe(1234)
+    expect(user.id).toBe(1234)
   });
 });

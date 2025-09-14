@@ -4,14 +4,69 @@
  */
 
 export interface paths {
-    '/rest/v1/entries': {
+    "/rest/v1/entries": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description - Vocabulary Entries
+         *      */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description ID of the owner to filter entries by.
+                     *
+                     *      */
+                    ownerId?: number | null;
+                    tagId?: number;
+                    lang?: string;
+                    /** @description Text to search for in entries.
+                     *
+                     *      */
+                    text?: string | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetEntriesResponse"];
+                    };
+                };
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BadRequest400"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
         put?: never;
         /** @description - Vocabulary Entries
          *      */
@@ -24,7 +79,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    'application/json': components['schemas']['CreateEntryRequest'];
+                    "application/json": components["schemas"]["CreateEntryRequest"];
                 };
             };
             responses: {
@@ -33,7 +88,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['CreateEntryResponse'];
+                        "application/json": components["schemas"]["CreateEntryResponse"];
                     };
                 };
                 403: {
@@ -41,7 +96,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['Forbidden403'];
+                        "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
                 500: {
@@ -49,7 +104,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['InternalServerError500'];
+                        "application/json": components["schemas"]["InternalServerError500"];
                     };
                 };
             };
@@ -60,7 +115,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/rest/v1/entries/{entryId}': {
+    "/rest/v1/entries/{entryId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -85,7 +140,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['GetEntryResponse'];
+                        "application/json": components["schemas"]["GetEntryResponse"];
                     };
                 };
                 403: {
@@ -93,7 +148,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['Forbidden403'];
+                        "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
                 500: {
@@ -101,7 +156,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['InternalServerError500'];
+                        "application/json": components["schemas"]["InternalServerError500"];
                     };
                 };
             };
@@ -114,7 +169,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/rest/v1/ping': {
+    "/rest/v1/ping": {
         parameters: {
             query?: never;
             header?: never;
@@ -149,7 +204,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': string;
+                        "application/json": string;
                     };
                 };
                 400: {
@@ -157,7 +212,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['BadRequest400'];
+                        "application/json": components["schemas"]["BadRequest400"];
                     };
                 };
             };
@@ -170,7 +225,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/rest/v1/tags': {
+    "/rest/v1/tags": {
         parameters: {
             query?: never;
             header?: never;
@@ -190,7 +245,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    'application/json': components['schemas']['CreateTagRequest'];
+                    "application/json": components["schemas"]["CreateTagRequest"];
                 };
             };
             responses: {
@@ -199,7 +254,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['CreateTagResponse'];
+                        "application/json": components["schemas"]["CreateTagResponse"];
                     };
                 };
                 403: {
@@ -207,7 +262,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['Forbidden403'];
+                        "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
                 500: {
@@ -215,7 +270,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['InternalServerError500'];
+                        "application/json": components["schemas"]["InternalServerError500"];
                     };
                 };
             };
@@ -226,7 +281,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/rest/v1/tags/{tagId}': {
+    "/rest/v1/tags/{tagId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -251,7 +306,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['GetTagResponse'];
+                        "application/json": components["schemas"]["GetTagResponse"];
                     };
                 };
                 403: {
@@ -259,7 +314,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['Forbidden403'];
+                        "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
                 500: {
@@ -267,7 +322,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        'application/json': components['schemas']['InternalServerError500'];
+                        "application/json": components["schemas"]["InternalServerError500"];
                     };
                 };
             };
@@ -291,7 +346,7 @@ export interface components {
         /** @description Command to create a new vocabulary entry. */
         CreateEntryRequest: {
             /** @description Entry to be added to the vocabulary. */
-            entry: components['schemas']['Entry'];
+            entry: components["schemas"]["Entry"];
             /** @description IDs of tags to be associated with the entry. */
             tagIds: number[];
         };
@@ -306,7 +361,7 @@ export interface components {
         /** @description Command to create a new tag. */
         CreateTagRequest: {
             /** @description Tag to be created. */
-            tag: components['schemas']['Tag'];
+            tag: components["schemas"]["Tag"];
         };
         /** @description CreateTagResponse containing the ID of the newly created tag. */
         CreateTagResponse: {
@@ -321,8 +376,8 @@ export interface components {
             langCode: string;
         };
         Entry: {
-            headword: components['schemas']['Headword'];
-            definitions: components['schemas']['Definition'][];
+            headword: components["schemas"]["Headword"];
+            definitions: components["schemas"]["Definition"][];
             /** Format: int64 */
             ownerId: number;
         };
@@ -330,19 +385,29 @@ export interface components {
         Forbidden403: {
             message: string;
         };
+        /** @description Response containing a list of entries. */
+        GetEntriesResponse: {
+            /** @description List of retrieved entries. */
+            entries: components["schemas"]["Identified"][];
+        };
         /** @description CreateTagResponse containing the entry if found. */
         GetEntryResponse: {
             /** @description The retrieved entry. */
-            entry?: null | components['schemas']['Entry'];
+            entry?: null | components["schemas"]["Entry"];
         };
         /** @description CreateTagResponse containing the tag if found. */
         GetTagResponse: {
             /** @description The retrieved tag. */
-            tag?: null | components['schemas']['Tag'];
+            tag?: null | components["schemas"]["Tag"];
         };
         Headword: {
             word: string;
             langCode: string;
+        };
+        Identified: {
+            /** Format: int64 */
+            id: number;
+            e: components["schemas"]["Entry"];
         };
         /** @description Internal server error occurred */
         InternalServerError500: {

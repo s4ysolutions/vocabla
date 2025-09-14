@@ -18,16 +18,18 @@ export const schemaDefinition = Schema.Struct({
   source: Schema.optionalWith(schemaSource, {exact: true})
 });
 export type Definition = Schema.Schema.Type<typeof schemaDefinition>;
-export const Definition: (localized: Localized) => Definition = (localized: Localized) =>
-  schemaDefinition.make({localized});
+export const Definition = (localized: Localized, source?: Source): Definition =>
+  source
+    ? schemaDefinition.make({localized, source})
+    : schemaDefinition.make({localized});
 
-export const schemaEntry = Schema.Struct({
-  word: schemaLocalized,
-  definitions: Schema.Array(schemaDefinition)
-}).pipe(
-  Schema.extend(schemaOwned<Student>()),
-)
-export type Entry = Schema.Schema.Type<typeof schemaEntry>
+export type Entry = {
+  readonly word: Localized,
+  readonly definitions: Readonly<Definition[]>,
+} & {
+  readonly ownerId: Identifier<Student>
+}
+
 export const Entry = (
   word: Localized,
   definitions: Readonly<Definition[]>,
@@ -36,3 +38,17 @@ export const Entry = (
   word, definitions, ownerId
 })
 
+//export const schemaEntry: Schema.Schema<Entry> = Schema.Struct({
+export const schemaEntry = Schema.Struct({
+  word: schemaLocalized,
+  definitions: Schema.Array(schemaDefinition)
+}).pipe(
+  Schema.extend(schemaOwned<Student>()),
+)
+
+const _check1: Entry = {} as Schema.Schema.Type<typeof schemaEntry>;
+void _check1
+const _check2: Schema.Schema.Type<typeof schemaEntry> = {} as Entry;
+void _check2
+void ({} as Entry satisfies Schema.Schema.Type<typeof schemaEntry>)
+void ({} as Schema.Schema.Type<typeof schemaEntry> satisfies Entry)

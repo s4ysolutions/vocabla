@@ -7,13 +7,16 @@ import {restClientLayer} from '../rest/restClientLayer.ts';
 import {repositoryRestLayer} from './repositoryRestLayer.ts';
 import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
+import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
 import {Identifier} from '../../domain/identity/Identifier.ts';
 import {Tag} from '../../domain/Tag.ts';
 import {Definition, Entry} from '../../domain/Entry.ts';
 import {Localized} from '../../domain/Localized.ts';
 import {LangCode} from '../../domain/LangCode.ts';
+import {EntriesFilter} from '../../domain/EntriesFilter.ts';
 import type {Student} from '../../domain/Student.ts';
 import {EntriesRepositoryTag} from '../../app-repo/EntriesRepository.ts';
+import {Identified} from '../../domain/identity/Identified.ts';
 
 describe('repositoryRest', () => {
   const layer: Layer.Layer<TagsRepositoryTag | EntriesRepositoryTag> = repositoryRestLayer.pipe(
@@ -53,6 +56,99 @@ describe('repositoryRest', () => {
         const tag = Effect.runSync(decodeGetTagResponse(response));
         expect(Option.isNone(tag)).toBeTruthy();
       })
+    })
+    describe('entries', () => {
+      it('schemaGetEntriesResponse', () => {
+        const response: GetEntriesResponse = {
+          entries: [
+            {
+              id: 42,
+              e: {
+                headword: {word: 'dog', langCode: 'en'},
+                definitions: [
+                  {definition: 'A domesticated carnivorous mammal', langCode: 'en'},
+                  {definition: 'Un mammifère carnivore domestiqué', langCode: 'fr'}
+                ],
+                ownerId: 1
+              }
+            },
+            {
+              id: 43,
+              e: {
+                headword: {word: 'cat', langCode: 'en'},
+                definitions: [
+                  {definition: 'A small domesticated carnivorous mammal', langCode: 'en'}
+                ],
+                ownerId: 1
+              }
+            }
+          ]
+        };
+
+        const {entries} = Effect.runSync(decodeGetEntriesResponse(response))
+        expect(entries).toHaveLength(2)
+
+        // Verify first entry
+        expect(entries[0]).toEqual(
+          Identified<Entry>(42, Entry(
+            Localized(LangCode('en'), 'dog'),
+            [
+              Definition(Localized(LangCode('en'), 'A domesticated carnivorous mammal')),
+              Definition(Localized(LangCode('fr'), 'Un mammifère carnivore domestiqué'))
+            ],
+            Identifier<Student>(1)
+          )))
+
+        // Verify second entry
+        expect(entries[1]).toEqual(
+          Identified<Entry>(43, Entry(
+              Localized(LangCode('en'), 'cat'),
+              [
+                Definition(Localized(LangCode('en'), 'A small domesticated carnivorous mammal'))
+              ],
+              Identifier<Student>(1)
+            )
+          ))
+      });
+
+      it('schemaGetEntriesResponse empty', () => {
+        const response: GetEntriesResponse = {
+          entries: []
+        };
+
+        const {entries} = Effect.runSync(decodeGetEntriesResponse(response));
+        expect(entries).toEqual([]);
+      });
+
+      it('schemaGetEntriesResponse error - invalid id', () => {
+        const response = {
+          entries: [
+            {
+              id: 'not-a-number',
+              e: {
+                headword: {word: 'test', langCode: 'en'},
+                definitions: [],
+                ownerId: 1
+              }
+            }
+          ]
+        } as unknown as GetEntriesResponse;
+
+        expect(() => Effect.runSync(decodeGetEntriesResponse(response))).toThrowError();
+      });
+
+      it('schemaGetEntriesResponse error - missing entry data', () => {
+        const response = {
+          entries: [
+            {
+              id: 42
+              // Missing 'e' property
+            }
+          ]
+        } as unknown as GetEntriesResponse;
+
+        expect(() => Effect.runSync(decodeGetEntriesResponse(response))).toThrowError();
+      });
     })
   });
   describe('integration tests', () => {
@@ -109,6 +205,67 @@ describe('repositoryRest', () => {
             expect(entryOpt.value.word.langCode).toEqual(LangCode('en'));
             expect(entryOpt.value.definitions.length).toBe(2);
             expect(entryOpt.value.ownerId).toEqual(Identifier(1));
+          }
+        });
+        return Effect.provide(program, layer);
+      })
+      it.effect('getEntries', () => {
+        const program = Effect.gen(function* () {
+          const entryRepository = yield* EntriesRepositoryTag;
+
+          // Create some test entries
+          const headword1 = 'dog-' + Math.floor(Math.random() * 10000);
+          const headword2 = 'cat-' + Math.floor(Math.random() * 10000);
+
+          const entryId1 = yield* entryRepository.createEntry(Entry(
+            Localized(LangCode('en'), headword1),
+            [
+              Definition(Localized(LangCode('en'), 'A domesticated carnivorous mammal')),
+              Definition(Localized(LangCode('fr'), 'Un mammifère carnivore domestiqué'))
+            ],
+            Identifier<Student>(1)
+          ), []);
+
+          const entryId2 = yield* entryRepository.createEntry(Entry(
+            Localized(LangCode('en'), headword2),
+            [
+              Definition(Localized(LangCode('en'), 'A small domesticated carnivorous mammal'))
+            ],
+            Identifier<Student>(1)
+          ), []);
+
+          // Create filter for retrieving entries
+          const filter = EntriesFilter([], [LangCode('en')], Option.none());
+
+          // Get entries for owner
+          const {entries} = yield* entryRepository.getEntries(Identifier<Student>(1), filter);
+
+          // Verify we got entries back (should include our created entries)
+          expect(entries.length).toBeGreaterThanOrEqual(2);
+
+          // Find our created entries in the results
+          const foundEntry1 = entries.find(entry =>
+            entry.id === entryId1 &&
+            entry.e.word.s === headword1 &&
+            entry.e.word.langCode === LangCode('en')
+          )
+          const foundEntry2 = entries.find(entry =>
+            entry.id === entryId2 &&
+            entry.e.word.s === headword2 &&
+            entry.e.word.langCode === LangCode('en')
+          )
+
+          expect(foundEntry1).toBeDefined();
+          expect(foundEntry2).toBeDefined();
+
+          if (foundEntry1) {
+            expect(foundEntry1.e.definitions.length).toBe(2);
+            expect(foundEntry1.e.ownerId).toEqual(Identifier<Student>(1));
+          }
+
+          if (foundEntry2) {
+            expect(foundEntry2.e.definitions.length).toBe(1);
+            expect(foundEntry2.e.ownerId).toEqual(Identifier<Student>(1));
           }
         });
         return Effect.provide(program, layer);

@@ -1,14 +1,13 @@
 import {Schema} from 'effect';
-import {langCode, schemaLangCode} from './LangCode.ts';
+import {LangCode, schemaLangCode} from './LangCode.ts';
 
-const _schemaLang = Schema.Struct({
+export const schemaLang = Schema.Struct({
   code: schemaLangCode,
   name: Schema.String,
   flag: Schema.optional(Schema.String)
 })
 
-export const schemaLang = Schema.asSchema(_schemaLang)
-
 export type Lang = Schema.Schema.Type<typeof schemaLang>
-export const lang = (code: string, name: string, flag?: string): Lang =>
-  _schemaLang.make({code: langCode(code), name, flag})
+
+export const Lang = (code: string, name: string, flag?: string): Lang =>
+  schemaLang.make({code: LangCode(code), name, flag})

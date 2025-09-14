@@ -4,10 +4,10 @@ import {schemaLangCodeDto} from '../lang/langCodeDto.ts';
 
 export type DefinitionDTO = components['schemas']['Entry']['definitions'][0]
 
-export const schemaDefinitionDto = Schema.Struct({
+export const schemaDefinitionDto = Schema.mutable(Schema.Struct({
   definition: Schema.String,
   langCode: schemaLangCodeDto
-})
+}))
 
 const _check1: DefinitionDTO = {} as Schema.Schema.Type<typeof schemaDefinitionDto>;
 void _check1

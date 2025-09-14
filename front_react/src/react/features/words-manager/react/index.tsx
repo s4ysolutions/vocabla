@@ -6,8 +6,8 @@ import EntryAdd from './EntryAdd.tsx'
 import Panel from '../../../widgets/panels/Panel.tsx'
 
 const WordManager: React.FC = () => {
-  console.log("WordManager rendered");
-  const { entries, loading } = useEntries("0")
+  console.log('WordManager rendered');
+  const { entries, loading } = useEntries('0')
 
   return <div className="h-full w-full flex flex-col">
     {/* Scrollable List */}

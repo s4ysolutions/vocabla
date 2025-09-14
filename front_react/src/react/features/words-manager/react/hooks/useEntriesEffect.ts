@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import Entry from "../../domain/models/entry.ts";
-import { id } from "../../../../../domain/id/Id.ts";
-import getEntriesUseCase from "../../application/use_cases/getEntriesUseCase.ts";
-import addEntryUseCase from "../../application/use_cases/addEntryUseCase.ts";
-import { runAppEffect } from "../../../../../app/effect-runtime.ts";
+import { useEffect, useState } from 'react';
+import { runAppEffect } from '../../../../../app/effect-runtime.ts';
+import type {Entry} from '../../../../../domain/Entry.ts';
+import {Identifier} from '../../../../../domain/identity/Identifier.ts';
+import type {Student} from '../../../../../domain/Student.ts';
 
 const useEntries = (
   ownerId: string
@@ -27,11 +26,11 @@ const useEntries = (
 
       try {
         const entries = await runAppEffect(
-          getEntriesUseCase(id(ownerId))
+          getEntriesUseCase(Identifier<Student>(ownerId))
         );
         setEntries(entries);
       } catch (error) {
-        console.error("Failed to fetch entries:", error);
+        console.error('Failed to fetch entries:', error);
       } finally {
         setLoading(false);
       }
@@ -64,7 +63,7 @@ const useEntries = (
       );
       setEntries(refreshedEntries);
     } catch (error) {
-      console.error("Failed to add entry:", error);
+      console.error('Failed to add entry:', error);
     }
   };
 
