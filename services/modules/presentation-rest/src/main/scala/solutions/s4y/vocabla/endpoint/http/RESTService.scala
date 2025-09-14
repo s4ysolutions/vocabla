@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
+import solutions.s4y.vocabla.app.ports.entries_get.GetEntriesUseCase
 import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
 import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.tag_create.CreateTagUseCase
@@ -13,7 +14,11 @@ import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.browserLocale
 import solutions.s4y.vocabla.endpoint.http.routes.Ping
-import solutions.s4y.vocabla.endpoint.http.routes.entries.{CreateEntry, GetEntry}
+import solutions.s4y.vocabla.endpoint.http.routes.entries.{
+  CreateEntry,
+  GetEntries,
+  GetEntry
+}
 import solutions.s4y.vocabla.endpoint.http.routes.tags.{CreateTag, GetTag}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
@@ -30,6 +35,7 @@ final class RESTService(
     private val createEntryUseCase: CreateEntryUseCase,
     private val createTagUseCase: CreateTagUseCase,
     private val getEntryUseCase: GetEntryUseCase,
+    private val getEntriesUseCase: GetEntriesUseCase,
     private val getTagUseCase: GetTagUseCase
 )(using IdentifierSchema):
   RESTService.logger.debug("Creating RESTService instance")
@@ -40,7 +46,8 @@ final class RESTService(
       CreateTag.endpoint,
       GetTag.endpoint,
       CreateEntry.endpoint,
-      GetEntry.endpoint
+      GetEntry.endpoint,
+      GetEntries.endpoint
     )
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
@@ -52,7 +59,7 @@ final class RESTService(
   private val corsConfig: CorsConfig = CorsConfig()
   private val routes: Routes[
     PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
-      GetEntryUseCase & GetTagUseCase,
+      GetEntryUseCase & GetEntriesUseCase & GetTagUseCase,
     Response
   ] = {
     (Routes(Ping.route)
@@ -61,7 +68,8 @@ final class RESTService(
           CreateTag.route,
           GetTag.route,
           CreateEntry.route,
-          GetEntry.route
+          GetEntry.route,
+          GetEntries.route
         ) @@ bearerAuthWithContext) @@ Middleware.cors(
       corsConfig
     ) @@ browserLocale
@@ -93,10 +101,11 @@ final class RESTService(
     .provideEnvironment(
       ZEnvironment(pingUseCase)
         .add(getUserUseCase)
-        .add(createEntryUseCase)
         .add(createTagUseCase)
-        .add(getEntryUseCase)
         .add(getTagUseCase)
+        .add(createEntryUseCase)
+        .add(getEntryUseCase)
+        .add(getEntriesUseCase)
     )
 end RESTService
 
@@ -113,12 +122,12 @@ object RESTService:
 
   val layer: ZLayer[
     CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
-      CreateTagUseCase & GetTagUseCase,
+      GetEntriesUseCase & CreateTagUseCase & GetTagUseCase,
     InfraFailure,
     RESTService
   ] =
     RestConfig.layer
       >>> httpServerLayer
-      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _))
+      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _, _))
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)
