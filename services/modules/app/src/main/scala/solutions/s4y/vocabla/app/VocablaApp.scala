@@ -3,19 +3,47 @@ package solutions.s4y.vocabla.app
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.ports.entry_create.{CreateEntryRequest, CreateEntryResponse, CreateEntryUseCase}
-import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
+import solutions.s4y.vocabla.app.ports.entries_get.{
+  GetEntriesRequest,
+  GetEntriesResponse,
+  GetEntriesUseCase
+}
+import solutions.s4y.vocabla.app.ports.entry_create.{
+  CreateEntryRequest,
+  CreateEntryResponse,
+  CreateEntryUseCase
+}
+import solutions.s4y.vocabla.app.ports.entry_get.{
+  GetEntryRequest,
+  GetEntryResponse,
+  GetEntryUseCase
+}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagRequest, CreateTagResponse, CreateTagUseCase}
-import solutions.s4y.vocabla.app.ports.tag_get.{GetTagRequest, GetTagResponse, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.tag_create.{
+  CreateTagRequest,
+  CreateTagResponse,
+  CreateTagUseCase
+}
+import solutions.s4y.vocabla.app.ports.tag_get.{
+  GetTagRequest,
+  GetTagResponse,
+  GetTagUseCase
+}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
-import solutions.s4y.vocabla.app.repo.{EntryRepository, TagRepository, UserRepository}
+import solutions.s4y.vocabla.app.repo.tx.{
+  TransactionContext,
+  TransactionManager
+}
+import solutions.s4y.vocabla.app.repo.{
+  EntryRepository,
+  TagRepository,
+  UserRepository
+}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
 import zio.prelude.Validation
-import zio.{IO, ZIO, ZLayer}
+import zio.{Chunk, IO, ZIO, ZLayer}
 
 final class VocablaApp[TX <: TransactionContext](
     private val tm: TransactionManager[TX],
@@ -27,6 +55,7 @@ final class VocablaApp[TX <: TransactionContext](
       CreateEntryUseCase,
       CreateTagUseCase,
       GetEntryUseCase,
+      GetEntriesUseCase,
       GetTagUseCase:
   VocablaApp.logger.debug("Creating VocablaApp instance")
 
@@ -71,6 +100,25 @@ final class VocablaApp[TX <: TransactionContext](
       entriesRepository
         .get(command.entryId)
     ).map(entry => GetEntryResponse(entry))
+
+  override def apply(
+      command: GetEntriesRequest
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    GetEntriesResponse
+  ] =
+    authorized(
+      authorizationService.canGetEntries(command.ownerId, _)
+    ) *> transaction(
+      "entriesGet",
+      entriesRepository.get(
+        ownerId = command.ownerId,
+        tagIds = command.tagId,
+        langCodes = command.lang,
+        text = command.text
+      )
+    ).map(entriesMap => GetEntriesResponse(entriesMap))
 
   /** **************************************************************************
     * Tags
