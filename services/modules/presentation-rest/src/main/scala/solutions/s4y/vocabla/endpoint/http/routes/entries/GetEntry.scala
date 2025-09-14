@@ -1,13 +1,20 @@
 package solutions.s4y.vocabla.endpoint.http.routes.entries
 
+import solutions.s4y.vocabla.app.ports.entry_get.{
+  GetEntryRequest,
+  GetEntryResponse,
+  GetEntryUseCase
+}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.{Entry, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
-import HttpError.{Forbidden403, InternalServerError500}
-import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
+  Forbidden403,
+  InternalServerError500
+}
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import zio.ZIO
 import zio.http.Method.GET
