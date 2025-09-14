@@ -73,6 +73,24 @@ object authorizationService:
       return Validation.fail(NeitherAdminNotStudent("GetEntry"))
     Validation.succeed(())
 
+  def canGetEntries(
+      ownerId: Option[Identifier[User]],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("GetEntries"))
+    
+    // If ownerId filter is provided, it must match the current user
+    ownerId match {
+      case Some(requestOwnerId) if requestOwnerId == userContext.studentId.asInstanceOf[Identifier[User]] =>
+        Validation.succeed(())
+      case Some(_) =>
+        Validation.fail(NotTheOwner("GetEntries", "entries", None))
+      case None =>
+        Validation.fail(NotTheOwner("GetEntries", "entries must be filtered by ownerId", None))
+    }
+
   private def isOwned(
       owned: Owned[User.Student],
       userContext: UserContext,
