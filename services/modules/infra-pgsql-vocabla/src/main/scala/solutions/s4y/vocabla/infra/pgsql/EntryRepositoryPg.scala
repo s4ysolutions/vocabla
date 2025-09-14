@@ -6,17 +6,13 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.{
-  pgDeleteOne,
-  pgInsertWithId,
-  pgSelectOne
-}
+import solutions.s4y.infra.pgsql.wrappers.{pgDeleteOne, pgInsertWithId, pgSelectMany, pgSelectOne}
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
-import solutions.s4y.vocabla.domain.identity.Identifier
+import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Entry, User}
+import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import zio.{Chunk, IO, ZIO, ZLayer}
 
 import scala.util.Using
@@ -79,6 +75,108 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
         )
       }
     )
+
+  override def get[R](
+      ownerId: Option[Identifier[User]] = None,
+      tagIds: Chunk[Identifier[Tag]] = Chunk.empty,
+      langCodes: Chunk[Lang.Code] = Chunk.empty,
+      text: Option[String] = None,
+      limit: Int = 100,
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Chunk[Identified[Entry]]] =
+    val baseQuery = "SELECT e.id, e.word, e.langCode, e.definitions, e.ownerId FROM entries e"
+
+    val (whereClause, joinClause) = buildWhereClause(ownerId, tagIds, langCodes, text)
+    val finalQuery = s"$baseQuery$joinClause$whereClause ORDER BY e.id LIMIT ?"
+
+    pgSelectMany(
+      finalQuery,
+      st => {
+        var paramIndex = 1
+
+        // Set parameters in the same order as the WHERE clause
+        ownerId.foreach { id =>
+          st.setLong(paramIndex, id.as[Long])
+          paramIndex += 1
+        }
+
+        if (tagIds.nonEmpty) {
+          val tagArray = st.getConnection.createArrayOf("bigint", tagIds.map(_.as[Long]).toArray)
+          st.setArray(paramIndex, tagArray)
+          paramIndex += 1
+        }
+
+        if (langCodes.nonEmpty) {
+          val langArray = st.getConnection.createArrayOf("text", langCodes.toArray)
+          st.setArray(paramIndex, langArray)
+          paramIndex += 1
+        }
+
+        text.foreach { searchText =>
+          st.setString(paramIndex, s"%$searchText%")
+          paramIndex += 1
+          st.setString(paramIndex, s"%$searchText%")
+          paramIndex += 1
+        }
+
+        st.setInt(paramIndex, limit)
+      },
+      rs => {
+        val entryId = rs.getLong(1).identifier[Entry]
+        val arr: PgArray = rs.getArray(4).asInstanceOf[PgArray]
+        val defs = arr.getArray.asInstanceOf[Array[Object]]
+        val definitions: Chunk[Definition] = Chunk.fromArray(
+          defs.map { obj =>
+            val pgObj = obj.asInstanceOf[PGobject]
+            val value = pgObj.getValue // (definition, langCode)
+            value match {
+              case Patterns.typeOf2(definition, langCode) =>
+                Definition(definition, langCode)
+              case _ =>
+                throw new Exception(s"Invalid definition format: $value")
+            }
+          }
+        )
+
+        val entry = Entry(
+          Headword(rs.getString(2), rs.getString(3)),
+          definitions,
+          rs.getLong(5).identifier[User.Student]
+        )
+
+        Identified(entryId, entry)
+      }
+    )
+
+  private def buildWhereClause(
+      ownerId: Option[Identifier[User]],
+      tagIds: Chunk[Identifier[Tag]],
+      langCodes: Chunk[Lang.Code],
+      text: Option[String]
+  ): (String, String) = {
+    val conditions = scala.collection.mutable.ListBuffer[String]()
+    var joinClause = ""
+
+    ownerId.foreach(_ => conditions += "e.ownerId = ?")
+
+    if (tagIds.nonEmpty) {
+      joinClause = " INNER JOIN tag_entry_associations tea ON e.id = tea.entry_id"
+      conditions += "tea.tag_id = ANY(?)"
+    }
+
+    if (langCodes.nonEmpty) {
+      conditions += "e.langCode = ANY(?)"
+    }
+
+    text.foreach(_ => conditions += "(e.word ILIKE ? OR EXISTS (SELECT 1 FROM unnest(e.definitions) AS def WHERE def.definition ILIKE ?))")
+
+    val whereClause = if (conditions.nonEmpty) {
+      " WHERE " + conditions.mkString(" AND ")
+    } else {
+      ""
+    }
+
+    (whereClause, joinClause)
+  }
 
 end EntryRepositoryPg
 
