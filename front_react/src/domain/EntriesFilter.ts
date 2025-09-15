@@ -22,3 +22,5 @@ export const EntriesFilter = (
     text
   })
 
+export const entriesFilterEmpty: EntriesFilter =
+  EntriesFilter([], [], Option.none())

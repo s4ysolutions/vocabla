@@ -6,19 +6,48 @@ import {
 } from '../app-ports/CreateTagUseCase.ts';
 import {type TagsRepository, TagsRepositoryTag} from '../app-repo/TagsRepository.ts';
 import {appError, type AppError} from '../app-ports/errors/AppError.ts';
-import {Effect, Layer} from 'effect';
+import {Context, Effect, Layer} from 'effect';
 import type {InfraError} from '../app-repo/infraError.ts';
-import type {GetTagResponse} from '../infra/repo/dto/tag/GetTagResponse.ts';
+import {
+  type GetEntriesByOwnerRequest,
+  type GetEntriesByOwnerResponse,
+  type GetEntriesByOwnerUseCase, GetEntriesByOwnerUseCaseTag
+} from '../app-ports/GetEntriesByOwner.ts';
+import {type EntriesRepository, EntriesRepositoryTag} from '../app-repo/EntriesRepository.ts';
+import {repositoryRestLive} from '../infra/repo/repositoryRestLive.ts';
 
-const vocablaApp = (tagsRepository: TagsRepository): CreateTagUseCase & GetTagResponse => ({
-  createTag: (request: CreateTagRequest): Effect.Effect<CreateTagResponse, AppError> =>
-    Effect.mapError(tagsRepository.createTag(request.tag), _infra2appError)
-})
+const vocablaApp = (tagsRepository: TagsRepository, entriesRepository: EntriesRepository):
+  CreateTagUseCase &
+  GetEntriesByOwnerUseCase =>
+  ({
+    createTag: (request: CreateTagRequest): Effect.Effect<CreateTagResponse, AppError> =>
+      tagsRepository.createTag(request.tag).pipe(
+        Effect.mapError(_infra2appError),
+      ),
+    getEntriesByOwner: (request: GetEntriesByOwnerRequest): Effect.Effect<GetEntriesByOwnerResponse, AppError> =>
+      entriesRepository.getEntriesByOwner(request.ownerId, request.filter).pipe(
+        Effect.mapError(_infra2appError)
+      )
+  })
 
 const _infra2appError = (error: InfraError): AppError =>
   appError(error.message)
 
-export const VocablaAppLayer: Layer.Layer<CreateTagUseCaseTag, never, TagsRepositoryTag> = Layer.effect(
-  CreateTagUseCaseTag,
-  Effect.map(TagsRepositoryTag, vocablaApp)
-);
+export type UseCases = CreateTagUseCaseTag | GetEntriesByOwnerUseCaseTag
+
+export const vocablaAppLayer: Layer.Layer<UseCases, never, TagsRepositoryTag | EntriesRepositoryTag> =
+  Layer.effectContext(
+    Effect.gen(function* () {
+      const entriesRepository = yield* EntriesRepositoryTag
+      const tagsRepository = yield* TagsRepositoryTag
+      const impl = vocablaApp(tagsRepository, entriesRepository)
+
+      return Context.empty()
+        .pipe(Context.add(CreateTagUseCaseTag, impl))
+        .pipe(Context.add(GetEntriesByOwnerUseCaseTag, impl))
+    })
+  )
+
+export const vocablaAppLive: Layer.Layer<UseCases> = vocablaAppLayer.pipe(
+  Layer.provide(repositoryRestLive),
+)

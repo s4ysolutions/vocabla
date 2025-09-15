@@ -1,15 +1,15 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Option, pipe, Schema, SchemaAST} from 'effect';
-import {isLangCode, type LangCode, schemaLangCode} from './LangCode.ts';
+import {isLangCode, LangCode, schemaLangCode} from './LangCode.ts';
 
 describe('LangCode', () => {
   describe('constructors, assigns and annotation', () => {
     it('construct instance', () => {
-      const langCode: LangCode = schemaLangCode.make('en')
+      const langCode: LangCode = LangCode('en')
       expect(langCode).toBe('en');
     });
     it('instance assigns', () => {
-      const langCode: LangCode = schemaLangCode.make('en')
+      const langCode: LangCode = LangCode('en')
       //expect(typeof langCode).toBe("LangCode");❌
       const lc: string = langCode; // ✅
       void lc;
@@ -27,7 +27,7 @@ describe('LangCode', () => {
         .toBe('LangCode');
     });
     it('type guard', () => {
-      const langCode: LangCode = schemaLangCode.make('en')
+      const langCode: LangCode = LangCode('en')
       expect(isLangCode(langCode)).toBe(true);
     });
     it('transform from string', () => {
@@ -106,14 +106,14 @@ describe('LangCode', () => {
   });
   describe('encoding (serializing to JSON)', () => {
     it('should encode LangCode to string', () => {
-      const langCode = schemaLangCode.make('en-US')
+      const langCode = LangCode('en-US')
       const encoded = Schema.encodeSync(schemaLangCode)(langCode)
 
       expect(encoded).toBe('en-US')
       expect(typeof encoded).toBe('string')
     })
     it('should encode to JSON string', () => {
-      const langCode = schemaLangCode.make('fr-FR')
+      const langCode = LangCode('fr-FR')
       const encoded = Schema.encodeSync(schemaLangCode)(langCode)
       const jsonString = JSON.stringify(encoded)
 
@@ -123,7 +123,7 @@ describe('LangCode', () => {
       const originalCodes = ['en', 'fr-FR', 'de-DE', 'ja', 'zh-CN']
 
       originalCodes.forEach(code => {
-        const langCode = schemaLangCode.make(code)
+        const langCode = LangCode(code)
         const encoded = Schema.encodeSync(schemaLangCode)(langCode)
         const decoded = Schema.decodeUnknownSync(schemaLangCode)(encoded)
 

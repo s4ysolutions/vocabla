@@ -107,11 +107,11 @@ const _httpRequestWithFetch = <REQ, RESP>(
  * Live implementation of HttpClient using Fetch API
  */
 
-const httpClientLayer: Layer.Layer<HttpClientTag> = Layer.succeed(
+const httpClientLive: Layer.Layer<HttpClientTag> = Layer.succeed(
   HttpClientTag,
   HttpClientTag.of({
     execute: _httpRequestWithFetch
   })
 )
 
-export default httpClientLayer
+export default httpClientLive

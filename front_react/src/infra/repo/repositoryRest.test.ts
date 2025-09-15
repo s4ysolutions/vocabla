@@ -1,10 +1,10 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Layer, Option} from 'effect';
-import httpClientLayer from '../http/httpClientLive.ts';
+import httpClientLive from '../http/httpClientLive.ts';
 import {Effect} from 'effect';
 import {TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
-import {restClientLayer} from '../rest/restClientLayer.ts';
-import {repositoryRestLayer} from './repositoryRestLayer.ts';
+import {restClientLayer} from '../rest/restClientLive.ts';
+import {repositoryRestLayer} from './repositoryRestLive.ts';
 import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
 import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
@@ -21,7 +21,7 @@ import {Identified} from '../../domain/identity/Identified.ts';
 describe('repositoryRest', () => {
   const layer: Layer.Layer<TagsRepositoryTag | EntriesRepositoryTag> = repositoryRestLayer.pipe(
     Layer.provide(restClientLayer),
-    Layer.provide(httpClientLayer)
+    Layer.provide(httpClientLive)
   )
   describe('schemas', () => {
     describe('tags', () => {

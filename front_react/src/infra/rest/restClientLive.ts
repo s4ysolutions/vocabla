@@ -3,9 +3,10 @@
  */
 import {Effect, Layer} from 'effect';
 import {type HttpClient, HttpClientTag} from '../http/HttpClient.ts';
-import {type Get, type Post, type RestClient, RestClientTag} from './restClient.ts';
+import {type Get, type Post, type RestClient, RestClientTag} from './RestClient.ts';
+import HttpClientLive from '../http/httpClientLive.ts';
 
-export const restClientLive = (httpClient: HttpClient): RestClient => ({
+export const restClient = (httpClient: HttpClient): RestClient => ({
   post: <REQ, RESP, OUT>({url, body, decoder}: Post<REQ, RESP, OUT>) =>
     Effect.flatMap(
       // get unknown response from http client
@@ -25,6 +26,9 @@ export const restClientLayer: Layer.Layer<RestClientTag, never, HttpClientTag> =
     RestClientTag,
     Effect.gen(function* () {
       const httpClient = yield* HttpClientTag;
-      return restClientLive(httpClient);
+      return restClient(httpClient);
     }))
-//HttpClientTag.pipe(Effect.map(restClientLive)));
+
+export const restClientLive: Layer.Layer<RestClientTag> = restClientLayer.pipe(
+  Layer.provide(HttpClientLive)
+)

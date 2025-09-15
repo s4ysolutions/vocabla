@@ -1,13 +1,31 @@
-import { useEffect, useState } from 'react';
-import { runAppEffect } from '../../../../../app/effect-runtime.ts';
+import {useEffect, useState} from 'react';
+import {promiseAppEffect} from '../../../../../app/effect-runtime.ts';
 import type {Entry} from '../../../../../domain/Entry.ts';
 import {Identifier} from '../../../../../domain/identity/Identifier.ts';
 import type {Student} from '../../../../../domain/Student.ts';
+import {Effect} from 'effect';
+import {GetEntriesByOwnerUseCaseTag} from '../../../../../app-ports/GetEntriesByOwner.ts';
+import {Identified} from '../../../../../domain/identity/Identified.ts';
+import {entriesFilterEmpty} from '../../../../../domain/EntriesFilter.ts';
+
+const programGetEntries = (ownerId: Identifier<Student>) => Effect.gen(function* () {
+  const useCase = yield* GetEntriesByOwnerUseCaseTag
+  const {entries} = yield* useCase
+    .getEntriesByOwner({ownerId, filter: entriesFilterEmpty})
+    .pipe(
+      Effect.catchAll(error => {
+        // TODO: better error handling
+        Effect.log('Application error fetching entries: ' + error.message)
+        return Effect.succeed({entries: []})
+      }),
+    )
+  return entries
+})
 
 const useEntries = (
-  ownerId: string
+  ownerId: Identifier<Student>
 ): {
-  entries: Array<Entry>;
+  entries: Array<Identified<Entry>>;
   loading: boolean;
   addEntry: (
     word: string,
@@ -17,26 +35,17 @@ const useEntries = (
     tagLabels: string[]
   ) => Promise<void>;
 } => {
-  const [entries, setEntries] = useState<Array<Entry>>([]);
+  const [entries, setEntries] = useState<ReadonlyArray<Identified<Entry>>>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+
   useEffect(() => {
-    const fetchEntries = async () => {
-      setLoading(true);
-
-      try {
-        const entries = await runAppEffect(
-          getEntriesUseCase(Identifier<Student>(ownerId))
-        );
+    setLoading(true)
+    promiseAppEffect(programGetEntries(ownerId)).then(entries => {
         setEntries(entries);
-      } catch (error) {
-        console.error('Failed to fetch entries:', error);
-      } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    fetchEntries();
+    );
   }, [ownerId]);
 
   const addEntry = async (
@@ -47,7 +56,7 @@ const useEntries = (
     tagLabels: string[]
   ) => {
     try {
-      await runAppEffect(
+      await promiseAppEffect(
         addEntryUseCase(
           id(ownerId),
           word,
@@ -58,7 +67,7 @@ const useEntries = (
         )
       );
 
-      const refreshedEntries = await runAppEffect(
+      const refreshedEntries = await promiseAppEffect(
         getEntriesUseCase(id(ownerId))
       );
       setEntries(refreshedEntries);
@@ -67,7 +76,7 @@ const useEntries = (
     }
   };
 
-  return { entries, loading, addEntry };
+  return {entries, loading, addEntry};
 };
 
 export default useEntries;

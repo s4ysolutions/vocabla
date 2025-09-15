@@ -1,5 +1,5 @@
 import {Effect, Option} from 'effect';
-import {type RestClient} from '../rest/restClient.ts';
+import {type RestClient} from '../rest/RestClient.ts';
 import {type TagsRepository} from '../../app-repo/TagsRepository.ts';
 import {infraError, type InfraError} from '../../app-repo/infraError.ts';
 import {tt} from '../../translable/Translatable.ts';

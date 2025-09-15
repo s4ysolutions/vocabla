@@ -1,39 +1,17 @@
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import {VocablaAppLayer} from './VocablaApp.ts';
-import {Layer} from 'effect';
-import {restClientLayer} from '../infra/rest/restClientLayer.ts';
-import httpClientLayer from '../infra/http/httpClientLive.ts';
-import {repositoryRestLayer} from '../infra/repo/repositoryRestLayer.ts';
-import {CreateTagUseCaseTag} from '../app-ports/CreateTagUseCase.ts';
-// import * as Layer from "effect/Layer"; // Uncomment when merging layers
-// import { UserServiceLayer } from "./example-services"; // Add when needed
+import {type UseCases, vocablaAppLive} from './VocablaApp.ts';
 
-type AppDependencies = CreateTagUseCaseTag
-// Combine all application layers here
-// Currently only WordsAdapter, but you can easily add more:
-const AppLayer = VocablaAppLayer.pipe(
-  Layer.provide(repositoryRestLayer),
-  Layer.provide(restClientLayer),
-  Layer.provide(httpClientLayer)
-)
-// Later when you need more services:
-// const AppLayer = Layer.merge(WordsAdapterRestLayer, UserServiceLayer, ConfigLayer);
-
-// Create a ManagedRuntime with all layers provided
-const AppRuntime = ManagedRuntime.make(AppLayer);
+const appRuntime: ManagedRuntime.ManagedRuntime<UseCases, never> = ManagedRuntime.make(vocablaAppLive);
 
 // Universal function to run ANY effect with all app layers provided
-export const runAppEffect = <A, E, R>(
-  effect: Effect.Effect<A, E, R & AppDependencies>
+export const promiseAppEffect = <A, E, R>(
+  effect: Effect.Effect<A, E, R & UseCases>
 ): Promise<A> =>
-  AppRuntime.runPromise(effect)// as Effect.Effect<A, E, never>);
+  appRuntime.runPromise(effect)// as Effect.Effect<A, E, never>);
 
 // For effects that need custom error handling
-export const runAppEffectExit = <A, E, R>(
-  effect: Effect.Effect<A, E, R & AppDependencies>
+export const promiseAppEffectExit = <A, E, R>(
+  effect: Effect.Effect<A, E, R & UseCases>
 ) =>
-  AppRuntime.runPromiseExit(effect as Effect.Effect<A, E, never>);
-
-// Export the runtime itself if needed
-export { AppRuntime, AppLayer };
+  appRuntime.runPromiseExit(effect as Effect.Effect<A, E, never>);

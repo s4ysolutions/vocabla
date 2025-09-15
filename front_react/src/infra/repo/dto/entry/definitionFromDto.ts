@@ -9,11 +9,10 @@ export const definitionFromDto: Schema.Schema<Definition, DefinitionDTO> = Schem
   schemaDefinition,
   {
     decode: (dto) => {
-      const defintion = Definition(Localized(LangCode(dto.langCode), dto.definition))
-      return defintion
+      return Definition(Localized(LangCode(dto.langCode), dto.definition))
     },
     encode: domain =>
-      schemaDefinitionDto.make({langCode: domain.localized.langCode, definition: domain.localized.s}),
+      ({langCode: domain.localized.langCode, definition: domain.localized.s}),
     strict: true
   }
 )

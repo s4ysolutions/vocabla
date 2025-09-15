@@ -1,6 +1,6 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Effect} from 'effect';
-import httpClientLayer from './httpClientLive.ts';
+import httpClientLive from './httpClientLive.ts';
 import {HttpClientTag} from './HttpClient.ts';
 
 describe('HttpClient', () => {
@@ -10,7 +10,7 @@ describe('HttpClient', () => {
         const client = yield* HttpClientTag;
         expect(client).not.toBeNull()
       })
-      return Effect.provide(program, httpClientLayer);
+      return Effect.provide(program, httpClientLive);
     });
   });
   describe('Integration tests', () => {
@@ -23,7 +23,7 @@ describe('HttpClient', () => {
         const obj = body as Record<string, unknown>;
         expect(obj['parsedQueryParams']).toEqual({'author': 'beeceptor'});
       })
-      return Effect.provide(program, httpClientLayer);
+      return Effect.provide(program, httpClientLive);
     });
     it.effect('post request should success', () => {
       const program = Effect.gen(function* () {
@@ -34,7 +34,7 @@ describe('HttpClient', () => {
         const obj = body as Record<string, unknown>;
         expect(obj['parsedQueryParams']).toEqual({'author': 'beeceptor'});
       })
-      return Effect.provide(program, httpClientLayer);
+      return Effect.provide(program, httpClientLive);
     });
   });
 });

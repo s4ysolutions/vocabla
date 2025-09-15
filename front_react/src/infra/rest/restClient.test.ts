@@ -1,11 +1,11 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Effect, Layer, Schema} from 'effect';
-import {RestClientTag} from './restClient.ts';
-import httpClientLayer from '../http/httpClientLive.ts';
-import {restClientLayer} from './restClientLayer.ts';
+import {RestClientTag} from './RestClient.ts';
+import httpClientLive from '../http/httpClientLive.ts';
+import {restClientLayer} from './restClientLive.ts';
 
 describe('REST', () => {
-  const restLiveProvider = restClientLayer.pipe(Layer.provide(httpClientLayer))
+  const restLiveProvider = restClientLayer.pipe(Layer.provide(httpClientLive))
 
   describe('Unit tests', () => {
     it.effect('Live instance can be instantiated', () =>

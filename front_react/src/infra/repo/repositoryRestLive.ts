@@ -1,8 +1,9 @@
 import {Context, Effect, Layer} from 'effect';
-import {RestClientTag} from '../rest/restClient.ts';
+import {RestClientTag} from '../rest/RestClient.ts';
 import {TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
 import {EntriesRepositoryTag} from '../../app-repo/EntriesRepository.ts';
 import {repositoryRest} from './repositoryRest.ts';
+import {restClientLive} from '../rest/restClientLive.ts';
 
 export const repositoryRestLayer: Layer.Layer<TagsRepositoryTag | EntriesRepositoryTag, never, RestClientTag> =
   Layer.effectContext(
@@ -15,6 +16,10 @@ export const repositoryRestLayer: Layer.Layer<TagsRepositoryTag | EntriesReposit
         .pipe(Context.add(EntriesRepositoryTag, repositoryImpl))
     })
   )
+
+export const repositoryRestLive: Layer.Layer<TagsRepositoryTag | EntriesRepositoryTag> = repositoryRestLayer.pipe(
+  Layer.provide(restClientLive)
+)
 /*
   Layer.merge(
     Layer.effect(

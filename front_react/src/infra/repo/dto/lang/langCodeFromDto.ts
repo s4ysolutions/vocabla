@@ -6,8 +6,9 @@ export const langCodeFromDto: Schema.Schema<LangCode, LangCodeDto> = Schema.tran
   schemaLangCodeDto,
   schemaLangCode,
   {
-    encode: (dto) => LangCode(dto),
-    decode: (domain) => domain as LangCodeDto,
+    decode: (dto) => LangCode(dto),
+    encode: (domain) => domain as LangCodeDto,
+    strict: true
   }
 )
 
