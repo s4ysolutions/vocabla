@@ -1,23 +1,34 @@
-import {Context, Effect, Schema} from 'effect';
-import {schemaIdentifier} from '../domain/identity/Identifier.ts';
+import {Context, Effect} from 'effect';
+import {type Identifier} from '../domain/identity/Identifier.ts';
 import type {Student} from '../domain/Student.ts';
-import {schemaEntriesFilter} from '../domain/EntriesFilter.ts';
-import {schemaIdentified} from '../domain/identity/Identified.ts';
-import {type Entry, schemaEntry} from '../domain/Entry.ts';
+import {type EntriesFilter} from '../domain/EntriesFilter.ts';
+import {type Entry} from '../domain/Entry.ts';
 import type {AppError} from './errors/AppError.ts';
+import type {Identified} from '../domain/identity/Identified.ts';
 
+
+export type GetEntriesByOwnerRequest = {
+  readonly ownerId: Identifier<Student>;
+  readonly filter: EntriesFilter
+}
+
+/*
 export const schemaGetEntriesByOwnerRequest = Schema.Struct({
   ownerId: schemaIdentifier<Student>(),
   filter: schemaEntriesFilter,
 })
+*/
+export type GetEntriesByOwnerResponse = {
+  readonly entries: ReadonlyArray<Identified<Entry>>;
+}
 
-export type GetEntriesByOwnerRequest = typeof schemaGetEntriesByOwnerRequest.Type;
-
+/*
 export const schemaGetEntriesByOwnerResponse = Schema.Struct({
   entries: Schema.Array(schemaIdentified<Entry>(schemaEntry))
 });
 
 export type GetEntriesByOwnerResponse = typeof schemaGetEntriesByOwnerResponse.Type;
+*/
 
 export interface GetEntriesByOwnerUseCase {
   getEntriesByOwner(request: GetEntriesByOwnerRequest): Effect.Effect<GetEntriesByOwnerResponse, AppError>;

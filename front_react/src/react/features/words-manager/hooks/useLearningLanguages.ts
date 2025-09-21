@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
-import type {Lang} from '../../../../../domain/Lang.ts';
-import {LangCode} from '../../../../../domain/LangCode.ts';
+import type {Lang} from '../../../../domain/Lang.ts';
+import {LangCode} from '../../../../domain/LangCode.ts';
 
 const mockLanguages: Array<Lang> = [
   {code: LangCode('en'), name: 'English', flag: '🇬🇧'},

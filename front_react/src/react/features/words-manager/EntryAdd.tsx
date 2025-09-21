@@ -1,10 +1,10 @@
-import React, { ReactElement, useState } from 'react'
-import PrimaryButton from '../../../widgets/buttons/PrimaryButton.tsx'
+import React, {type ReactElement, useState } from 'react'
+import PrimaryButton from '../../widgets/buttons/PrimaryButton.tsx'
 import useLearningLanguages from './hooks/useLearningLanguages.ts'
-import LanguageSelect from '../../../widgets/selectors/LanguageSelect.tsx'
+import LanguageSelect from '../../widgets/selectors/LanguageSelect.tsx'
 import useIUnderstandLanguages from './hooks/useIUnderstandLanguages.ts'
-import InputText from '../../../widgets/inputs/InputText.tsx'
-import Textarea from '../../../widgets/textarea/Textarea.tsx'
+import InputText from '../../widgets/inputs/InputText.tsx'
+import Textarea from '../../widgets/textarea/Textarea.tsx'
 
 const EntryAdd: React.FC = (): ReactElement => {
     const { languages: learningLanguages, loading: lll } = useLearningLanguages()

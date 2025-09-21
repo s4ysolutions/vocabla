@@ -1,10 +1,10 @@
-import React, { ReactElement, useState } from 'react'
-import Entry from '../domain/models/entry.ts'
-import Card from '../../../widgets/cards/Card.tsx'
-import PrimaryButton from '../../../widgets/buttons/PrimaryButton.tsx'
-import DangerButton from '../../../widgets/buttons/DangerButton.tsx'
-import Modal from '../../../widgets/modal'
+import React, {type ReactElement, useState } from 'react'
+import Card from '../../widgets/cards/Card.tsx'
+import PrimaryButton from '../../widgets/buttons/PrimaryButton.tsx'
+import DangerButton from '../../widgets/buttons/DangerButton.tsx'
+import Modal from '../../widgets/modal'
 import EntryEdit from './EntryEdit.tsx'
+import type {Entry} from '../../../domain/Entry.ts';
 
 interface Props {
     entry: Entry
@@ -28,7 +28,7 @@ const EntryCard: React.FC<Props> = ({ entry }): ReactElement => {
                     {/* First Column */}
                     <div className="flex-shrink-0 flex flex-col space-y-4">
                         {/* Word */}
-                        <span className="text-lg font-semibold">{entry.word}</span>
+                        <span className="text-lg font-semibold">{entry.word.s}</span>
                     </div>
 
                     {/* Second Column */}

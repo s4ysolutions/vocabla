@@ -15,14 +15,27 @@ import {
 } from '../app-ports/GetEntriesByOwner.ts';
 import {type EntriesRepository, EntriesRepositoryTag} from '../app-repo/EntriesRepository.ts';
 import {repositoryRestLive} from '../infra/repo/repositoryRestLive.ts';
+import {
+  type CreateEntryRequest,
+  type CreateEntryResponse,
+  type CreateEntryUseCase,
+  CreateEntryUseCaseTag
+} from '../app-ports/CreateEntryUseCase.ts';
 
 const vocablaApp = (tagsRepository: TagsRepository, entriesRepository: EntriesRepository):
   CreateTagUseCase &
+  CreateEntryUseCase &
   GetEntriesByOwnerUseCase =>
   ({
     createTag: (request: CreateTagRequest): Effect.Effect<CreateTagResponse, AppError> =>
       tagsRepository.createTag(request.tag).pipe(
+        Effect.map(id => ({id})),
         Effect.mapError(_infra2appError),
+      ),
+    createEntry: (request: CreateEntryRequest): Effect.Effect<CreateEntryResponse, AppError> =>
+      entriesRepository.createEntry(request.entry, request.tagIds).pipe(
+        Effect.map(id => ({id})),
+        Effect.mapError(_infra2appError)
       ),
     getEntriesByOwner: (request: GetEntriesByOwnerRequest): Effect.Effect<GetEntriesByOwnerResponse, AppError> =>
       entriesRepository.getEntriesByOwner(request.ownerId, request.filter).pipe(
@@ -33,7 +46,7 @@ const vocablaApp = (tagsRepository: TagsRepository, entriesRepository: EntriesRe
 const _infra2appError = (error: InfraError): AppError =>
   appError(error.message)
 
-export type UseCases = CreateTagUseCaseTag | GetEntriesByOwnerUseCaseTag
+export type UseCases = CreateTagUseCaseTag | GetEntriesByOwnerUseCaseTag | CreateEntryUseCaseTag
 
 export const vocablaAppLayer: Layer.Layer<UseCases, never, TagsRepositoryTag | EntriesRepositoryTag> =
   Layer.effectContext(
@@ -45,6 +58,7 @@ export const vocablaAppLayer: Layer.Layer<UseCases, never, TagsRepositoryTag | E
       return Context.empty()
         .pipe(Context.add(CreateTagUseCaseTag, impl))
         .pipe(Context.add(GetEntriesByOwnerUseCaseTag, impl))
+        .pipe(Context.add(CreateEntryUseCaseTag, impl))
     })
   )
 

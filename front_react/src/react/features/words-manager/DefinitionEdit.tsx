@@ -1,7 +1,7 @@
-import React, { ReactElement } from 'react'
-import Lang from '../../../../domain/Lang.ts'
-import Textarea from '../../../widgets/textarea/Textarea.tsx'
-import LanguageSelect from '../../../widgets/selectors/LanguageSelect.tsx'
+import React, {type ReactElement } from 'react'
+import Textarea from '../../widgets/textarea/Textarea.tsx'
+import LanguageSelect from '../../widgets/selectors/LanguageSelect.tsx'
+import type {Lang} from '../../../domain/Lang.ts';
 
 interface Props {
   languagesIUnderstand: Lang[],

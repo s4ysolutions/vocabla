@@ -1,7 +1,8 @@
 import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
+import type {DeepReadonly} from '../DeepReadonly.ts';
 
-export type HeadwordDTO = components['schemas']['Entry']['headword']
+export type HeadwordDTO = DeepReadonly<components['schemas']['Entry']['headword']>
 
 export const schemaHeadwordDto: Schema.Schema<HeadwordDTO> = Schema.Struct({
   word: Schema.String,

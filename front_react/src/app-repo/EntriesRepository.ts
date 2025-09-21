@@ -10,7 +10,9 @@ import type {Identified} from '../domain/identity/Identified.ts';
 export interface EntriesRepository {
   createEntry: (entry: Entry, tagIds: Array<Identifier<Tag>>) => Effect.Effect<Identifier<Entry>, InfraError>
   getEntry: (entryId: Identifier<Entry>) => Effect.Effect<Option.Option<Entry>, InfraError>
-  getEntriesByOwner: (ownerId: Identifier<Student>, filter: EntriesFilter) => Effect.Effect<{entries: Array<Identified<Entry>>}, InfraError>
+  getEntriesByOwner: (ownerId: Identifier<Student>, filter: EntriesFilter) => Effect.Effect<{
+    readonly entries: ReadonlyArray<Identified<Entry>>
+  }, InfraError>
 }
 
 export class EntriesRepositoryTag extends Context.Tag('EntriesRepository')<

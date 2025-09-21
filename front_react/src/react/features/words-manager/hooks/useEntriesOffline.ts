@@ -1,10 +1,9 @@
 import {useEffect, useState} from 'react';
-import {LangCode} from '../../../../../domain/LangCode.ts';
-import type Source from '../../domain/models/source.ts';
-import {Definition, type Entry} from '../../../../../domain/Entry.ts';
-import {Localized} from '../../../../../domain/Localized.ts';
-import {Identifier} from '../../../../../domain/identity/Identifier.ts';
-import type {Student} from '../../../../../domain/Student.ts';
+import {LangCode} from '../../../../domain/LangCode.ts';
+import {Definition, type Entry, type Source} from '../../../../domain/Entry.ts';
+import {Localized} from '../../../../domain/Localized.ts';
+import {Identifier} from '../../../../domain/identity/Identifier.ts';
+import type {Student} from '../../../../domain/Student.ts';
 
 //const en: Lang = Lang(LangCode('en'), 'English', '🇬🇧')
 

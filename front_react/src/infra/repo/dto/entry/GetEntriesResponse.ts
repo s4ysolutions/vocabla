@@ -7,16 +7,18 @@ import {identifiedFromDto} from '../transformers/identifiedFromDto.ts';
 import {type EntryDTO, schemaEntryDto} from './entryDto.ts';
 import {schemaIdentifier} from '../../../../domain/identity/Identifier.ts';
 import type {ParseError} from 'effect/ParseResult';
+import type {DeepReadonly} from '../DeepReadonly.ts';
 
-export type GetEntriesResponse = components['schemas']['GetEntriesResponse']
+export type GetEntriesResponse = DeepReadonly<components['schemas']['GetEntriesResponse']>;
 
-export const schemaGetEntriesResponseDto: Schema.Schema<GetEntriesResponse> =
-  Schema.mutable(Schema.Struct({
-    entries: Schema.mutable(Schema.Array(Schema.Struct({
+//export const schemaGetEntriesResponseDto: Schema.Schema<GetEntriesResponse> =
+export const schemaGetEntriesResponseDto =
+  Schema.Struct({
+    entries: Schema.Array(Schema.Struct({
       id: Schema.Number,
       e: schemaEntryDto
-    })))
-  }))
+    }))
+  })
 
 const _check1: GetEntriesResponse = {} as Schema.Schema.Type<typeof schemaGetEntriesResponseDto>
 void _check1
@@ -27,10 +29,10 @@ void ({} as GetEntriesResponse satisfies Schema.Schema.Type<typeof schemaGetEntr
 void ({} as Schema.Schema.Type<typeof schemaGetEntriesResponseDto> satisfies GetEntriesResponse)
 void (schemaGetEntriesResponseDto satisfies Schema.Schema<GetEntriesResponse>)
 
-const transformer = Schema.mutable(identifiedFromDto<Entry, EntryDTO>(schemaIdentifier<Entry>(), entryFromDto))
+const transformer = identifiedFromDto<Entry, EntryDTO>(schemaIdentifier<Entry>(), entryFromDto)
 export const schemaGetEntriesResponse =
   Schema.Struct({
-    entries: Schema.mutable(Schema.Array(transformer))
+    entries: Schema.Array(transformer)
   })
 
 
@@ -43,10 +45,10 @@ void _check5
 const _check6: Schema.Schema.Encoded<typeof schemaGetEntriesResponse> = {} as GetEntriesResponse
 void _check6
 
-void (schemaGetEntriesResponse satisfies Schema.Schema<{ entries: Array<Identified<Entry>> }, GetEntriesResponse>)
+void (schemaGetEntriesResponse satisfies Schema.Schema<{readonly entries: ReadonlyArray<Identified<Entry>> }, GetEntriesResponse>)
 
 export const decodeGetEntriesResponse = Schema.decode(schemaGetEntriesResponse)
 
-type Decoder = (input: GetEntriesResponse) => Effect.Effect<{ entries: Array<Identified<Entry>> }, ParseError>;
+type Decoder = (input: GetEntriesResponse) => Effect.Effect<{readonly entries: ReadonlyArray<Identified<Entry>> }, ParseError>;
 const _checkDecoder: Decoder = decodeGetEntriesResponse;
 void _checkDecoder

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import MeAppMenu from './app-menu'
-import WordManager from '../words-manager/react'
-import WordManagerControlPanel from '../words-manager/react/ControlPanel.tsx'
+import WordManager from '../words-manager'
+import WordManagerControlPanel from '../words-manager/ControlPanel.tsx'
 import LearningSettings from '../learning-settings'
 import Panel from '../../widgets/panels/Panel.tsx'
 import {defaultMenuItem, type MenuItem} from './app-menu/menuItems.ts';

@@ -1,8 +1,9 @@
 import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
 import {schemaLangCodeDto} from '../lang/langCodeDto.ts';
+import type {DeepReadonly} from '../DeepReadonly.ts';
 
-export type DefinitionDTO = components['schemas']['Entry']['definitions'][0]
+export type DefinitionDTO = DeepReadonly<components['schemas']['Entry']['definitions'][0]>
 
 export const schemaDefinitionDto = Schema.mutable(Schema.Struct({
   definition: Schema.String,

@@ -238,7 +238,7 @@ describe('repositoryRest', () => {
           const filter = EntriesFilter([], [LangCode('en')], Option.none());
 
           // Get entries for owner
-          const {entries} = yield* entryRepository.getEntries(Identifier<Student>(1), filter);
+          const {entries} = yield* entryRepository.getEntriesByOwner(Identifier<Student>(1), filter);
 
           // Verify we got entries back (should include our created entries)
           expect(entries.length).toBeGreaterThanOrEqual(2);

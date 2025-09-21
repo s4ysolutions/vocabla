@@ -67,7 +67,7 @@ export const repositoryRest = (restClient: RestClient): TagsRepository & Entries
         decoder: decodeGetEntryResponse,
       }), _error2infraError)
   },
-  getEntries: (ownerId, filter) => {
+  getEntriesByOwner: (ownerId, filter) => {
     const queryParams = new URLSearchParams();
     queryParams.append('ownerId', ownerId.toString());
 
@@ -86,7 +86,7 @@ export const repositoryRest = (restClient: RestClient): TagsRepository & Entries
     }
 
     return Effect.mapError(
-      restClient.get<GetEntriesResponse, {entries: Array<Identified<Entry>>}>({
+      restClient.get<GetEntriesResponse, {readonly entries: ReadonlyArray<Identified<Entry>>}>({
         url: `${urlBase}/entries?${queryParams.toString()}`,
         decoder: decodeGetEntriesResponse,
       }), _error2infraError)

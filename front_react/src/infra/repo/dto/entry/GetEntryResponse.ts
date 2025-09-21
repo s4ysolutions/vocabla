@@ -2,8 +2,9 @@ import type {components} from '../../../rest/types.ts';
 import {Option, Schema} from 'effect';
 import {Entry, schemaEntry} from '../../../../domain/Entry.ts';
 import {entryFromDto} from './entryFromDto.ts';
+import type {DeepReadonly} from '../DeepReadonly.ts';
 
-export type GetEntryResponse = components['schemas']['GetEntryResponse']
+export type GetEntryResponse = DeepReadonly<components['schemas']['GetEntryResponse']>
 
 
 const schemaGetEntryResponseDto =

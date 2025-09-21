@@ -2,9 +2,9 @@ import React, {type ChangeEventHandler, type ReactElement, type ReactNode } from
 
 interface Props {
     values: Array<{ id: string; value: string }>
-    value: string | undefined
-    defaultValue: string | undefined
-    onChange?: ChangeEventHandler<HTMLSelectElement>
+    value?: string | undefined
+    defaultValue?: string | undefined
+    onChange?: ChangeEventHandler<HTMLSelectElement> | undefined
     children?: ReactNode
 }
 

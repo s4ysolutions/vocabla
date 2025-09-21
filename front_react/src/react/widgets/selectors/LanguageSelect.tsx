@@ -5,10 +5,10 @@ import type {Lang} from '../../../domain/Lang.ts';
 
 interface props {
   loading?: boolean
-  defaultLanguage: Lang
-  language: Lang | undefined
+  defaultLanguage?: Lang | undefined
+  language?: Lang | undefined
   languages: Array<Lang>
-  onChange: (lang: Lang) => void | undefined
+  onChange?: ((lang: Lang) => void) | undefined
 }
 
 const langByCode = (languages: Array<Lang>, code: string | undefined) => code && languages.find(lang => lang.code === code) || undefined;
@@ -19,7 +19,7 @@ const LanguageSelect: React.FC<props> = ({defaultLanguage: initialLanguage, lang
   (loading || !languages || languages.length === 0)
     ? <ProgressInfinity/>
     : (languages.length === 1)
-      ? <LanguageSelect1 language={languages[0] || initialLanguage}/>
+      ? <LanguageSelect1 language={languages[0]!}/>
       : <LanguageSelectMany
         defaultLanguage={initialLanguage}
         languages={languages}
@@ -34,11 +34,12 @@ const LanguageSelect1: React.FC<{ language: Lang }> = ({language}) =>
 const LanguageSelectMany: React.FC<props> = ({defaultLanguage: initialLanguage, languages, language, onChange}) => {
 
   const [selectedId, setSelectedId] = React.useState(language?.code);
+  const selectedLang = langByCode(languages, selectedId);
 
   return <Select
     values={languages.map((lang) => ({id: lang.code, value: lang.name}))}
     value={selectedId}
-    defaultValue={initialLanguage.code}
+    defaultValue={initialLanguage?.code}
     onChange={(e) => {
       const selectedLang = langByCode(languages, e.target.value);
       if (selectedLang) {
@@ -47,7 +48,9 @@ const LanguageSelectMany: React.FC<props> = ({defaultLanguage: initialLanguage, 
       }
     }}
   >
-    <LanguageSelect1 language={langByCode(languages, selectedId) || languages[0] || initialLanguage}/>
+    {
+      selectedLang && <LanguageSelect1 language={selectedLang}/>
+    }
   </Select>
 }
 

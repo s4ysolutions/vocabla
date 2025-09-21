@@ -2,13 +2,15 @@ import type {components} from '../../../rest/types.ts';
 import {Schema} from 'effect';
 import {schemaHeadwordDto} from './headwordDto.ts';
 import {schemaDefinitionDto} from './definitionDto.ts';
+import type {DeepReadonly} from '../DeepReadonly.ts';
 
 
-export type EntryDTO = components['schemas']['Entry']
+export type EntryDTO = DeepReadonly<components['schemas']['Entry']>
 
-export const schemaEntryDto: Schema.Schema<EntryDTO, EntryDTO> = Schema.Struct({
+//export const schemaEntryDto: Schema.Schema<EntryDTO, EntryDTO> = Schema.Struct({
+export const schemaEntryDto = Schema.Struct({
   headword: schemaHeadwordDto,
-  definitions: Schema.mutable(Schema.Array(schemaDefinitionDto)),
+  definitions: Schema.Array(schemaDefinitionDto),
   ownerId: Schema.Number,
 })
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import InputText from '../../../widgets/inputs/InputText.tsx';
+import InputText from '../../widgets/inputs/InputText.tsx';
 
 interface Props {
   onFilterChange: (filter: string) => void;
