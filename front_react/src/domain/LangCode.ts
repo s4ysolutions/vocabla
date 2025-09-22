@@ -3,8 +3,9 @@ import {Brand, ParseResult, Schema} from 'effect'
 
 export type LangCode = string & Brand.Brand<'LangCode'>
 
+const LANG_CODE_REGEX = /^[a-z]{2}[a-z]?(-[A-Z]{2}[A-Z]?)?$/
 const isValidLangCode = (lc: string): boolean =>
-  /^[a-z]{2}(-[A-Z]{2})?$/.test(lc)
+  LANG_CODE_REGEX.test(lc) || lc === 'map-bms'
 /*
 export const schemaLangCode: Schema.Schema<LangCode, string> = Schema.String.pipe(
   Schema.filter(isValidLangCode, {
@@ -45,5 +46,5 @@ void ('' as Schema.Schema.Type<typeof schemaLangCode> satisfies LangCode)
 //export type LangCode = Schema.Schema.Type<typeof schemaLangCode>
 
 export const LangCode =
-  (langCode: string) => langCode as LangCode
+  (langCode: string) => langCode as LangCode // TODO: validate?
 export const isLangCode = Schema.is(schemaLangCode)

@@ -51,7 +51,7 @@ describe('LangCode', () => {
   });
   describe('decoding (parsing from JSON)', () => {
     it('should decode valid language codes', () => {
-      const validCodes = ['en', 'fr', 'de', 'es', 'ja', 'zh']
+      const validCodes = ['en', 'fr', 'de', 'es', 'ja', 'zh', 'unk']
       validCodes.forEach(code => {
         const result = Schema.decodeUnknownSync(schemaLangCode)(code)
         expect(result).toBe(code)

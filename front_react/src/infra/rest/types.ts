@@ -169,6 +169,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rest/v1/languages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Endpoint to retrieve all supported languages
+         *
+         *     Get all available languages with their codes, names, and flags
+         *
+         *     - Languages
+         *      */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of all available languages
+                 *
+                 *      */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetLanguagesResponse"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/rest/v1/ping": {
         parameters: {
             query?: never;
@@ -395,6 +446,12 @@ export interface components {
             /** @description The retrieved entry. */
             entry?: null | components["schemas"]["Entry"];
         };
+        /** @description Response containing the list of all languages, the default language, and the unknown language. */
+        GetLanguagesResponse: {
+            defaultLang: components["schemas"]["Lang"];
+            unknownLang: components["schemas"]["Lang"];
+            languages: components["schemas"]["Lang"][];
+        };
         /** @description CreateTagResponse containing the tag if found. */
         GetTagResponse: {
             /** @description The retrieved tag. */
@@ -412,6 +469,11 @@ export interface components {
         /** @description Internal server error occurred */
         InternalServerError500: {
             message: string;
+        };
+        Lang: {
+            code: string;
+            flag: string;
+            name: string;
         };
         Tag: {
             label: string;

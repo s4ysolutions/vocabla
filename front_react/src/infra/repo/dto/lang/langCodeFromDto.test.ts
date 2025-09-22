@@ -1,6 +1,6 @@
 import {describe, it, expect} from '@effect/vitest';
 import {Schema} from 'effect';
-import {langCodeFromDto} from './langCodeFromDto.ts';
+import {schemaLangCodeFromDto} from './langCodeFromDto.ts';
 import {LangCode} from '../../../../domain/LangCode.ts';
 
 describe('langCodeFromDto', () => {
@@ -8,7 +8,7 @@ describe('langCodeFromDto', () => {
     // arrange
     const dto = 'en'
     // act
-    const domain: LangCode = Schema.decodeSync(langCodeFromDto)(dto)
+    const domain: LangCode = Schema.decodeSync(schemaLangCodeFromDto)(dto)
     // assert
     expect(domain).toEqual(LangCode('en'))
   })
@@ -16,7 +16,7 @@ describe('langCodeFromDto', () => {
     // arrange
     const domain = LangCode('en')
     // act
-    const dto: string = Schema.encodeSync(langCodeFromDto)(domain)
+    const dto: string = Schema.encodeSync(schemaLangCodeFromDto)(domain)
     // assert
     expect(dto).toEqual('en')
   })

@@ -19,11 +19,14 @@ import {type CreateEntryResponse, decodeCreateEntryResponse} from './dto/entry/C
 import {decodeGetEntryResponse, type GetEntryResponse} from './dto/entry/GetEntryResponse.ts';
 import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
 import type {Identified} from '../../domain/identity/Identified.ts';
+import type {LangRepository} from '../../app-repo/LangRepository.ts';
+import type {Lang} from '../../domain/Lang.ts';
+import {decodeGetLanguagesResponse, type GetLanguagesResponseDto} from './dto/lang/getLanguagesResponse.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
 
-export const repositoryRest = (restClient: RestClient): TagsRepository & EntriesRepository => ({
+export const repositoryRest = (restClient: RestClient): TagsRepository & EntriesRepository & LangRepository=> ({
   createTag: (tag) => {
     const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId}}
     return Effect.mapError(
@@ -86,9 +89,16 @@ export const repositoryRest = (restClient: RestClient): TagsRepository & Entries
     }
 
     return Effect.mapError(
-      restClient.get<GetEntriesResponse, {readonly entries: ReadonlyArray<Identified<Entry>>}>({
+      restClient.get<GetEntriesResponse, { readonly entries: ReadonlyArray<Identified<Entry>> }>({
         url: `${urlBase}/entries?${queryParams.toString()}`,
         decoder: decodeGetEntriesResponse,
+      }), _error2infraError)
+  },
+  getAllLangs: () => {
+    return Effect.mapError(
+      restClient.get<GetLanguagesResponseDto, {readonly defaultLang: Lang, readonly unknownLang: Lang, readonly languages: ReadonlyArray<Lang>}>({
+        url: `${urlBase}/languages`,
+        decoder: decodeGetLanguagesResponse,
       }), _error2infraError)
   }
 })
