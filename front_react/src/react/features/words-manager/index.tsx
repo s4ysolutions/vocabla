@@ -6,10 +6,12 @@ import EntryAdd from './EntryAdd.tsx'
 import Panel from '../../widgets/panels/Panel.tsx'
 import {Identifier} from '../../../domain/identity/Identifier.ts';
 import type {Student} from '../../../domain/Student.ts';
+import loglevel from 'loglevel';
+const renderLog = loglevel.getLogger('render')
 
 const WordManager: React.FC = () => {
-  console.log('WordManager rendered');
-  const { entries, loading } = useEntries(Identifier<Student>(1))
+  renderLog.debug('Rendering WordManager component')
+  const { entries, loading, addEntry } = useEntries(Identifier<Student>(1))
 
   return <div className="h-full w-full flex flex-col">
     {/* Scrollable List */}
@@ -24,7 +26,7 @@ const WordManager: React.FC = () => {
     </div>
     {/* Footer */}
     <Panel  className="bg-gray-200 border-t border-gray-300">
-      <EntryAdd />
+      <EntryAdd add={addEntry}/>
     </Panel>
   </div>
 }
