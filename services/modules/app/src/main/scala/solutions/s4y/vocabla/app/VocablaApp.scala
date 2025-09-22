@@ -19,6 +19,10 @@ import solutions.s4y.vocabla.app.ports.entry_get.{
   GetEntryUseCase
 }
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.app.ports.lang_get.{
+  GetLanguagesResponse,
+  GetLanguagesUseCase
+}
 import solutions.s4y.vocabla.app.ports.tag_create.{
   CreateTagRequest,
   CreateTagResponse,
@@ -36,6 +40,7 @@ import solutions.s4y.vocabla.app.repo.tx.{
 }
 import solutions.s4y.vocabla.app.repo.{
   EntryRepository,
+  LangRepository,
   TagRepository,
   UserRepository
 }
@@ -43,14 +48,16 @@ import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
 import zio.prelude.Validation
-import zio.{Chunk, IO, ZIO, ZLayer}
+import zio.{IO, UIO, ZIO, ZLayer}
 
 final class VocablaApp[TX <: TransactionContext](
     private val tm: TransactionManager[TX],
     private val userRepository: UserRepository[TX],
     private val entriesRepository: EntryRepository[TX],
-    private val tagsRepository: TagRepository[TX]
+    private val tagsRepository: TagRepository[TX],
+    private val langRepository: LangRepository
 ) extends PingUseCase,
+      GetLanguagesUseCase,
       GetUserUseCase,
       CreateEntryUseCase,
       CreateTagUseCase,
@@ -162,6 +169,17 @@ final class VocablaApp[TX <: TransactionContext](
   ).mapError(f => ServiceFailure(f.message, f.cause))
 
   /** **************************************************************************
+    * Languages
+    */
+  override def apply(): UIO[GetLanguagesResponse] = ZIO.succeed(
+    GetLanguagesResponse(
+      defaultLang = langRepository.defaultLang,
+      unknownLang = langRepository.unknownLang,
+      languages = langRepository.getLangs
+    )
+  )
+
+  /** **************************************************************************
     * privates
     */
   private def authorized(
@@ -174,17 +192,18 @@ final class VocablaApp[TX <: TransactionContext](
       unitOfWork: TX ?=> ZIO[R, InfraFailure, T]
   ): ZIO[R, ServiceFailure, T] =
     tm.transaction(log, unitOfWork).mapInfraFailure
+
 end VocablaApp
 
 object VocablaApp:
   def layer[TX <: TransactionContext: zio.Tag](): ZLayer[
     TransactionManager[TX] & UserRepository[TX] &
-      (EntryRepository[TX] & TagRepository[TX]),
+      (EntryRepository[TX] & TagRepository[TX] & LangRepository),
     Nothing,
     VocablaApp[TX]
   ] =
     ZLayer.fromFunction(
-      new VocablaApp[TX](_, _, _, _)
+      new VocablaApp[TX](_, _, _, _, _)
     )
 
   extension [R, A](self: zio.ZIO[R, InfraFailure, A])
