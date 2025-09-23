@@ -1,6 +1,7 @@
 package solutions.s4y.vocabla.domain.identity
 
-import zio.prelude.{Equal, EqualOps, Equivalence}
+import zio.json.JsonCodec
+import zio.prelude.{Equal, Equivalence}
 import zio.schema.Schema
 
 trait Identifier[E]:
@@ -33,6 +34,10 @@ object Identifier:
       id => Identifier[E, is.ID](id),
       (identity: Identifier[E]) => identity.as[is.ID]
     )
+
+  given [E](using schema: Schema[Identifier[E]]): JsonCodec[Identifier[E]] = {
+    zio.schema.codec.JsonCodec.jsonCodec(schema)
+  }
 
   given [E, I: Equal]: Equal[Identifier[E]] =
     Equal.make((a, b) =>

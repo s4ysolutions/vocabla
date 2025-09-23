@@ -1,7 +1,14 @@
 package solutions.s4y.vocabla.domain
 
-import solutions.s4y.vocabla.domain.identity.{Identified, Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.identity.{
+  Identified,
+  Identifier,
+  IdentifierSchema,
+  given
+}
+
 import solutions.s4y.vocabla.domain.owner.Owned
+import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.prelude.Equal
 import zio.schema.{Schema, derived}
 
@@ -19,3 +26,4 @@ object Tag:
     Equal.make((a, b) => a.e.label == b.e.label)
 
   given (using is: IdentifierSchema): Schema[Tag] = Schema.derived
+  given (using IdentifierSchema): JsonCodec[Tag] = DeriveJsonCodec.gen[Tag]
