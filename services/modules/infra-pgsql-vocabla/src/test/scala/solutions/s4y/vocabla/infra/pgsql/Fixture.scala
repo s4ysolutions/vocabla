@@ -39,6 +39,13 @@ object Fixture:
       cleardb
     )) >>> (*/ layerWithDataSourcePg >>> TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer
 
+  val layerWithUserRepository: ZLayer[
+    Any,
+    InfraFailure,
+    TransactionManagerPg & UserRepositoryPg
+  ] =
+    layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ UserRepositoryPg.layer)
+
   val testSystem: ZIO[Any, Throwable, Unit] = ZIO
     .attempt(DotenvBuilder().filename(".env_test").load())
     .flatMap(dotenv =>

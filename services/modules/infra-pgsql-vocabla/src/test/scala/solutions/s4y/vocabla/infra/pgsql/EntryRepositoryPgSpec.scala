@@ -295,7 +295,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(3))
         },
-        test("get entries returns empty map when no matches") {
+        test("get entries returns emptyLearningSettings map when no matches") {
           for {
             transactionManager <- ZIO.service[TransactionManagerPg]
             results <- transactionManager.transaction {

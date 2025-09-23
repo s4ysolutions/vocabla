@@ -3,16 +3,19 @@ package solutions.s4y.vocabla.infra.pgsql
 import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.pgSelectOne
+import solutions.s4y.infra.pgsql.wrappers.{pgSelectOne, pgUpdateOne}
 import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.User
-import solutions.s4y.vocabla.domain.identity.Identifier
+import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
+import zio.json.{DecoderOps, EncoderOps, JsonCodec}
+import zio.schema.{DeriveSchema, Schema}
 import zio.{ZIO, ZLayer}
 
 import scala.util.Using
 
-class UserRepositoryPg extends UserRepository[TransactionContextPg]:
+class UserRepositoryPg(using IdentifierSchema)
+    extends UserRepository[TransactionContextPg]:
   override def get[R](
       userId: Identifier[User]
   )(using TransactionContextPg): ZIO[R, InfraFailure, Option[User]] =
@@ -38,7 +41,47 @@ class UserRepositoryPg extends UserRepository[TransactionContextPg]:
         )
     )
 
+  override def getLearningSettings[R](
+      studentId: Identifier[User.Student]
+  )(using
+      TransactionContextPg
+  ): ZIO[R, InfraFailure, UserRepository.LearningSettings] =
+    pgSelectOne(
+      "SELECT learning_settings FROM users WHERE id = ? AND student IS NOT NULL",
+      st => st.setLong(1, studentId.as[Long]),
+      rs => {
+        val jsonStr = rs.getString(1)
+        if (jsonStr == null) {
+          UserRepository.emptyLearningSettings
+        } else {
+          jsonStr.fromJson[UserRepository.LearningSettings] match {
+            case Right(settings) => settings
+            case Left(error)     =>
+              // Log error and return emptyLearningSettings settings as fallback
+              UserRepository.emptyLearningSettings
+          }
+        }
+      }
+    ).map(_.getOrElse(UserRepository.emptyLearningSettings))
+
+  def updateLearningSettings[R](
+      studentId: Identifier[User.Student],
+      settings: UserRepository.LearningSettings
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
+    pgUpdateOne(
+      "UPDATE users SET learning_settings = ?::jsonb WHERE id = ? AND student IS NOT NULL",
+      st => {
+        st.setString(1, settings.toJson)
+        st.setLong(2, studentId.as[Long])
+      }
+    ).unit
+
 object UserRepositoryPg:
+  given IdentifierSchema with
+    type ID = Long
+    val schema: Schema[Long] = summon[Schema[Long]]
+  end given
+
   private val init = Seq(
     "DROP TABLE IF EXISTS users CASCADE",
     "DROP TYPE IF EXISTS user_admin",
@@ -53,9 +96,14 @@ object UserRepositoryPg:
      id SERIAL PRIMARY KEY,
      student user_student,
      admin user_admin,
+     learning_settings JSONB,
      CONSTRAINT has_at_least_one_role CHECK (
         student IS NOT NULL OR
         admin IS NOT NULL
+    ),
+     CONSTRAINT learning_settings_only_for_students CHECK (
+        (student IS NULL AND learning_settings IS NULL) OR
+        (student IS NOT NULL)
     )
     )"""
   )
