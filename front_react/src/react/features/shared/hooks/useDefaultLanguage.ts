@@ -1,23 +1,19 @@
 import type {Lang} from '../../../../domain/Lang.ts';
-import {LangCode} from '../../../../domain/LangCode.ts';
+import {Effect} from 'effect';
+import {GetDefaultLangUseCaseTag} from '../../../../app-ports/languages/GetDefaultLangUseCase.ts';
 import {useState} from 'react';
+import {promiseAppEffect} from '../../../../app/effect-runtime.ts';
 
-const mockLanguages: Array<Lang> = [
-  {code: LangCode('en'), name: 'English', flag: '🇬🇧'},
-  {code: LangCode('es'), name: 'Spanish', flag: '🇪🇸'},
-  {code: LangCode('fr'), name: 'French', flag: '🇫🇷'},
-  {code: LangCode('de'), name: 'German', flag: '🇩🇪'},
-  {code: LangCode('it'), name: 'Italian', flag: '🇮🇹'},
-  {code: LangCode('pt'), name: 'Portuguese', flag: '🇧🇷'},
-  {code: LangCode('zh'), name: 'Chinese', flag: '🇨🇳'},
-  {code: LangCode('ja'), name: 'Japanese', flag: '🇯🇵'},
-  {code: LangCode('ru'), name: 'Russian', flag: '🇷🇺'},
-  {code: LangCode('ar'), name: 'Arabic', flag: '🇸🇦'},
-];
+const program: Effect.Effect<Lang, never, GetDefaultLangUseCaseTag> = Effect.gen(function* () {
+  const useCase = yield* GetDefaultLangUseCaseTag
+  return useCase.defaultLang
+})
 
-const useLanguage = (): Lang => {
-  const [lang,] = useState(mockLanguages[0]!);
-  return lang;
+
+const useDefaultLanguage = (): Lang | undefined => {
+  const [lang, setLang] = useState<Lang | undefined>(undefined)
+  promiseAppEffect(program).then(defaultLang => setLang(defaultLang))
+  return lang
 }
 
-export default useLanguage;
+export default useDefaultLanguage;

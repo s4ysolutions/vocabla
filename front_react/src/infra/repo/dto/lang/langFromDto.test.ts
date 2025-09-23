@@ -2,7 +2,7 @@ import {describe, it, expect} from '@effect/vitest';
 import { Schema } from 'effect';
 import { schemaLangFromDto } from './langFromDto';
 import { type LangDto } from './langDto';
-import { type Lang } from '../../../../domain/Lang';
+import { type Lang } from '../../../../domain/Lang.ts';
 import {LangCode} from '../../../../domain/LangCode.ts';
 
 describe('schemaLangFromDto', () => {

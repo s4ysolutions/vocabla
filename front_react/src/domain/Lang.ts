@@ -9,6 +9,9 @@ export const schemaLang = Schema.Struct({
 
 export type Lang = Schema.Schema.Type<typeof schemaLang>
 
+export const defaultFallbackLang: Lang = {code: LangCode('en'), name: 'English', flag: '🇬🇧'};
+export const unknownFallbackLang: Lang = {code: LangCode('unk'), name: 'Unknown', flag: '🏳️'};
+
 export const Lang = (code: string | LangCode, name?: string, flag?: string): Lang =>
   (isLangCode(code) && name == undefined && flag == undefined)
     ? mockLanguages.find(l => l.code === code) || mockLanguages[0]!
@@ -20,6 +23,7 @@ export const Lang = (code: string | LangCode, name?: string, flag?: string): Lan
       throw new Error('Name is required if code is not a valid LangCode');
     })();
 
+// depricated: for tests only
 const mockLanguages: Array<Lang> = [
   {code: LangCode('en'), name: 'English', flag: '🇬🇧'},
   {code: LangCode('es'), name: 'Spanish', flag: '🇪🇸'},

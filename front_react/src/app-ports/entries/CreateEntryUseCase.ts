@@ -1,8 +1,8 @@
-import type {Identifier} from '../domain/identity/Identifier.ts';
-import type {Tag} from '../domain/Tag.ts';
+import type {Identifier} from '../../domain/identity/Identifier.ts';
+import type {Tag} from '../../domain/Tag.ts';
 import {Context, Effect} from 'effect';
-import type {AppError} from './errors/AppError.ts';
-import type {Entry} from '../domain/Entry.ts';
+import type {AppError} from '../errors/AppError.ts';
+import type {Entry} from '../../domain/Entry.ts';
 
 export type CreateEntryRequest = {
   readonly entry: Entry,

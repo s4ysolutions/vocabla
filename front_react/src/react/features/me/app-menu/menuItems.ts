@@ -12,4 +12,4 @@ export const menuItems: MenuItem[] = [
   { id: 'menu3', title: 'Menu 3' },
 ]
 
-export const defaultMenuItem : MenuItem = menuItems[0]!;
+export const defaultMenuItem : MenuItem = menuItems[1]!;

@@ -1,10 +1,10 @@
 import {Context, Effect} from 'effect';
-import {type Identifier} from '../domain/identity/Identifier.ts';
-import type {Student} from '../domain/Student.ts';
-import {type EntriesFilter} from '../domain/EntriesFilter.ts';
-import {type Entry} from '../domain/Entry.ts';
-import type {AppError} from './errors/AppError.ts';
-import type {Identified} from '../domain/identity/Identified.ts';
+import {type Identifier} from '../../domain/identity/Identifier.ts';
+import type {Student} from '../../domain/Student.ts';
+import {type EntriesFilter} from '../../domain/EntriesFilter.ts';
+import {type Entry} from '../../domain/Entry.ts';
+import type {AppError} from '../errors/AppError.ts';
+import type {Identified} from '../../domain/identity/Identified.ts';
 
 
 export type GetEntriesByOwnerRequest = {

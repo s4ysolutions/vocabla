@@ -20,8 +20,12 @@ export const promiseAppEffectExit = <A, E, R>(
 export const forkAppEffect = <A, E, R>(
   effect: Effect.Effect<A, E, R & UseCases>
 ) =>
-  appRuntime.runFork(effect as Effect.Effect<A, E, never>);
+  appRuntime.runFork(effect as Effect.Effect<A, E, R & UseCases>);
 
 export const interruptFiber = (fiber: Fiber.Fiber<unknown, unknown>) =>
   Fiber.interrupt(fiber) as unknown as void;
-  //Fiber.interrupt(fiber).pipe(Effect.runSync) as unknown as void;
+
+export const syncAppEffect = <A, E, R>(
+  effect: Effect.Effect<A, E, R & UseCases>
+) =>
+  appRuntime.runSync(effect as Effect.Effect<A, E, R & UseCases>);

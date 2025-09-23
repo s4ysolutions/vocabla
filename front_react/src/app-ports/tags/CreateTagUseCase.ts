@@ -1,8 +1,8 @@
 import {Context} from 'effect';
-import {type Tag} from '../domain/Tag.ts';
+import {type Tag} from '../../domain/Tag.ts';
 import type {Effect} from 'effect/Effect';
-import type {AppError} from './errors/AppError.ts';
-import type {Identifier} from '../domain/identity/Identifier.ts';
+import type {AppError} from '../errors/AppError.ts';
+import type {Identifier} from '../../domain/identity/Identifier.ts';
 
 export type CreateTagRequest = {
   readonly tag: Tag
