@@ -5,12 +5,12 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "s4y.solutions"
 ThisBuild / scalaVersion := "3.7.2"
 
-val zioVersion = "2.1.20"
+val zioVersion = "2.1.21"
 val zioConfigVersion = "4.0.4"
 val zioHttpVersion = "3.4.0"
 val zioLoggingVersion = "2.5.1"
 val zioPreludeVersion = "1.0.0-RC41"
-val zioSchemaVersion = "1.7.4"
+val zioSchemaVersion = "1.7.5"
 val dotenvVersion = "5.2.2"
 val munitVersion = "1.1.1"
 
@@ -18,7 +18,8 @@ ThisBuild / assemblyMergeStrategy := {
   case x if x.endsWith("module-info.class") => sbtassembly.MergeStrategy.discard
   case x if x.endsWith("io.netty.versions.properties") =>
     sbtassembly.MergeStrategy.discard
-  case x if x.matches(".*messages_.*\\.properties") => sbtassembly.MergeStrategy.concat
+  case x if x.matches(".*messages_.*\\.properties") =>
+    sbtassembly.MergeStrategy.concat
   case x =>
     val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
     oldStrategy(x)
@@ -45,6 +46,7 @@ lazy val domain = (project in file("modules/domain"))
     libraryDependencies += "dev.zio" %% "zio-prelude" % zioPreludeVersion,
     libraryDependencies += "dev.zio" %% "zio-schema" % zioSchemaVersion,
     libraryDependencies += "dev.zio" %% "zio-schema-derivation" % zioSchemaVersion,
+    libraryDependencies += "dev.zio" %% "zio-schema-json" % zioSchemaVersion,
     libraryDependencies += "org.scalameta" %% "munit" % munitVersion % Test
   )
 
