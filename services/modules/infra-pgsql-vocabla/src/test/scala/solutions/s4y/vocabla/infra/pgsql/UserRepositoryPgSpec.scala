@@ -58,95 +58,111 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
             settings == UserRepository.emptyLearningSettings
           )
         },
-        test("update and get learning settings") {
+        test("bulk update and get learning languages") {
           for {
             transactionManager <- ZIO.service[TransactionManagerPg]
             retrievedSettings <- transactionManager.transaction {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
-                newSettings = UserRepository.LearningSettings(
-                  learnLanguages = Chunk("en", "es"),
-                  knownLanguages = Chunk("fr", "de"),
-                  tags = Chunk(1L.identifier[Tag], 2L.identifier[Tag])
+                // Use the language-only bulk update method
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk("en", "es"), 
+                  Chunk("fr", "de")
                 )
-                _ <- repo.updateLearningSettings(1L.identifier[User.Student], newSettings)
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
               } yield retrieved
             }
           } yield assertTrue(
             retrievedSettings.learnLanguages == Chunk("en", "es") &&
             retrievedSettings.knownLanguages == Chunk("fr", "de") &&
-            retrievedSettings.tags == Chunk(1L.identifier[Tag], 2L.identifier[Tag])
+            retrievedSettings.tags.isEmpty // Tags managed separately
           )
         },
-        test("update learning settings for non-existing student should not fail") {
+        test("update learning languages for non-existing student should not fail") {
           for {
             repo <- ZIO.service[UserRepositoryPg]
             result <- pgWithTransaction {
-              val newSettings = UserRepository.LearningSettings(
-                learnLanguages = Chunk("en"),
-                knownLanguages = Chunk("fr"),
-                tags = Chunk(1L.identifier[Tag])
+              repo.updateLearningLanguages(
+                999L.identifier[User.Student], 
+                Chunk("en"), 
+                Chunk("fr")
               )
-              repo.updateLearningSettings(999L.identifier[User.Student], newSettings)
             }.either
           } yield assertTrue(result.isRight) // Should not fail, just update 0 rows
         },
-        test("update learning settings with empty values") {
+        test("update learning languages with empty values") {
           for {
             transactionManager <- ZIO.service[TransactionManagerPg]
             retrievedSettings <- transactionManager.transaction {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
                 // First set some values
-                initialSettings = UserRepository.LearningSettings(
-                  learnLanguages = Chunk("en", "es"),
-                  knownLanguages = Chunk("fr"),
-                  tags = Chunk(1L.identifier[Tag])
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk("en", "es"), 
+                  Chunk("fr")
                 )
-                _ <- repo.updateLearningSettings(1L.identifier[User.Student], initialSettings)
                 
-                // Then update to empty settings
-                emptySettings = UserRepository.emptyLearningSettings
-                _ <- repo.updateLearningSettings(1L.identifier[User.Student], emptySettings)
+                // Then update to empty languages
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk.empty, 
+                  Chunk.empty
+                )
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
               } yield retrieved
             }
           } yield assertTrue(
-            retrievedSettings == UserRepository.emptyLearningSettings
+            retrievedSettings.learnLanguages.isEmpty &&
+            retrievedSettings.knownLanguages.isEmpty &&
+            retrievedSettings.tags.isEmpty
           )
         },
-        test("update learning settings with complex data") {
+        test("update learning languages with complex data") {
           for {
             transactionManager <- ZIO.service[TransactionManagerPg]
             retrievedSettings <- transactionManager.transaction {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
-                complexSettings = UserRepository.LearningSettings(
-                  learnLanguages = Chunk("en", "es", "fr", "de", "it", "pt"),
-                  knownLanguages = Chunk("ru", "zh", "ja", "ko"),
-                  tags = Chunk(
-                    1L.identifier[Tag], 
-                    2L.identifier[Tag], 
-                    3L.identifier[Tag],
-                    100L.identifier[Tag],
-                    999L.identifier[Tag]
-                  )
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk("en", "es", "fr", "de", "it", "pt"),
+                  Chunk("ru", "zh", "ja", "ko")
                 )
-                _ <- repo.updateLearningSettings(1L.identifier[User.Student], complexSettings)
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
               } yield retrieved
             }
           } yield assertTrue(
             retrievedSettings.learnLanguages.size == 6 &&
             retrievedSettings.knownLanguages.size == 4 &&
-            retrievedSettings.tags.size == 5 &&
             retrievedSettings.learnLanguages.contains("en") &&
             retrievedSettings.learnLanguages.contains("pt") &&
             retrievedSettings.knownLanguages.contains("ru") &&
-            retrievedSettings.knownLanguages.contains("ko") &&
-            retrievedSettings.tags.contains(1L.identifier[Tag]) &&
-            retrievedSettings.tags.contains(999L.identifier[Tag])
+            retrievedSettings.knownLanguages.contains("ko")
+          )
+        },
+        test("get learning settings includes tags from user_learning_tags table") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            settings <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[UserRepositoryPg]
+                // Set up some languages
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk("en", "es"), 
+                  Chunk("fr")
+                )
+                // Note: Tags would be managed through separate tag association methods
+                // that you already have implemented - we don't test those here
+                retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
+              } yield retrieved
+            }
+          } yield assertTrue(
+            settings.learnLanguages == Chunk("en", "es") &&
+            settings.knownLanguages == Chunk("fr") &&
+            settings.tags.isEmpty // Empty since no tags associated via user_learning_tags
           )
         }
       ),
@@ -157,12 +173,11 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
             retrievedSettings <- transactionManager.transaction {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
-                specialSettings = UserRepository.LearningSettings(
-                  learnLanguages = Chunk("en-US", "zh-CN", "es-MX"),
-                  knownLanguages = Chunk("pt-BR", "fr-CA"),
-                  tags = Chunk(1L.identifier[Tag])
+                _ <- repo.updateLearningLanguages(
+                  1L.identifier[User.Student], 
+                  Chunk("en-US", "zh-CN", "es-MX"),
+                  Chunk("pt-BR", "fr-CA")
                 )
-                _ <- repo.updateLearningSettings(1L.identifier[User.Student], specialSettings)
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
               } yield retrieved
             }

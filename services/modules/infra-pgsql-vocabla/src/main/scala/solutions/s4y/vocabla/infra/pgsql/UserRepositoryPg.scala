@@ -3,14 +3,14 @@ package solutions.s4y.vocabla.infra.pgsql
 import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.{pgSelectOne, pgUpdateOne}
+import solutions.s4y.infra.pgsql.wrappers.{pgSelectOne, pgUpdateOne, pgSelectMany, pgInsertOne, pgDeleteOne}
 import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.domain.User
+import solutions.s4y.vocabla.domain.{Lang, Tag, User}
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import zio.json.{DecoderOps, EncoderOps, JsonCodec}
-import zio.schema.{DeriveSchema, Schema}
-import zio.{ZIO, ZLayer}
+import zio.{Chunk, ZIO, ZLayer}
 
 import scala.util.Using
 
@@ -46,43 +46,157 @@ class UserRepositoryPg(using IdentifierSchema)
   )(using
       TransactionContextPg
   ): ZIO[R, InfraFailure, UserRepository.LearningSettings] =
-    pgSelectOne(
-      "SELECT learning_settings FROM users WHERE id = ? AND student IS NOT NULL",
-      st => st.setLong(1, studentId.as[Long]),
-      rs => {
-        val jsonStr = rs.getString(1)
-        if (jsonStr == null) {
-          UserRepository.emptyLearningSettings
-        } else {
-          jsonStr.fromJson[UserRepository.LearningSettings] match {
-            case Right(settings) => settings
-            case Left(error)     =>
-              // Log error and return emptyLearningSettings settings as fallback
-              UserRepository.emptyLearningSettings
+    for {
+      // Run both queries in parallel using zipPar
+      (languageSettings, tags) <- pgSelectOne(
+        "SELECT learning_settings FROM users WHERE id = ? AND student IS NOT NULL",
+        st => st.setLong(1, studentId.as[Long]),
+        rs => {
+          val jsonStr = rs.getString(1)
+          if (jsonStr == null) {
+            LanguageSettings(Chunk.empty, Chunk.empty)
+          } else {
+            jsonStr.fromJson[LanguageSettings] match {
+              case Right(settings) => settings
+              case Left(error) =>
+                // Log error and return empty settings as fallback
+                LanguageSettings(Chunk.empty, Chunk.empty)
+            }
           }
         }
-      }
-    ).map(_.getOrElse(UserRepository.emptyLearningSettings))
+      ).zipPar(
+        pgSelectMany(
+          """SELECT t.id
+             FROM user_learning_tags ult
+             JOIN tags t ON ult.tag_id = t.id
+             WHERE ult.user_id = ?""",
+          st => st.setLong(1, studentId.as[Long]),
+          rs => rs.getLong(1).identifier[Tag]
+        )
+      )
+    } yield UserRepository.LearningSettings(
+      learnLanguages = languageSettings.map(_.learnLanguages).getOrElse(Chunk.empty),
+      knownLanguages = languageSettings.map(_.knownLanguages).getOrElse(Chunk.empty),
+      tags = tags
+    )
 
-  def updateLearningSettings[R](
+  // Fine-grained language management methods only
+  def addLearnLanguage[R](
       studentId: Identifier[User.Student],
-      settings: UserRepository.LearningSettings
+      language: Lang.Code
   )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
     pgUpdateOne(
-      "UPDATE users SET learning_settings = ?::jsonb WHERE id = ? AND student IS NOT NULL",
+      """UPDATE users
+         SET learning_settings = jsonb_set(
+           COALESCE(learning_settings, '{"learnLanguages":[],"knownLanguages":[]}'),
+           '{learnLanguages}',
+           COALESCE(learning_settings->'learnLanguages', '[]') || ?::jsonb,
+           true
+         )
+         WHERE id = ? AND student IS NOT NULL""",
       st => {
-        st.setString(1, settings.toJson)
+        st.setString(1, s""""$language"""")
         st.setLong(2, studentId.as[Long])
       }
     ).unit
 
+  def removeLearnLanguage[R](
+      studentId: Identifier[User.Student],
+      language: Lang.Code
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
+    pgUpdateOne(
+      """UPDATE users
+         SET learning_settings = jsonb_set(
+           learning_settings,
+           '{learnLanguages}',
+           (
+             SELECT jsonb_agg(elem)
+             FROM jsonb_array_elements_text(learning_settings->'learnLanguages') elem
+             WHERE elem != ?
+           ),
+           true
+         )
+         WHERE id = ? AND student IS NOT NULL AND learning_settings IS NOT NULL""",
+      st => {
+        st.setString(1, language)
+        st.setLong(2, studentId.as[Long])
+      }
+    ).unit
+
+  def addKnownLanguage[R](
+      studentId: Identifier[User.Student],
+      language: Lang.Code
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
+    pgUpdateOne(
+      """UPDATE users
+         SET learning_settings = jsonb_set(
+           COALESCE(learning_settings, '{"learnLanguages":[],"knownLanguages":[]}'),
+           '{knownLanguages}',
+           COALESCE(learning_settings->'knownLanguages', '[]') || ?::jsonb,
+           true
+         )
+         WHERE id = ? AND student IS NOT NULL""",
+      st => {
+        st.setString(1, s""""$language"""")
+        st.setLong(2, studentId.as[Long])
+      }
+    ).unit
+
+  def removeKnownLanguage[R](
+      studentId: Identifier[User.Student],
+      language: Lang.Code
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
+    pgUpdateOne(
+      """UPDATE users
+         SET learning_settings = jsonb_set(
+           learning_settings,
+           '{knownLanguages}',
+           (
+             SELECT jsonb_agg(elem)
+             FROM jsonb_array_elements_text(learning_settings->'knownLanguages') elem
+             WHERE elem != ?
+           ),
+           true
+         )
+         WHERE id = ? AND student IS NOT NULL AND learning_settings IS NOT NULL""",
+      st => {
+        st.setString(1, language)
+        st.setLong(2, studentId.as[Long])
+      }
+    ).unit
+
+  // Bulk update method for backward compatibility (languages only, tags handled by existing association methods)
+  def updateLearningLanguages[R](
+      studentId: Identifier[User.Student],
+      learnLanguages: Chunk[Lang.Code],
+      knownLanguages: Chunk[Lang.Code]
+  )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
+    val languageSettings = LanguageSettings(learnLanguages, knownLanguages)
+    pgUpdateOne(
+      "UPDATE users SET learning_settings = ?::jsonb WHERE id = ? AND student IS NOT NULL",
+      st => {
+        st.setString(1, languageSettings.toJson)
+        st.setLong(2, studentId.as[Long])
+      }
+    ).unit
+
+// Helper case class for language settings only (no tags)
+private case class LanguageSettings(
+  learnLanguages: Chunk[Lang.Code],
+  knownLanguages: Chunk[Lang.Code]
+)
+
+private object LanguageSettings:
+  given JsonCodec[LanguageSettings] = zio.json.DeriveJsonCodec.gen[LanguageSettings]
+
 object UserRepositoryPg:
   given IdentifierSchema with
     type ID = Long
-    val schema: Schema[Long] = summon[Schema[Long]]
+    val schema: zio.schema.Schema[Long] = zio.schema.Schema.primitive[Long]
   end given
 
   private val init = Seq(
+    "DROP TABLE IF EXISTS user_learning_tags CASCADE",
     "DROP TABLE IF EXISTS users CASCADE",
     "DROP TYPE IF EXISTS user_admin",
     """CREATE TYPE user_admin AS (
@@ -105,6 +219,13 @@ object UserRepositoryPg:
         (student IS NULL AND learning_settings IS NULL) OR
         (student IS NOT NULL)
     )
+    )""",
+    """CREATE TABLE user_learning_tags (
+      user_id BIGINT NOT NULL,
+      tag_id BIGINT NOT NULL,
+      PRIMARY KEY (user_id, tag_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
     )"""
   )
 
