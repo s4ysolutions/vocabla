@@ -6,7 +6,7 @@ import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{Lang, User}
 import zio.ZIO
 
-trait UnknownLanguagesRepository[TX <: TransactionContext]:
+trait KnownLanguagesRepository[TX <: TransactionContext]:
   def addKnownLanguage[R](
       studentId: Identifier[User.Student],
       language: Lang.Code
@@ -16,4 +16,4 @@ trait UnknownLanguagesRepository[TX <: TransactionContext]:
       studentId: Identifier[User.Student],
       language: Lang.Code
   )(using TX): ZIO[R, InfraFailure, Unit]
-end UnknownLanguagesRepository
+end KnownLanguagesRepository

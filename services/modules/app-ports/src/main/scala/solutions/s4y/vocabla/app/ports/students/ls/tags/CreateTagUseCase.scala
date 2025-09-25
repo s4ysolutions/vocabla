@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.tag_create
+package solutions.s4y.vocabla.app.ports.students.ls.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.errors.NotAuthorized

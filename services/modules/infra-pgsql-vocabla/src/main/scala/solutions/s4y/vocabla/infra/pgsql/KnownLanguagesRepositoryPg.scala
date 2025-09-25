@@ -2,14 +2,14 @@ package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.infra.pgsql.wrappers.pgUpdateOne
-import solutions.s4y.vocabla.app.repo.{LearnLanguagesRepository, UnknownLanguagesRepository}
+import solutions.s4y.vocabla.app.repo.{LearnLanguagesRepository, KnownLanguagesRepository}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{Lang, User}
 import zio.{ULayer, ZIO, ZLayer}
 
 class KnownLanguagesRepositoryPg
-    extends UnknownLanguagesRepository[TransactionContextPg] {
+    extends KnownLanguagesRepository[TransactionContextPg] {
   def addKnownLanguage[R](
                            studentId: Identifier[User.Student],
                            language: Lang.Code

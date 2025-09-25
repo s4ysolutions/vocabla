@@ -1,9 +1,9 @@
-package solutions.s4y.vocabla.app.ports.tag_create
+package solutions.s4y.vocabla.app.ports.students.ls.tags
 
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import zio.schema.{Schema, derived}
 import zio.schema.annotation.description
+import zio.schema.{Schema, derived}
 
 @description("CreateTagResponse containing the ID of the newly created tag.")
 final case class CreateTagResponse(

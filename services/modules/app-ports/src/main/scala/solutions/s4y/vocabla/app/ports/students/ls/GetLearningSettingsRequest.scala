@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.student_ls_get
+package solutions.s4y.vocabla.app.ports.students.ls
 
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.User.Student
@@ -11,7 +11,7 @@ final case class GetLearningSettingsRequest(
     @description(
       "ID of the student whose learning settings are to be retrieved."
     )
-    ownerId: Identifier[Student]
+    studentId: Identifier[Student]
 )
 
 object GetLearningSettingsRequest:

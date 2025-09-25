@@ -8,10 +8,8 @@ import solutions.s4y.vocabla.app.ports.entries_get.GetEntriesUseCase
 import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
 import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.lang_get.GetLanguagesUseCase
-import solutions.s4y.vocabla.app.ports.student_ls_get.GetLearningSettingsUseCase
-import solutions.s4y.vocabla.app.ports.tag_create.CreateTagUseCase
-import solutions.s4y.vocabla.app.ports.tag_delete.DeleteTagUseCase
-import solutions.s4y.vocabla.app.ports.tag_get.GetTagUseCase
+import solutions.s4y.vocabla.app.ports.students.ls.GetLearningSettingsUseCase
+import solutions.s4y.vocabla.app.ports.students.ls.tags.{CreateTagUseCase, DeleteTagUseCase, GetTagUseCase}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext

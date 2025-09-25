@@ -43,7 +43,7 @@ object GetEntries:
           .query[GetEntriesRequest] /*
           .examples(
             "example" -> GetEntriesRequest(
-              ownerId = Some(123L.identifier[User]),
+              studentId = Some(123L.identifier[User]),
               tagId = Chunk(456L.identifier[Tag], 789L.identifier[Tag]),
               lang = Chunk("en", "es"),
               text = Some("search term")

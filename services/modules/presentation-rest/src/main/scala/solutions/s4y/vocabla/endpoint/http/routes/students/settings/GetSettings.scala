@@ -1,11 +1,7 @@
 package solutions.s4y.vocabla.endpoint.http.routes.students.settings
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.student_ls_get.{
-  GetLearningSettingsRequest,
-  GetLearningSettingsResponse,
-  GetLearningSettingsUseCase
-}
+import solutions.s4y.vocabla.app.ports.students.ls.{GetLearningSettingsRequest, GetLearningSettingsResponse, GetLearningSettingsUseCase}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
@@ -45,7 +41,7 @@ object GetSettings:
       )
       .transformIn(id =>
         GetLearningSettingsRequest(id.identifier[User.Student])
-      )(command => command.ownerId.as[Long])
+      )(command => command.studentId.as[Long])
       .auth(AuthType.Bearer)
 
   def route(using

@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.tag_delete
+package solutions.s4y.vocabla.app.ports.students.ls.tags
 
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.User.Student

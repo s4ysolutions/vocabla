@@ -23,36 +23,17 @@ import solutions.s4y.vocabla.app.ports.lang_get.{
   GetLanguagesResponse,
   GetLanguagesUseCase
 }
-import solutions.s4y.vocabla.app.ports.student_ls_get.{
+import solutions.s4y.vocabla.app.ports.students.ls.tags.*
+import solutions.s4y.vocabla.app.ports.students.ls.{
   GetLearningSettingsRequest,
   GetLearningSettingsResponse,
   GetLearningSettingsUseCase
 }
-import solutions.s4y.vocabla.app.ports.tag_create.{
-  CreateTagCommand,
-  CreateTagResponse,
-  CreateTagUseCase
-}
-import solutions.s4y.vocabla.app.ports.tag_delete.{
-  DeleteTagCommand,
-  DeleteTagResponse,
-  DeleteTagUseCase
-}
-import solutions.s4y.vocabla.app.ports.tag_get.{
-  GetTagCommand,
-  GetTagResponse,
-  GetTagUseCase
-}
+import solutions.s4y.vocabla.app.repo.*
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.app.repo.tx.{
   TransactionContext,
   TransactionManager
-}
-import solutions.s4y.vocabla.app.repo.{
-  EntryRepository,
-  LangRepository,
-  TagRepository,
-  UserRepository
 }
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
@@ -65,7 +46,9 @@ final class VocablaApp[TX <: TransactionContext](
     private val userRepository: UserRepository[TX],
     private val entriesRepository: EntryRepository[TX],
     private val tagsRepository: TagRepository[TX],
-    private val langRepository: LangRepository
+    private val langRepository: LangRepository,
+    private val learnLanguagesRepository: LearnLanguagesRepository[TX],
+    private val knownLanguagesRepository: KnownLanguagesRepository[TX]
 ) extends PingUseCase,
       GetLearningSettingsUseCase,
       GetLanguagesUseCase,
@@ -213,11 +196,11 @@ final class VocablaApp[TX <: TransactionContext](
     GetLearningSettingsResponse
   ] =
     authorized(
-      authorizationService.canGetLearningSettings(request.ownerId, _)
+      authorizationService.canGetLearningSettings(request.studentId, _)
     ) *>
       transaction(
         "GetLearningSettings",
-        userRepository.getLearningSettings(request.ownerId)
+        userRepository.getLearningSettings(request.studentId)
       ).mapBoth(
         f => ServiceFailure(f.message, f.cause),
         ls => GetLearningSettingsResponse(ls)
@@ -242,13 +225,14 @@ end VocablaApp
 
 object VocablaApp:
   def layer[TX <: TransactionContext: zio.Tag](): ZLayer[
-    TransactionManager[TX] & UserRepository[TX] &
-      (EntryRepository[TX] & TagRepository[TX] & LangRepository),
+    TransactionManager[TX] & UserRepository[TX] & EntryRepository[TX] &
+      TagRepository[TX] & LangRepository & LearnLanguagesRepository[TX] &
+      KnownLanguagesRepository[TX],
     Nothing,
     VocablaApp[TX]
   ] =
     ZLayer.fromFunction(
-      new VocablaApp[TX](_, _, _, _, _)
+      new VocablaApp[TX](_, _, _, _, _, _, _)
     )
 
   extension [R, A](self: zio.ZIO[R, InfraFailure, A])

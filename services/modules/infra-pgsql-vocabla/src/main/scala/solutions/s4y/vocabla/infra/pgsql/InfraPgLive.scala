@@ -10,14 +10,16 @@ object InfraPgLive:
     DataSourcePg,
     InfraFailure,
     TransactionManagerPg & UserRepositoryPg & EntryRepositoryPg &
-      TagRepositoryPg & TagAssociationRepositoryPg
+      TagRepositoryPg & TagAssociationRepositoryPg & KnownLanguagesRepositoryPg & LearnLanguagesRepositoryPg
   ] = for {
     tm <- TransactionManagerPg.layer
     user <- UserRepositoryPg.layer
     entry <- EntryRepositoryPg.layer
     tag <- TagRepositoryPg.layer
     tagAssoc <- TagAssociationRepositoryPg.layer
-  } yield tm ++ user ++ entry ++ tag ++ tagAssoc
+    knownLang <- KnownLanguagesRepositoryPg.layer
+    learnLang <- LearnLanguagesRepositoryPg.layer
+  } yield tm ++ user ++ entry ++ tag ++ tagAssoc ++ knownLang ++ learnLang
 
   type TX = TransactionContextPg
 
@@ -25,6 +27,6 @@ object InfraPgLive:
     Any,
     InfraFailure,
     TransactionManagerPg & UserRepositoryPg & EntryRepositoryPg &
-      TagRepositoryPg & TagAssociationRepositoryPg
+      TagRepositoryPg & TagAssociationRepositoryPg & KnownLanguagesRepositoryPg & LearnLanguagesRepositoryPg
   ] =
     PgSqlConfig.layer >>> DataSourcePg.layer >>> repositoriesLayer
