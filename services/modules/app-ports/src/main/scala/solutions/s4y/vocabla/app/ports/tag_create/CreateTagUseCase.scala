@@ -12,7 +12,7 @@ import zio.schema.{Schema, derived}
 @description("Use case for creating a new tag.")
 trait CreateTagUseCase:
   def apply(
-      command: CreateTagRequest
+      command: CreateTagCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,

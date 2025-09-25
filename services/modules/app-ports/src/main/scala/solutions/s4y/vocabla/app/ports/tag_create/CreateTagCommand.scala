@@ -6,12 +6,12 @@ import zio.schema.{Schema, derived}
 import zio.schema.annotation.description
 
 @description("Command to create a new tag.")
-final case class CreateTagRequest(
+final case class CreateTagCommand(
     @description(
       "Tag to be created."
     )
     tag: Tag
 )
 
-object CreateTagRequest:
-  given (using IdentifierSchema): Schema[CreateTagRequest] = Schema.derived
+object CreateTagCommand:
+  given (using IdentifierSchema): Schema[CreateTagCommand] = Schema.derived

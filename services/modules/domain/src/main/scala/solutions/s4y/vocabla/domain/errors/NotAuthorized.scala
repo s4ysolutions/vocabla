@@ -25,3 +25,7 @@ case class NotTheOwner(
     case Some(o) => t"Operation not allowed: $op, $owned is not owned by $owned"
     case None =>
       t"Operation not allowed: $op, $owned is not owned by the requesting owner"
+
+case class NotMe(override val op: AuthorizedOperation) extends NotAuthorized:
+  override val message: TranslationTemplate =
+    t"Operation not allowed: $op, the operation can only be performed by the user himself"

@@ -1,38 +1,59 @@
-package solutions.s4y.vocabla.endpoint.http.routes.tags
+package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagRequest, CreateTagResponse, CreateTagUseCase}
-import solutions.s4y.vocabla.domain.UserContext
+import solutions.s4y.vocabla.app.ports.tag_create.{CreateTagCommand, CreateTagResponse, CreateTagUseCase}
+import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
+import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
+import solutions.s4y.vocabla.domain.{Tag, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.error.HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.openapiTag
 import zio.ZIO
 import zio.http.*
 import zio.http.Method.POST
 import zio.http.codec.HttpCodec
 import zio.http.endpoint.{AuthType, Endpoint}
+import zio.schema.annotation.description
+import zio.schema.{Schema, derived}
 
 import java.util.Locale
 
 object CreateTag:
+  @description("Command to create a new tag.")
+  final case class CreateTagRequest(
+      @description(
+        "The label of the tag to be created."
+      )
+      label: String
+  )
+
+  object CreateTagRequest:
+    given (using IdentifierSchema): Schema[CreateTagRequest] = Schema.derived
 
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
-    Unit,
-    CreateTagRequest,
+    Long,
+    CreateTagCommand,
     HttpError,
     CreateTagResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix)
-    .tag("Tags")
+  ] = Endpoint(POST / prefix / long("studentId") / "settings" / "tags")
+    .tag(openapiTag)
     .in[CreateTagRequest]
     .out[CreateTagResponse]
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
       HttpCodec.error[Forbidden403](Status.Forbidden)
+    )
+    .transformIn((studentId, request) =>
+      CreateTagCommand(Tag(request.label, studentId.identifier[Student]))
+    )(command =>
+      (command.tag.ownerId.as[Long], CreateTagRequest(command.tag.label))
     )
     .auth(AuthType.Bearer)
 

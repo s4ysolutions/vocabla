@@ -1,15 +1,17 @@
-package solutions.s4y.vocabla.endpoint.http.routes.tags
+package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
 
-import solutions.s4y.vocabla.app.ports.entry_get.GetEntryRequest
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.tag_get.{GetTagRequest, GetTagResponse, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.tag_get.{GetTagCommand, GetTagResponse, GetTagUseCase}
+import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.domain.{Entry, Tag, UserContext}
+import solutions.s4y.vocabla.domain.{Tag, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.error.HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.openapiTag
 import zio.ZIO
 import zio.http.Method.GET
 import zio.http.codec.{HttpCodec, PathCodec}
@@ -23,22 +25,22 @@ object GetTag:
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
-    Long,
-    GetTagRequest,
+    (Long, Long),
+    GetTagCommand,
     HttpError,
     GetTagResponse,
     AuthType.Bearer.type
   ] =
-    Endpoint(GET / prefix / long("tagId"))
-      .tag("Tags")
+    Endpoint(GET / prefix / long("studentId") / "settings" / long("tagId"))
+      .tag(openapiTag)
       .out[GetTagResponse]
       .outErrors[HttpError](
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
-      .transformIn(id => GetTagRequest(id.identifier[Tag]))(command =>
-        command.tagId.as[Long]
-      )
+      .transformIn((studentId, tagId) =>
+        GetTagCommand(studentId.identifier[Student], tagId.identifier[Tag])
+      )(command => (command.ownerId.as[Long], command.tagId.as[Long]))
       .auth(AuthType.Bearer)
 
   def route(using

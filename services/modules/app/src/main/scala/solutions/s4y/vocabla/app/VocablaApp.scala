@@ -23,13 +23,23 @@ import solutions.s4y.vocabla.app.ports.lang_get.{
   GetLanguagesResponse,
   GetLanguagesUseCase
 }
+import solutions.s4y.vocabla.app.ports.student_ls_get.{
+  GetLearningSettingsRequest,
+  GetLearningSettingsResponse,
+  GetLearningSettingsUseCase
+}
 import solutions.s4y.vocabla.app.ports.tag_create.{
-  CreateTagRequest,
+  CreateTagCommand,
   CreateTagResponse,
   CreateTagUseCase
 }
+import solutions.s4y.vocabla.app.ports.tag_delete.{
+  DeleteTagCommand,
+  DeleteTagResponse,
+  DeleteTagUseCase
+}
 import solutions.s4y.vocabla.app.ports.tag_get.{
-  GetTagRequest,
+  GetTagCommand,
   GetTagResponse,
   GetTagUseCase
 }
@@ -57,13 +67,15 @@ final class VocablaApp[TX <: TransactionContext](
     private val tagsRepository: TagRepository[TX],
     private val langRepository: LangRepository
 ) extends PingUseCase,
+      GetLearningSettingsUseCase,
       GetLanguagesUseCase,
       GetUserUseCase,
       CreateEntryUseCase,
-      CreateTagUseCase,
       GetEntryUseCase,
       GetEntriesUseCase,
-      GetTagUseCase:
+      CreateTagUseCase,
+      GetTagUseCase,
+      DeleteTagUseCase:
   VocablaApp.logger.debug("Creating VocablaApp instance")
 
   /** **************************************************************************
@@ -131,7 +143,7 @@ final class VocablaApp[TX <: TransactionContext](
     * Tags
     */
   override def apply(
-      command: CreateTagRequest
+      command: CreateTagCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
@@ -142,13 +154,25 @@ final class VocablaApp[TX <: TransactionContext](
     )
 
   override def apply(
-      command: GetTagRequest
+      command: GetTagCommand
   ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetTagResponse] =
-    authorized(authorizationService.canGetTag(command.tagId, _)) *>
+    authorized(
+      authorizationService.canGetTag(command.ownerId, command.tagId, _)
+    ) *>
       transaction(
         "tagGet",
         tagsRepository.get(command.tagId)
       ).map(tag => GetTagResponse(tag))
+
+  override def apply(
+      command: DeleteTagCommand
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, DeleteTagResponse] =
+    authorized(
+      authorizationService.canDeleteTag(command.ownerId, command.tagId, _)
+    ) *> transaction(
+      "tagDelete",
+      tagsRepository.delete(command.tagId).map(r => DeleteTagResponse(r))
+    )
 
   /** **************************************************************************
     * Users
@@ -180,8 +204,29 @@ final class VocablaApp[TX <: TransactionContext](
   )
 
   /** **************************************************************************
+    * Learning settings
+    */
+
+  override def apply(request: GetLearningSettingsRequest): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    GetLearningSettingsResponse
+  ] =
+    authorized(
+      authorizationService.canGetLearningSettings(request.ownerId, _)
+    ) *>
+      transaction(
+        "GetLearningSettings",
+        userRepository.getLearningSettings(request.ownerId)
+      ).mapBoth(
+        f => ServiceFailure(f.message, f.cause),
+        ls => GetLearningSettingsResponse(ls)
+      )
+
+  /** **************************************************************************
     * privates
     */
+
   private def authorized(
       validate: UserContext => Validation[NotAuthorized, Unit]
   ): ZIO[UserContext, NotAuthorized, Unit] =

@@ -3,11 +3,12 @@ package solutions.s4y.vocabla.domain
 import solutions.s4y.vocabla.domain.errors.{
   NeitherAdminNotStudent,
   NotAuthorized,
+  NotMe,
   NotTheOwner
 }
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.owner.Owned
-import zio.prelude.Validation
+import zio.prelude.{EqualOps, Validation}
 
 object authorizationService:
   opaque type AuthorizedOperation = String
@@ -28,6 +29,15 @@ object authorizationService:
     def apply(owner: String): AuthorizedOwner = owner
     extension (owner: AuthorizedOwner) def value: String = owner
   end AuthorizedOwner
+
+  def canGetLearningSettings(
+      studentId: Identifier[User.Student],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("GetLearningSettings"))
+    Validation.succeed(())
 
   private final val opAssignTagToEntry: AuthorizedOperation = "AssignTagToEntry"
   def canAssignTag(
@@ -50,13 +60,18 @@ object authorizationService:
     isOwned(tag, userContext, "CreateTag")
 
   def canGetTag(
+      ownerId: Identifier[User.Student],
       tagId: Identifier[Tag],
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
-    if userContext.user.isAdmin then return Validation.succeed(())
-    if !userContext.user.isStudent then
-      return Validation.fail(NeitherAdminNotStudent("GetTag"))
-    Validation.succeed(())
+    isMe(ownerId, userContext, "GetTag")
+
+  def canDeleteTag(
+      ownerId: Identifier[User.Student],
+      tagId: Identifier[Tag],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    isMe(ownerId, userContext, "DeleteTag")
 
   def canCreateEntry(
       entry: Entry,
@@ -80,16 +95,31 @@ object authorizationService:
     if userContext.user.isAdmin then return Validation.succeed(())
     if !userContext.user.isStudent then
       return Validation.fail(NeitherAdminNotStudent("GetEntries"))
-    
+
     // If ownerId filter is provided, it must match the current user
     ownerId match {
-      case Some(requestOwnerId) if requestOwnerId == userContext.studentId.asInstanceOf[Identifier[User]] =>
+      case Some(requestOwnerId)
+          if requestOwnerId == userContext.studentId
+            .asInstanceOf[Identifier[User]] =>
         Validation.succeed(())
       case Some(_) =>
         Validation.fail(NotTheOwner("GetEntries", "entries", None))
       case None =>
-        Validation.fail(NotTheOwner("GetEntries", "entries must be filtered by ownerId", None))
+        Validation.fail(
+          NotTheOwner("GetEntries", "entries must be filtered by ownerId", None)
+        )
     }
+
+  private def isMe(
+      student: Identifier[User.Student],
+      userContext: UserContext,
+      op: AuthorizedOperation
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent(op))
+    if student !== userContext.studentId then return Validation.fail(NotMe(op))
+    Validation.succeed(())
 
   private def isOwned(
       owned: Owned[User.Student],

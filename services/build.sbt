@@ -143,7 +143,7 @@ lazy val mvStore = (project in file("modules/infra/mv-store"))
   )
  */
 
-lazy val rest =
+lazy val presentationRest =
   (project in file("modules/presentation-rest"))
     .dependsOn(i18n)
     .dependsOn(zio)
@@ -161,7 +161,7 @@ lazy val rest =
 lazy val cliRest =
   (project in file("modules/cli-rest"))
     .enablePlugins(AssemblyPlugin)
-    .dependsOn(rest)
+    .dependsOn(presentationRest)
     .dependsOn(app)
     .dependsOn(pgSqlVocabla)
     .settings(
