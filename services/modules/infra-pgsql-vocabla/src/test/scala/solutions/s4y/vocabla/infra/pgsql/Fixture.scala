@@ -1,8 +1,6 @@
 package solutions.s4y.vocabla.infra.pgsql
 
 import io.github.cdimascio.dotenv.DotenvBuilder
-import solutions.s4y.i18n.ResourcesStringsResolver.default
-import solutions.s4y.i18n.t
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.infra.pgsql.{DataSourcePg, PgSqlConfig}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
@@ -46,6 +44,20 @@ object Fixture:
   ] =
     layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ UserRepositoryPg.layer)
 
+  val layerWithKnownLanguagesRepository: ZLayer[
+    Any,
+    InfraFailure,
+    TransactionManagerPg & KnownLanguagesRepositoryPg
+  ] =
+    layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ KnownLanguagesRepositoryPg.layer)
+
+  val layerWithLearnLanguagesRepository: ZLayer[
+    Any,
+    InfraFailure,
+    TransactionManagerPg & LearnLanguagesRepositoryPg
+  ] =
+    layerWithDataSourcePg >>> (TransactionManagerPg.layer ++ LearnLanguagesRepositoryPg.layer)
+
   val testSystem: ZIO[Any, Throwable, Unit] = ZIO
     .attempt(DotenvBuilder().filename(".env_test").load())
     .flatMap(dotenv =>
@@ -75,13 +87,17 @@ object Fixture:
                   stmt.execute("DROP TYPE IF EXISTS user_student")
                 }.unit
               }
-          }
-          .mapError {
-            case infra: InfraFailure => infra
-            case th: Throwable =>
-              InfraFailure(t"Failed to clear database", Some(th))
+              .zipLeft(ZIO.logInfo("Database cleared"))
+              .orDie
           }
       }
     }
+
+  val layerWithClearDb: ZLayer[
+    Any,
+    InfraFailure,
+    Unit
+  ] =
+    layerWithDataSourcePg >>> ZLayer.fromZIO(cleardb)
 
 end Fixture

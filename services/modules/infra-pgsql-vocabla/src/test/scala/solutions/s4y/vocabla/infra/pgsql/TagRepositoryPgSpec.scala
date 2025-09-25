@@ -4,6 +4,7 @@ import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.infra.pgsql.wrappers.pgWithTransaction
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Tag, User}
+import solutions.s4y.vocabla.infra.pgsql.Fixture.layerWithClearDb
 import solutions.s4y.zio.consoleColorDebugLogger
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Scope, ZIO, ZLayer}
@@ -50,7 +51,7 @@ object TagRepositoryPgSpec extends ZIOSpecDefault {
         }
       )
     ).provide {
-      consoleColorDebugLogger >>> Fixture.layerWithTagRepository
+      consoleColorDebugLogger >>> layerWithClearDb >>> Fixture.layerWithTagRepository
     } @@ TestAspect.before(
       Fixture.testSystem
     ) @@ TestAspect.sequential // @@ TestAspect.ignore

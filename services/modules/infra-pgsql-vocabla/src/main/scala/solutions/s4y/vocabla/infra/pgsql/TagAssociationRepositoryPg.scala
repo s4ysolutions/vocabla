@@ -88,8 +88,7 @@ end TagAssociationRepositoryPg
 
 object TagAssociationRepositoryPg:
   private val init = Seq(
-    "DROP TABLE IF EXISTS tag_entry_associations",
-    """CREATE TABLE tag_entry_associations (
+    """CREATE TABLE IF NOT EXISTS tag_entry_associations (
        tag_id BIGINT NOT NULL,
        entry_id BIGINT NOT NULL,
        PRIMARY KEY (tag_id, entry_id),
@@ -103,7 +102,7 @@ object TagAssociationRepositoryPg:
       ZIO.logDebug("Initializing TagAssociationRepositoryPg...") *>
         ZIO
           .serviceWithZIO[DataSourcePg] { ds =>
-            ZIO.attempt {
+            ZIO.fromTry {
               Using.Manager { use =>
                 val connection = use(ds.dataSource.getConnection)
                 val statement = use(connection.createStatement())
@@ -113,11 +112,11 @@ object TagAssociationRepositoryPg:
                   statement.execute(sql)
                 }
               }
-            }.orDie
+            }.orDie *> ZIO.logDebug(
+              "TagAssociationRepositoryPg initialized"
+            )
           }
-          .as(new TagAssociationRepositoryPg) <* ZIO.logDebug(
-          "TagAssociationRepositoryPg initialized"
-        )
+          .as(new TagAssociationRepositoryPg)
     }
   private val log = LoggerFactory.getLogger(TagAssociationRepositoryPg.getClass)
 end TagAssociationRepositoryPg

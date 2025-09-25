@@ -2,7 +2,7 @@ package solutions.s4y.vocabla.infra.pgsql
 
 import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
-import solutions.s4y.infra.pgsql.tx.{TransactionContextPg, TransactionManagerPg}
+import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.infra.pgsql.wrappers.{
   pgDeleteOne,
   pgInsertWithId,
@@ -14,8 +14,7 @@ import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Tag, User}
-import solutions.s4y.vocabla.infra.pgsql.TagAssociationRepositoryPg.{init, log}
-import zio.{IO, ZIO, ZLayer}
+import zio.{ZIO, ZLayer}
 
 import scala.util.Using
 
@@ -64,15 +63,14 @@ end TagRepositoryPg
 
 object TagRepositoryPg:
   private val init = Seq(
-    "DROP TABLE IF EXISTS tags CASCADE",
-    "CREATE TABLE tags (id SERIAL PRIMARY KEY, label TEXT NOT NULL, ownerId BIGINT NOT NULL)"
+    "CREATE TABLE IF NOT EXISTS tags (id SERIAL PRIMARY KEY, label TEXT NOT NULL, ownerId BIGINT NOT NULL)"
   )
   val layer: ZLayer[DataSourcePg, InfraFailure, TagRepositoryPg] = {
     ZLayer {
       ZIO.logDebug("Initializing TagRepositoryPg...") *>
         ZIO
           .serviceWithZIO[DataSourcePg] { ds =>
-            ZIO.attempt {
+            ZIO.fromTry {
               Using.Manager { use =>
                 val connection = use(ds.dataSource.getConnection)
                 val statement = use(connection.createStatement())
@@ -82,11 +80,9 @@ object TagRepositoryPg:
                   statement.execute(sql)
                 }
               }
-            }.orDie
+            }.orDie *> ZIO.logDebug("TagRepositoryPg initialized")
           }
-          .as(new TagRepositoryPg) <* ZIO.logDebug(
-          "TagRepositoryPg initialized"
-        )
+          .as(new TagRepositoryPg)
     }
   }
   private val log = LoggerFactory.getLogger(TagRepositoryPg.getClass)

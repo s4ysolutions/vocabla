@@ -3,6 +3,7 @@ package solutions.s4y.vocabla.infra.pgsql
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Entry, Tag, User}
+import solutions.s4y.vocabla.infra.pgsql.Fixture.layerWithClearDb
 import solutions.s4y.zio.{consoleColorDebugLogger, consoleColorTraceLogger}
 import zio.{Chunk, Scope, ZIO}
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assert}
@@ -336,7 +337,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
         }
       )
     ).provideLayer(
-      consoleColorTraceLogger >>> Fixture.layerWithEntryRepository
+      consoleColorTraceLogger >>> layerWithClearDb >>> Fixture.layerWithEntryRepository
     ) @@ TestAspect.before(
       Fixture.testSystem
     ) @@ TestAspect.sequential // @@ TestAspect.ignore

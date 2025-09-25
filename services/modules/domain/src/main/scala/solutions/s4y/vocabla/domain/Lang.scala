@@ -6,6 +6,8 @@ final case class Lang(code: Lang.Code, flag: String, name: String) {
 
 object Lang:
   type Code = String
-  
+  object Code:
+    def apply(code: String): Code = code
+
   given Conversion[String, Code] with
     def apply(code: String): Code = code

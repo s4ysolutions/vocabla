@@ -6,7 +6,12 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.{pgDeleteOne, pgInsertWithId, pgSelectMany, pgSelectOne}
+import solutions.s4y.infra.pgsql.wrappers.{
+  pgDeleteOne,
+  pgInsertWithId,
+  pgSelectMany,
+  pgSelectOne
+}
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
@@ -81,11 +86,15 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
       tagIds: Chunk[Identifier[Tag]] = Chunk.empty,
       langCodes: Chunk[Lang.Code] = Chunk.empty,
       text: Option[String] = None,
-      limit: Int = 100,
-  )(using TransactionContextPg): ZIO[R, InfraFailure, Chunk[Identified[Entry]]] =
-    val baseQuery = "SELECT e.id, e.word, e.langCode, e.definitions, e.ownerId FROM entries e"
+      limit: Int = 100
+  )(using
+      TransactionContextPg
+  ): ZIO[R, InfraFailure, Chunk[Identified[Entry]]] =
+    val baseQuery =
+      "SELECT e.id, e.word, e.langCode, e.definitions, e.ownerId FROM entries e"
 
-    val (whereClause, joinClause) = buildWhereClause(ownerId, tagIds, langCodes, text)
+    val (whereClause, joinClause) =
+      buildWhereClause(ownerId, tagIds, langCodes, text)
     val finalQuery = s"$baseQuery$joinClause$whereClause ORDER BY e.id LIMIT ?"
 
     pgSelectMany(
@@ -100,13 +109,15 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
         }
 
         if (tagIds.nonEmpty) {
-          val tagArray = st.getConnection.createArrayOf("bigint", tagIds.map(_.as[Long]).toArray)
+          val tagArray = st.getConnection
+            .createArrayOf("bigint", tagIds.map(_.as[Long]).toArray)
           st.setArray(paramIndex, tagArray)
           paramIndex += 1
         }
 
         if (langCodes.nonEmpty) {
-          val langArray = st.getConnection.createArrayOf("text", langCodes.toArray)
+          val langArray =
+            st.getConnection.createArrayOf("text", langCodes.toArray)
           st.setArray(paramIndex, langArray)
           paramIndex += 1
         }
@@ -159,7 +170,8 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
     ownerId.foreach(_ => conditions += "e.ownerId = ?")
 
     if (tagIds.nonEmpty) {
-      joinClause = " INNER JOIN tag_entry_associations tea ON e.id = tea.entry_id"
+      joinClause =
+        " INNER JOIN tag_entry_associations tea ON e.id = tea.entry_id"
       conditions += "tea.tag_id = ANY(?)"
     }
 
@@ -167,7 +179,9 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
       conditions += "e.langCode = ANY(?)"
     }
 
-    text.foreach(_ => conditions += "(e.word ILIKE ? OR EXISTS (SELECT 1 FROM unnest(e.definitions) AS def WHERE def.definition ILIKE ?))")
+    text.foreach(_ =>
+      conditions += "(e.word ILIKE ? OR EXISTS (SELECT 1 FROM unnest(e.definitions) AS def WHERE def.definition ILIKE ?))"
+    )
 
     val whereClause = if (conditions.nonEmpty) {
       " WHERE " + conditions.mkString(" AND ")
@@ -182,13 +196,14 @@ end EntryRepositoryPg
 
 object EntryRepositoryPg:
   private val init = Seq(
-    "DROP TABLE IF EXISTS entries CASCADE",
-    "DROP TYPE IF EXISTS definition",
-    """CREATE TYPE definition AS (
-      definition TEXT,
-      langCode TEXT
-    )""",
-    """CREATE TABLE entries (
+    """DO $$
+    BEGIN
+        CREATE TYPE definition AS ( definition TEXT, langCode TEXT );
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+    $$""",
+    """CREATE TABLE IF NOT EXISTS entries (
      id SERIAL PRIMARY KEY,
      word TEXT NOT NULL,
      langCode TEXT NOT NULL,

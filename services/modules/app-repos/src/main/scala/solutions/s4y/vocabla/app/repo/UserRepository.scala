@@ -2,10 +2,9 @@ package solutions.s4y.vocabla.app.repo
 
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
-import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import solutions.s4y.vocabla.domain.{Lang, LearningSettings, Tag, User}
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zio.{Chunk, ZIO}
+import solutions.s4y.vocabla.domain.{LearningSettings, User}
+import solutions.s4y.vocabla.domain.identity.Identifier
+import zio.ZIO
 
 trait UserRepository[TX <: TransactionContext]:
   /*
