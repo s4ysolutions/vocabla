@@ -110,6 +110,18 @@ object authorizationService:
         )
     }
 
+  def canChooseKnownLang(
+      studentId: Identifier[User.Student],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    isMe(studentId, userContext, "ChooseKnownLanguages")
+
+  def canChooseLearnLang(
+      studentId: Identifier[User.Student],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    isMe(studentId, userContext, "ChooseLearnLanguages")
+
   private def isMe(
       student: Identifier[User.Student],
       userContext: UserContext,
