@@ -270,8 +270,11 @@ object TagAssociationRepositoryPgSpec extends ZIOSpecDefault {
         }
       )
     ).provideLayer(
-      consoleColorDebugLogger >>> Fixture.layerWithTagAssociationRepository
+      consoleColorDebugLogger >>>
+        Fixture.layerWithClearDb >>>
+        (Fixture.layerWithTagRepository ++ Fixture.layerWithEntryRepository) >>>
+        Fixture.layerWithTagAssociationRepository
     ) @@ TestAspect.before(
       Fixture.testSystem
-    ) @@ TestAspect.sequential// @@ TestAspect.ignore
+    ) @@ TestAspect.sequential // @@ TestAspect.ignore
 }
