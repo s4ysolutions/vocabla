@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.students.ls.tags
+package solutions.s4y.vocabla.app.ports.students.settings.tags
 
 import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema

@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.students.ls
+package solutions.s4y.vocabla.app.ports.students.settings
 
 import solutions.s4y.vocabla.domain.LearningSettings
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}

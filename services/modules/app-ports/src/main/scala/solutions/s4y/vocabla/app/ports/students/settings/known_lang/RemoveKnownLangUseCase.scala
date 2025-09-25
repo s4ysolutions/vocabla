@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.students.ls
+package solutions.s4y.vocabla.app.ports.students.settings.known_lang
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.UserContext
@@ -6,14 +6,12 @@ import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import zio.ZIO
 import zio.schema.annotation.description
 
-@description(
-  "Use case for retrieving the learning settings of a student by owner ID."
-)
-trait GetLearningSettingsUseCase:
+@description("Use case for removing a language the student wants to learn.")
+trait RemoveKnownLangUseCase:
   def apply(
-      command: GetLearningSettingsRequest
+      command: RemoveKnownLangCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
-    GetLearningSettingsResponse
+    RemoveKnownLangResponse
   ]

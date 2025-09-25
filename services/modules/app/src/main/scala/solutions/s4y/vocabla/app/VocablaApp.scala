@@ -3,38 +3,18 @@ package solutions.s4y.vocabla.app
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.ports.entries_get.{
-  GetEntriesRequest,
-  GetEntriesResponse,
-  GetEntriesUseCase
-}
-import solutions.s4y.vocabla.app.ports.entry_create.{
-  CreateEntryRequest,
-  CreateEntryResponse,
-  CreateEntryUseCase
-}
-import solutions.s4y.vocabla.app.ports.entry_get.{
-  GetEntryRequest,
-  GetEntryResponse,
-  GetEntryUseCase
-}
+import solutions.s4y.vocabla.app.ports.entries_get.{GetEntriesRequest, GetEntriesResponse, GetEntriesUseCase}
+import solutions.s4y.vocabla.app.ports.entry_create.{CreateEntryRequest, CreateEntryResponse, CreateEntryUseCase}
+import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.lang_get.{
-  GetLanguagesResponse,
-  GetLanguagesUseCase
-}
-import solutions.s4y.vocabla.app.ports.students.ls.tags.*
-import solutions.s4y.vocabla.app.ports.students.ls.{
-  GetLearningSettingsRequest,
-  GetLearningSettingsResponse,
-  GetLearningSettingsUseCase
-}
+import solutions.s4y.vocabla.app.ports.lang_get.{GetLanguagesResponse, GetLanguagesUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.tags.*
+import solutions.s4y.vocabla.app.ports.students.settings.known_lang.*
+import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{AddLearnLangCommand, AddLearnLangResponse, AddLearnLangUseCase, RemoveLearnLangCommand, RemoveLearnLangResponse, RemoveLearnLangUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.{GetLearningSettingsCommand, GetLearningSettingsResponse, GetLearningSettingsUseCase}
 import solutions.s4y.vocabla.app.repo.*
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.app.repo.tx.{
-  TransactionContext,
-  TransactionManager
-}
+import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
@@ -58,7 +38,11 @@ final class VocablaApp[TX <: TransactionContext](
       GetEntriesUseCase,
       CreateTagUseCase,
       GetTagUseCase,
-      DeleteTagUseCase:
+      DeleteTagUseCase,
+      AddLearnLangUseCase,
+      AddKnownLangUseCase,
+      RemoveLearnLangUseCase,
+      RemoveKnownLangUseCase:
   VocablaApp.logger.debug("Creating VocablaApp instance")
 
   /** **************************************************************************
@@ -190,7 +174,7 @@ final class VocablaApp[TX <: TransactionContext](
     * Learning settings
     */
 
-  override def apply(request: GetLearningSettingsRequest): ZIO[
+  override def apply(request: GetLearningSettingsCommand): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
     GetLearningSettingsResponse
@@ -205,6 +189,74 @@ final class VocablaApp[TX <: TransactionContext](
         f => ServiceFailure(f.message, f.cause),
         ls => GetLearningSettingsResponse(ls)
       )
+
+  /** **************************************************************************
+    * Known Languages
+    */
+
+  override def apply(
+      command: AddKnownLangCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    AddKnownLangResponse
+  ] =
+    authorized(
+      authorizationService.canChooseKnownLang(command.studentId, _)
+    ) *>
+      transaction(
+        "addKnownLanguage",
+        knownLanguagesRepository.addKnownLanguage(command.studentId, command.langCode)
+      ).as(AddKnownLangResponse(command.langCode))
+
+  override def apply(
+      command: RemoveKnownLangCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    RemoveKnownLangResponse
+  ] =
+    authorized(
+      authorizationService.canChooseKnownLang(command.studentId, _)
+    ) *>
+      transaction(
+        "removeKnownLanguage",
+        knownLanguagesRepository.removeKnownLanguage(command.studentId, command.langCode)
+      ).as(RemoveKnownLangResponse(command.langCode))
+
+  /** **************************************************************************
+    * Learn Languages
+    */
+
+  override def apply(
+      command: AddLearnLangCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    AddLearnLangResponse
+  ] =
+    authorized(
+      authorizationService.canChooseLearnLang(command.studentId, _)
+    ) *>
+      transaction(
+        "addLearnLanguage",
+        learnLanguagesRepository.addLearnLanguage(command.studentId, command.langCode)
+      ).as(AddLearnLangResponse(command.langCode))
+
+  override def apply(
+      command: RemoveLearnLangCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    RemoveLearnLangResponse
+  ] =
+    authorized(
+      authorizationService.canChooseLearnLang(command.studentId, _)
+    ) *>
+      transaction(
+        "removeLearnLanguage",
+        learnLanguagesRepository.removeLearnLanguage(command.studentId, command.langCode)
+      ).as(RemoveLearnLangResponse(command.langCode))
 
   /** **************************************************************************
     * privates
