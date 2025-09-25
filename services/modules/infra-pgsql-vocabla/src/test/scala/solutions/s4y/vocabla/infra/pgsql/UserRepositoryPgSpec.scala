@@ -2,9 +2,8 @@ package solutions.s4y.vocabla.infra.pgsql
 
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.infra.pgsql.wrappers.pgWithTransaction
-import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Tag, User}
+import solutions.s4y.vocabla.domain.{LearningSettings, Tag, User}
 import solutions.s4y.zio.consoleColorDebugLogger
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Chunk, Scope, ZIO, ZLayer}
@@ -45,7 +44,7 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
               repo.getLearningSettings(1L.identifier[User.Student])
             }
           } yield assertTrue(
-            settings == UserRepository.emptyLearningSettings
+            settings == LearningSettings.emptyLearningSettings
           )
         },
         test("get learning settings for non-existing student returns empty settings") {
@@ -55,7 +54,7 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
               repo.getLearningSettings(999L.identifier[User.Student])
             }
           } yield assertTrue(
-            settings == UserRepository.emptyLearningSettings
+            settings == LearningSettings.emptyLearningSettings
           )
         },
         test("bulk update and get learning languages") {
@@ -66,8 +65,8 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
                 repo <- ZIO.service[UserRepositoryPg]
                 // Use the language-only bulk update method
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
-                  Chunk("en", "es"), 
+                  1L.identifier[User.Student],
+                  Chunk("en", "es"),
                   Chunk("fr", "de")
                 )
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
@@ -84,8 +83,8 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
             repo <- ZIO.service[UserRepositoryPg]
             result <- pgWithTransaction {
               repo.updateLearningLanguages(
-                999L.identifier[User.Student], 
-                Chunk("en"), 
+                999L.identifier[User.Student],
+                Chunk("en"),
                 Chunk("fr")
               )
             }.either
@@ -99,15 +98,15 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
                 repo <- ZIO.service[UserRepositoryPg]
                 // First set some values
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
-                  Chunk("en", "es"), 
+                  1L.identifier[User.Student],
+                  Chunk("en", "es"),
                   Chunk("fr")
                 )
-                
+
                 // Then update to empty languages
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
-                  Chunk.empty, 
+                  1L.identifier[User.Student],
+                  Chunk.empty,
                   Chunk.empty
                 )
                 retrieved <- repo.getLearningSettings(1L.identifier[User.Student])
@@ -126,7 +125,7 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
+                  1L.identifier[User.Student],
                   Chunk("en", "es", "fr", "de", "it", "pt"),
                   Chunk("ru", "zh", "ja", "ko")
                 )
@@ -150,8 +149,8 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
                 repo <- ZIO.service[UserRepositoryPg]
                 // Set up some languages
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
-                  Chunk("en", "es"), 
+                  1L.identifier[User.Student],
+                  Chunk("en", "es"),
                   Chunk("fr")
                 )
                 // Note: Tags would be managed through separate tag association methods
@@ -174,7 +173,7 @@ object UserRepositoryPgSpec extends ZIOSpecDefault {
               for {
                 repo <- ZIO.service[UserRepositoryPg]
                 _ <- repo.updateLearningLanguages(
-                  1L.identifier[User.Student], 
+                  1L.identifier[User.Student],
                   Chunk("en-US", "zh-CN", "es-MX"),
                   Chunk("pt-BR", "fr-CA")
                 )

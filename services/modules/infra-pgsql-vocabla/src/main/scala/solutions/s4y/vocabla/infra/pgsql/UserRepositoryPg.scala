@@ -3,12 +3,16 @@ package solutions.s4y.vocabla.infra.pgsql
 import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.{pgSelectOne, pgUpdateOne, pgSelectMany, pgInsertOne, pgDeleteOne}
+import solutions.s4y.infra.pgsql.wrappers.{
+  pgSelectMany,
+  pgSelectOne,
+  pgUpdateOne
+}
 import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.domain.{Lang, Tag, User}
-import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
+import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.{Lang, LearningSettings, Tag, User}
 import zio.json.{DecoderOps, EncoderOps, JsonCodec}
 import zio.{Chunk, ZIO, ZLayer}
 
@@ -45,7 +49,7 @@ class UserRepositoryPg(using IdentifierSchema)
       studentId: Identifier[User.Student]
   )(using
       TransactionContextPg
-  ): ZIO[R, InfraFailure, UserRepository.LearningSettings] =
+  ): ZIO[R, InfraFailure, LearningSettings] =
     for {
       // Run both queries in parallel using zipPar
       (languageSettings, tags) <- pgSelectOne(
@@ -58,7 +62,7 @@ class UserRepositoryPg(using IdentifierSchema)
           } else {
             jsonStr.fromJson[LanguageSettings] match {
               case Right(settings) => settings
-              case Left(error) =>
+              case Left(error)     =>
                 // Log error and return empty settings as fallback
                 LanguageSettings(Chunk.empty, Chunk.empty)
             }
@@ -74,9 +78,11 @@ class UserRepositoryPg(using IdentifierSchema)
           rs => rs.getLong(1).identifier[Tag]
         )
       )
-    } yield UserRepository.LearningSettings(
-      learnLanguages = languageSettings.map(_.learnLanguages).getOrElse(Chunk.empty),
-      knownLanguages = languageSettings.map(_.knownLanguages).getOrElse(Chunk.empty),
+    } yield LearningSettings(
+      learnLanguages =
+        languageSettings.map(_.learnLanguages).getOrElse(Chunk.empty),
+      knownLanguages =
+        languageSettings.map(_.knownLanguages).getOrElse(Chunk.empty),
       tags = tags
     )
 
@@ -182,12 +188,13 @@ class UserRepositoryPg(using IdentifierSchema)
 
 // Helper case class for language settings only (no tags)
 private case class LanguageSettings(
-  learnLanguages: Chunk[Lang.Code],
-  knownLanguages: Chunk[Lang.Code]
+    learnLanguages: Chunk[Lang.Code],
+    knownLanguages: Chunk[Lang.Code]
 )
 
 private object LanguageSettings:
-  given JsonCodec[LanguageSettings] = zio.json.DeriveJsonCodec.gen[LanguageSettings]
+  given JsonCodec[LanguageSettings] =
+    zio.json.DeriveJsonCodec.gen[LanguageSettings]
 
 object UserRepositoryPg:
   given IdentifierSchema with
