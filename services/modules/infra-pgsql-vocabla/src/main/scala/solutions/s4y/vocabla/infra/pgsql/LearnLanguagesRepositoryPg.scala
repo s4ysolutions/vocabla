@@ -17,16 +17,39 @@ class LearnLanguagesRepositoryPg
   )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
     pgUpdateOne(
       """UPDATE users
-         SET learning_settings = jsonb_set(
-           COALESCE(learning_settings, '{"learnLanguages":[],"knownLanguages":[]}'),
-           '{learnLanguages}',
-           COALESCE(learning_settings->'learnLanguages', '[]') || ?::jsonb,
-           true
-         )
-         WHERE id = ? AND student IS NOT NULL""",
+        |SET learning_settings = jsonb_set(
+        |  COALESCE(learning_settings, '{"learnLanguages":[],"knownLanguages":[]}'),
+        |  '{learnLanguages}',
+        |  (
+        |   CASE
+        |      -- Handle empty array case
+        |      WHEN learning_settings->'learnLanguages' = '[]'::jsonb
+        |        OR learning_settings->'learnLanguages' IS NULL
+        |      THEN to_jsonb(ARRAY[?])  -- Create new array with just the new language
+        |
+        |      -- Handle existing array case
+        |      WHEN EXISTS (
+        |        SELECT 1
+        |        FROM jsonb_array_elements_text(learning_settings->'learnLanguages') elem
+        |        WHERE LOWER(elem) = LOWER(?)
+        |      )
+        |      THEN learning_settings->'learnLanguages'  -- No change, already exists
+        |
+        |      -- Add to existing array
+        |      ELSE (
+        |        SELECT jsonb_agg(elem) || to_jsonb(?)::jsonb
+        |        FROM jsonb_array_elements_text(learning_settings->'learnLanguages') elem
+        |      )
+        |    END
+        |  ),
+        |  true
+        |)
+        |WHERE id = ? AND student IS NOT NULL""".stripMargin,
       st => {
-        st.setString(1, s""""$language"""")
-        st.setLong(2, studentId.as[Long])
+        st.setString(1, s"$language")
+        st.setString(2, s"$language")
+        st.setString(3, s"$language")
+        st.setLong(4, studentId.as[Long])
       }
     ).unit
 
@@ -36,17 +59,20 @@ class LearnLanguagesRepositoryPg
   )(using TransactionContextPg): ZIO[R, InfraFailure, Unit] =
     pgUpdateOne(
       """UPDATE users
-         SET learning_settings = jsonb_set(
-           learning_settings,
-           '{learnLanguages}',
-           (
-             SELECT jsonb_agg(elem)
-             FROM jsonb_array_elements_text(learning_settings->'learnLanguages') elem
-             WHERE elem != ?
-           ),
-           true
-         )
-         WHERE id = ? AND student IS NOT NULL AND learning_settings IS NOT NULL""",
+        |   SET learning_settings = jsonb_set(
+        |     learning_settings,
+        |     '{learnLanguages}',
+        |     COALESCE(
+        |       (
+        |         SELECT jsonb_agg(elem)
+        |         FROM jsonb_array_elements_text(learning_settings->'learnLanguages') elem
+        |         WHERE LOWER(elem) != LOWER(?)
+        |       ),
+        |       '[]'::jsonb
+        |     ),
+        |     true
+        |   )
+        |   WHERE id = ? AND student IS NOT NULL""".stripMargin,
       st => {
         st.setString(1, language)
         st.setLong(2, studentId.as[Long])

@@ -56,7 +56,7 @@ object LearnLanguagesRepositoryPgSpec extends ZIOSpecDefault {
               settings.learnLanguages.contains(Lang.Code("fr"))
           )
         },
-        test("add duplicate learn language is idempotent") {
+        test("add duplicate learn language does not create duplicate entries") {
           for {
             repo <- ZIO.service[LearnLanguagesRepositoryPg]
             userRepo <- ZIO.service[UserRepositoryPg]
@@ -78,7 +78,7 @@ object LearnLanguagesRepositoryPgSpec extends ZIOSpecDefault {
           } yield assertTrue(
             settings.learnLanguages.count(
               _ == Lang.Code("es")
-            ) == 2 // JSONB array allows duplicates
+            ) == 1 // JSONB array allows duplicates
           )
         }
       ),
@@ -215,6 +215,39 @@ object LearnLanguagesRepositoryPgSpec extends ZIOSpecDefault {
           } yield assertTrue(
             settings.learnLanguages.contains(Lang.Code("ko")) &&
               settings.knownLanguages.contains(Lang.Code("ja"))
+          )
+        },
+        test("preserve known languages when removing learn languages") {
+          for {
+            knownRepo <- ZIO.service[KnownLanguagesRepositoryPg]
+            learnRepo <- ZIO.service[LearnLanguagesRepositoryPg]
+            userRepo <- ZIO.service[UserRepositoryPg]
+            // Add known and learn languages
+            _ <- pgWithTransaction {
+              for {
+                _ <- knownRepo.addKnownLanguage(
+                  1L.identifier[User.Student],
+                  Lang.Code("ar")
+                )
+                _ <- learnRepo.addLearnLanguage(
+                  1L.identifier[User.Student],
+                  Lang.Code("tr")
+                )
+              } yield ()
+            }
+            // Remove learn language
+            _ <- pgWithTransaction {
+              learnRepo.removeLearnLanguage(
+                1L.identifier[User.Student],
+                Lang.Code("tr")
+              )
+            }
+            settings <- pgWithTransaction {
+              userRepo.getLearningSettings(1L.identifier[User.Student])
+            }
+          } yield assertTrue(
+            !settings.learnLanguages.contains(Lang.Code("tr")) &&
+              settings.knownLanguages.contains(Lang.Code("ar"))
           )
         }
       )
