@@ -1,6 +1,5 @@
 package solutions.s4y.vocabla.app.ports.students.settings
 
-import solutions.s4y.vocabla.domain.Tag
 import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
 import zio.schema.annotation.description
