@@ -1,14 +1,20 @@
-package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
+package solutions.s4y.vocabla.endpoint.http.routes.students.settings.learn_lang
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.settings.tags.{CreateTagCommand, CreateTagResponse, CreateTagUseCase}
-import solutions.s4y.vocabla.domain.User.Student
+import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{
+  AddLearnLangCommand,
+  AddLearnLangResponse,
+  AddLearnLangUseCase
+}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.domain.{Tag, UserContext}
+import solutions.s4y.vocabla.domain.{Lang, User, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
-import solutions.s4y.vocabla.endpoint.http.error.HttpError.{Forbidden403, InternalServerError500}
+import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
+  Forbidden403,
+  InternalServerError500
+}
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.openapiTag
@@ -22,52 +28,53 @@ import zio.schema.{Schema, derived}
 
 import java.util.Locale
 
-object CreateTag:
-  @description("Command to create a new tag.")
-  final case class CreateTagRequest(
-      @description(
-        "The label of the tag to be created."
-      )
-      label: String
+object AddLearnLang:
+  @description("Request to add a language the student wants to learn.")
+  final case class AddLearnLangRequest(
+      @description("Code of the language to be added for learning.")
+      langCode: Lang.Code
   )
 
-  object CreateTagRequest:
-    given (using IdentifierSchema): Schema[CreateTagRequest] = Schema.derived
+  object AddLearnLangRequest:
+    given (using IdentifierSchema): Schema[AddLearnLangRequest] = Schema.derived
 
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
     Long,
-    CreateTagCommand,
+    AddLearnLangCommand,
     HttpError,
-    CreateTagResponse,
+    AddLearnLangResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / long("studentId") / "settings" / "tags")
+  ] = Endpoint(POST / prefix / long("studentId") / "settings" / "learn-languages")
     .tag(openapiTag)
-    .in[CreateTagRequest]
-    .out[CreateTagResponse]
+    .in[AddLearnLangRequest]
+    .out[AddLearnLangResponse]
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
       HttpCodec.error[Forbidden403](Status.Forbidden)
     )
-    .transformIn((studentId, request) =>
-      CreateTagCommand(Tag(request.label, studentId.identifier[Student]))
-    )(command =>
-      (command.tag.ownerId.as[Long], CreateTagRequest(command.tag.label))
-    )
     .auth(AuthType.Bearer)
+    .transformIn((studentId, request) =>
+      AddLearnLangCommand(
+        langCode = request.langCode,
+        studentId = studentId.identifier[User.Student]
+      )
+    )(command =>
+      (command.studentId.as[Long], AddLearnLangRequest(command.langCode))
+    )
 
   def route(using
       IdentifierSchema
-  ): Route[CreateTagUseCase & Locale & UserContext, Response] =
+  ): Route[AddLearnLangUseCase & Locale & UserContext, Response] =
     endpoint.implement { command =>
       withLocale {
-        ZIO.serviceWithZIO[CreateTagUseCase] { useCase =>
+        ZIO.serviceWithZIO[AddLearnLangUseCase](useCase =>
           useCase(command).mapError {
             case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
               InternalServerError500(e.message.localized)
           }
-        }
+        )
       }
     }

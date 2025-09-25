@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.endpoint.http.routes.students.settings
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.ls.{GetLearningSettingsRequest, GetLearningSettingsResponse, GetLearningSettingsUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.{GetLearningSettingsCommand, GetLearningSettingsResponse, GetLearningSettingsUseCase}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
@@ -27,7 +27,7 @@ object GetSettings:
       IdentifierSchema
   ): Endpoint[
     Long,
-    GetLearningSettingsRequest,
+    GetLearningSettingsCommand,
     HttpError,
     GetLearningSettingsResponse,
     AuthType.Bearer.type
@@ -40,7 +40,7 @@ object GetSettings:
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
       .transformIn(id =>
-        GetLearningSettingsRequest(id.identifier[User.Student])
+        GetLearningSettingsCommand(id.identifier[User.Student])
       )(command => command.studentId.as[Long])
       .auth(AuthType.Bearer)
 

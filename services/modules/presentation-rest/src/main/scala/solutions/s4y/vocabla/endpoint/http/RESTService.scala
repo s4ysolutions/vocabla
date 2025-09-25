@@ -8,8 +8,10 @@ import solutions.s4y.vocabla.app.ports.entries_get.GetEntriesUseCase
 import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
 import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.lang_get.GetLanguagesUseCase
-import solutions.s4y.vocabla.app.ports.students.ls.GetLearningSettingsUseCase
-import solutions.s4y.vocabla.app.ports.students.ls.tags.{CreateTagUseCase, DeleteTagUseCase, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.GetLearningSettingsUseCase
+import solutions.s4y.vocabla.app.ports.students.settings.tags.{CreateTagUseCase, DeleteTagUseCase, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.known_lang.{AddKnownLangUseCase, RemoveKnownLangUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{AddLearnLangUseCase, RemoveLearnLangUseCase}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
@@ -27,6 +29,8 @@ import solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags.{
   DeleteTag,
   GetTag
 }
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.known_lang.{AddKnownLang, RemoveKnownLang}
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.learn_lang.{AddLearnLang, RemoveLearnLang}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
@@ -46,7 +50,11 @@ final class RESTService(
     private val getEntriesUseCase: GetEntriesUseCase,
     private val getTagUseCase: GetTagUseCase,
     private val getLanguagesUseCase: GetLanguagesUseCase,
-    private val getLearningSettingsUseCase: GetLearningSettingsUseCase
+    private val getLearningSettingsUseCase: GetLearningSettingsUseCase,
+    private val addKnownLangUseCase: AddKnownLangUseCase,
+    private val removeKnownLangUseCase: RemoveKnownLangUseCase,
+    private val addLearnLangUseCase: AddLearnLangUseCase,
+    private val removeLearnLangUseCase: RemoveLearnLangUseCase
 )(using IdentifierSchema):
   RESTService.logger.debug("Creating RESTService instance")
 
@@ -60,7 +68,11 @@ final class RESTService(
       GetEntry.endpoint,
       GetEntries.endpoint,
       GetLanguages.endpoint,
-      GetSettings.endpoint
+      GetSettings.endpoint,
+      AddKnownLang.endpoint,
+      RemoveKnownLang.endpoint,
+      AddLearnLang.endpoint,
+      RemoveLearnLang.endpoint
     )
 
   private val openAPI: OpenAPI = OpenAPIGen.fromEndpoints(
@@ -71,79 +83,11 @@ final class RESTService(
 
   private val corsConfig: CorsConfig = CorsConfig()
 
-  // Root page handler that shows API documentation links
-  private val rootHandler: Handler[Any, Nothing, Request, Response] =
-    Handler.fromFunction { _ =>
-      val html = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabla API</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 { color: #333; text-align: center; }
-        .links { margin: 30px 0; }
-        .link-item {
-            display: block;
-            padding: 15px;
-            margin: 10px 0;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-        .link-item:hover { background: #0056b3; }
-        .description { color: #666; margin: 20px 0; text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Vocabla API</h1>
-        <p class="description">
-            Welcome to the Vocabla vocabulary learning API.
-            Use the links below to explore the API documentation and endpoints.
-        </p>
-        <div class="links">
-            <a href="/swagger-ui" class="link-item">
-                📚 API Documentation (Swagger UI)
-            </a>
-            <a href="/rest/v1/ping?message=hello" class="link-item">
-                🏓 Test Ping Endpoint
-            </a>
-        </div>
-        <p class="description">
-            <small>API Version: 1.0.0</small>
-        </p>
-    </div>
-</body>
-</html>"""
-
-      Response(
-        status = Status.Ok,
-        headers = Headers(Header.ContentType(MediaType.text.html)),
-        body = Body.fromString(html)
-      )
-    }
-
   private val routes: Routes[
     PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
       GetEntryUseCase & GetEntriesUseCase & GetTagUseCase & DeleteTagUseCase &
-      GetLanguagesUseCase & GetLearningSettingsUseCase,
+      GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
+      RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     Response
   ] = {
     // Root route for API documentation
@@ -157,7 +101,11 @@ final class RESTService(
             CreateEntry.route,
             GetEntry.route,
             GetEntries.route,
-            GetSettings.route
+            GetSettings.route,
+            AddKnownLang.route,
+            RemoveKnownLang.route,
+            AddLearnLang.route,
+            RemoveLearnLang.route
           ) @@ bearerAuthWithContext) @@ Middleware.cors(
         corsConfig
       ) @@ browserLocale
@@ -197,6 +145,10 @@ final class RESTService(
         .add(getEntriesUseCase)
         .add(getLanguagesUseCase)
         .add(getLearningSettingsUseCase)
+        .add(addKnownLangUseCase)
+        .add(removeKnownLangUseCase)
+        .add(addLearnLangUseCase)
+        .add(removeLearnLangUseCase)
     )
 end RESTService
 
@@ -214,12 +166,13 @@ object RESTService:
   val layer: ZLayer[
     CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
       GetEntriesUseCase & CreateTagUseCase & GetTagUseCase & DeleteTagUseCase &
-      GetLanguagesUseCase & GetLearningSettingsUseCase,
+      GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
+      RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     InfraFailure,
     RESTService
   ] =
     RestConfig.layer
       >>> httpServerLayer
-      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _, _, _, _, _))
+      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _))
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

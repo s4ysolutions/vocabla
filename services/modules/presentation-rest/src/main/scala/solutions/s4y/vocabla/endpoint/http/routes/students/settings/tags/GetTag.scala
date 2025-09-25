@@ -1,7 +1,7 @@
 package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.ls.tags.{GetTagCommand, GetTagResponse, GetTagUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.tags.{GetTagCommand, GetTagResponse, GetTagUseCase}
 import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
