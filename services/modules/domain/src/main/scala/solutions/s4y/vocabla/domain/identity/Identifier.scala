@@ -1,8 +1,9 @@
 package solutions.s4y.vocabla.domain.identity
 
+import zio.Tag
 import zio.json.JsonCodec
 import zio.prelude.{Equal, Equivalence}
-import zio.schema.Schema
+import zio.schema.{Schema, TypeId}
 
 trait Identifier[E]:
   type ID
@@ -29,11 +30,50 @@ object Identifier:
     def asIdentifier[E1]: Identifier[E1] =
       Identifier[E1, identifier.ID](identifier.internal)
 
-  given [E](using is: IdentifierSchema): Schema[Identifier[E]] =
-    is.schema.transform[Identifier[E]](
+  given [E](using is: IdentifierSchema, ct: Tag[E]): Schema[Identifier[E]] =
+    val typeName = ct.tag.shortName
+    val customId = TypeId.parse(s"Identifier$typeName")
+    is.schema
+      .transform[Identifier[E]](
+        id => Identifier[E, is.ID](id),
+        (identity: Identifier[E]) => identity.as[is.ID]
+      )
+      .annotate(customId)
+  /*
+  given [E](using is: IdentifierSchema, ct: Tag[E]): Schema[Identifier[E]] = {
+    val typeName = ct.tag.shortName
+    val customId = TypeId.parse(s"Identifier$typeName")
+    Schema.CaseClass1(
+      customId,
+      Schema.Field(
+        "internal",
+        is.schema,
+        get0 = (id: Identifier[E]) => id.as[is.ID],
+        set0 = (_, newValue: is.ID) => Identifier[E, is.ID](newValue)
+      ),
+      (value: is.ID) => Identifier[E, is.ID](value),
+      Chunk.empty
+    )
+
+  }*/
+  /*
+  given identifierSchemaWithTypeId[E](using
+      is: IdentifierSchema,
+      ct: Tag[E]
+  ): Schema[Identifier[E]] = {
+    val typeName = ct.tag.shortName
+    val customId = TypeId.parse(s"Identifier$typeName")
+
+    // Create the base schema with custom TypeId, then transform
+    val baseSchema = is.schema.annotate(customId)
+    val transformedSchema = baseSchema.transform[Identifier[E]](
       id => Identifier[E, is.ID](id),
       (identity: Identifier[E]) => identity.as[is.ID]
     )
+
+    transformedSchema.annotate(customId)
+  }
+   */
 
   given [E](using schema: Schema[Identifier[E]]): JsonCodec[Identifier[E]] = {
     zio.schema.codec.JsonCodec.jsonCodec(schema)

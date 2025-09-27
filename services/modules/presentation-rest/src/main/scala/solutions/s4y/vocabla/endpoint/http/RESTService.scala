@@ -9,9 +9,19 @@ import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
 import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.lang_get.GetLanguagesUseCase
 import solutions.s4y.vocabla.app.ports.students.settings.GetLearningSettingsUseCase
-import solutions.s4y.vocabla.app.ports.students.settings.tags.{CreateTagUseCase, DeleteTagUseCase, GetTagUseCase}
-import solutions.s4y.vocabla.app.ports.students.settings.known_lang.{AddKnownLangUseCase, RemoveKnownLangUseCase}
-import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{AddLearnLangUseCase, RemoveLearnLangUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.tags.{
+  CreateTagUseCase,
+  DeleteTagUseCase,
+  GetTagUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.settings.known_lang.{
+  AddKnownLangUseCase,
+  RemoveKnownLangUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{
+  AddLearnLangUseCase,
+  RemoveLearnLangUseCase
+}
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
@@ -29,8 +39,14 @@ import solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags.{
   DeleteTag,
   GetTag
 }
-import solutions.s4y.vocabla.endpoint.http.routes.students.settings.known_lang.{AddKnownLang, RemoveKnownLang}
-import solutions.s4y.vocabla.endpoint.http.routes.students.settings.learn_lang.{AddLearnLang, RemoveLearnLang}
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.known_lang.{
+  AddKnownLang,
+  RemoveKnownLang
+}
+import solutions.s4y.vocabla.endpoint.http.routes.students.settings.learn_lang.{
+  AddLearnLang,
+  RemoveLearnLang
+}
 import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
@@ -55,10 +71,11 @@ final class RESTService(
     private val removeKnownLangUseCase: RemoveKnownLangUseCase,
     private val addLearnLangUseCase: AddLearnLangUseCase,
     private val removeLearnLangUseCase: RemoveLearnLangUseCase
-)(using IdentifierSchema):
+):
   RESTService.logger.debug("Creating RESTService instance")
+  given IdentifierSchema = IdentifierSchema[Long]
 
-  private val endpoints =
+  private def endpoints =
     Seq(
       Ping.endpoint,
       CreateTag.endpoint,
@@ -173,6 +190,8 @@ object RESTService:
   ] =
     RestConfig.layer
       >>> httpServerLayer
-      >>> ZLayer.fromFunction(new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _))
+      >>> ZLayer.fromFunction(
+        new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)
+      )
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

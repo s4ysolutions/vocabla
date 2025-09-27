@@ -5,8 +5,15 @@ import zio.Chunk
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema}
 
-@description("Response containing the list of all languages, the default language, and the unknown language.")
-final case class GetLanguagesResponse(defaultLang: Lang, unknownLang: Lang, languages: Chunk[Lang])
+@description(
+  "Response containing the list of all languages, the default language, and the unknown language."
+)
+final case class GetLanguagesResponse(
+    defaultLang: Lang,
+    unknownLang: Lang,
+    languages: Chunk[Lang]
+)
 
 object GetLanguagesResponse:
-  given Schema[GetLanguagesResponse] = DeriveSchema.gen[GetLanguagesResponse]
+  given Schema[GetLanguagesResponse] = DeriveSchema
+    .gen[GetLanguagesResponse]

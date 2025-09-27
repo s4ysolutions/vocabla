@@ -16,7 +16,16 @@ class IdentifierSchemaTests extends munit.FunSuite:
     val schema = summon[Schema[Identifier[Foo]]]
     assertNotEquals(schema, null)
   }
+  /*
+  test("schema type id is correct for Identifier[Foo] with long internal type") {
+    given IdentifierSchema with
+      type ID = Long
+      val schema: Schema[Long] = summon[Schema[Long]]
 
+    val schema = summon[Schema[Identifier[Foo]]]
+    assertEquals(schema.asInstanceOf[CaseClass1[?,?]].id, zio.schema.TypeId.parse("IdentifierFoo"))
+  }
+   */
   test("can crate json encoder for Identifier[Foo] with long internal type") {
     given IdentifierSchema with
       type ID = Long
