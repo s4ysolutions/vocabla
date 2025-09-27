@@ -1,5 +1,5 @@
 import {Schema} from 'effect';
-import {identifierFromNumber} from './identifierFromNumber.ts';
+import {identifierFromNumber} from '../identifer/identifierFromNumber.ts';
 
 export const ownedFromNumber = <E>() => {
   const schemaIdentifierFromNumberE = identifierFromNumber<E>();

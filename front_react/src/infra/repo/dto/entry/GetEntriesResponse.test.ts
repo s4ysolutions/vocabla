@@ -1,7 +1,7 @@
 import {describe, it, expect} from '@effect/vitest';
 import {
   decodeGetEntriesResponse,
-  type GetEntriesResponse
+  type GetEntriesResponseDto
 } from './GetEntriesResponse.ts';
 import {Effect} from 'effect';
 import {Definition, Entry} from '../../../../domain/Entry.ts';
@@ -13,7 +13,7 @@ import {LangCode} from '../../../../domain/LangCode.ts';
 
 describe('GetEntriesResponse', () => {
   it('dto -> domain', () => {
-    const response: GetEntriesResponse = {
+    const response: GetEntriesResponseDto = {
       entries: [
         {
           id: 42,
@@ -70,7 +70,7 @@ describe('GetEntriesResponse', () => {
   });
 
   it('should decode empty entries array', () => {
-    const response: GetEntriesResponse = {
+    const response: GetEntriesResponseDto = {
       entries: []
     };
 
@@ -80,7 +80,7 @@ describe('GetEntriesResponse', () => {
   });
 
   it('should decode single entry', () => {
-    const response: GetEntriesResponse = {
+    const response: GetEntriesResponseDto = {
       entries: [
         {
           id: 99,
@@ -110,7 +110,7 @@ describe('GetEntriesResponse', () => {
   });
 
   it('should handle entries with multiple definitions in different languages', () => {
-    const response: GetEntriesResponse = {
+    const response: GetEntriesResponseDto = {
       entries: [
         {
           id: 100,
@@ -143,7 +143,7 @@ describe('GetEntriesResponse', () => {
   });
 
   it('should handle entries with different owners', () => {
-    const response: GetEntriesResponse = {
+    const response: GetEntriesResponseDto = {
       entries: [
         {
           id: 200,
@@ -187,7 +187,7 @@ describe('GetEntriesResponse', () => {
           }
         }
       ]
-    } as unknown as GetEntriesResponse;
+    } as unknown as GetEntriesResponseDto;
 
     expect(() => Effect.runSync(decodeGetEntriesResponse(invalidResponse))).toThrow();
   });
@@ -206,7 +206,7 @@ describe('GetEntriesResponse', () => {
           }
         }
       ]
-    } as unknown as GetEntriesResponse;
+    } as unknown as GetEntriesResponseDto;
 
     expect(() => Effect.runSync(decodeGetEntriesResponse(invalidResponse))).toThrow();
   });

@@ -29,4 +29,3 @@ export const schemaGetEntryResponse: Schema.Schema<Option.Option<Entry>, GetEntr
 
 void (schemaGetEntryResponse satisfies Schema.Schema<Option.Option<Entry>, GetEntryResponse>)
 export const decodeGetEntryResponse = Schema.decode(schemaGetEntryResponse)
-export const encodeGetEntryResponse = Schema.encode(schemaGetEntryResponse)

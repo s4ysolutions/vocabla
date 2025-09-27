@@ -1,5 +1,6 @@
 package solutions.s4y.vocabla.app.ports.students.settings.tags
 
+import solutions.s4y.vocabla.domain.LearningSettings
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import zio.schema.annotation.description
 import zio.schema.{DeriveSchema, Schema}
@@ -8,8 +9,8 @@ import zio.schema.{DeriveSchema, Schema}
   "DeleteTagResponse containing the result of the deletion operation."
 )
 final case class DeleteTagResponse(
-    @description("Actual deletion status.")
-    deleted: Boolean
+    @description("The learning settings associated with the newly created tag.")
+    learningSettings: LearningSettings
 )
 
 object DeleteTagResponse:

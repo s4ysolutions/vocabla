@@ -6,31 +6,37 @@ import {tt} from '../../translable/Translatable.ts';
 import type {ClientError} from '../http/errors/ClientError.ts';
 import type {HTTPError} from '../http/errors/HTTPError.ts';
 import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';
-import {type Tag} from '../../domain/Tag.ts';
+import {type Tag, type TagId} from '../../domain/Tag.ts';
 import {type Identifier} from '../../domain/identity/Identifier.ts';
 import {ParseError} from 'effect/ParseResult';
 import type {EntriesRepository} from '../../app-repo/EntriesRepository.ts';
-import type {CreateTagRequest} from './dto/tag/CreateTagRequest.ts';
+import type {CreateTagRequestDto} from './dto/tag/CreateTagRequestDto.ts';
 import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import type {CreateEntryRequest} from './dto/entry/CreateEntryRequest.ts';
 import {type Entry} from '../../domain/Entry.ts';
 import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
 import {type CreateEntryResponse, decodeCreateEntryResponse} from './dto/entry/CreateEntryResponse.ts';
 import {decodeGetEntryResponse, type GetEntryResponse} from './dto/entry/GetEntryResponse.ts';
-import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
+import {decodeGetEntriesResponse, type GetEntriesResponseDto} from './dto/entry/GetEntriesResponse.ts';
 import type {Identified} from '../../domain/identity/Identified.ts';
 import type {LangRepository} from '../../app-repo/LangRepository.ts';
 import type {Lang} from '../../domain/Lang.ts';
 import {decodeGetLanguagesResponse, type GetLanguagesResponseDto} from './dto/lang/getLanguagesResponse.ts';
+import type {LearningSettingsRepository} from '../../app-repo/LearningSettingsRepository.ts';
+import {
+  decodeLearningSettingsResponse,
+  type GetLearningSettingsResponseDto
+} from './dto/learning_settings/GetLearningSettingsResponse.ts';
+import type {LangCode} from '../../domain/LangCode.ts';
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
 
-export const repositoryRest = (restClient: RestClient): TagsRepository & EntriesRepository & LangRepository=> ({
+export const repositoryRest = (restClient: RestClient): TagsRepository & EntriesRepository & LangRepository & LearningSettingsRepository => ({
   createTag: (tag) => {
-    const request: CreateTagRequest = {tag: {label: tag.label, ownerId: tag.ownerId}}
+    const request: CreateTagRequestDto = {label: tag.label}//, ownerId: tag.ownerId}}
     return Effect.mapError(
-      restClient.post<CreateTagRequest, CreateTagResponse, Identifier<Tag>>({
+      restClient.post<CreateTagRequestDto, CreateTagResponse, Identifier<Tag>>({
         url: `${urlBase}/tags`,
         body: request,
         decoder: decodeCreateTagResponse,
@@ -89,18 +95,34 @@ export const repositoryRest = (restClient: RestClient): TagsRepository & Entries
     }
 
     return Effect.mapError(
-      restClient.get<GetEntriesResponse, { readonly entries: ReadonlyArray<Identified<Entry>> }>({
+      restClient.get<GetEntriesResponseDto, { readonly entries: ReadonlyArray<Identified<Entry>> }>({
         url: `${urlBase}/entries?${queryParams.toString()}`,
         decoder: decodeGetEntriesResponse,
       }), _error2infraError)
   },
   getAllLangs: () => {
     return Effect.mapError(
-      restClient.get<GetLanguagesResponseDto, {readonly defaultLang: Lang, readonly unknownLang: Lang, readonly languages: ReadonlyArray<Lang>}>({
+      restClient.get<GetLanguagesResponseDto, {
+        readonly defaultLang: Lang,
+        readonly unknownLang: Lang,
+        readonly languages: ReadonlyArray<Lang>
+      }>({
         url: `${urlBase}/languages`,
         decoder: decodeGetLanguagesResponse,
       }), _error2infraError)
-  }
+  },
+  // LearningSettingsRepository methods
+  getLearningSettings: (studentId) => {
+    return Effect.mapError(
+      restClient.get<GetLearningSettingsResponseDto, {
+        readonly learnLangCodes: ReadonlyArray<LangCode>,
+        readonly knownLangCodes: ReadonlyArray<LangCode>,
+        readonly tagIds: ReadonlyArray<TagId>
+      }>({
+        url: `${urlBase}/students/${studentId}`,
+        decoder: decodeLearningSettingsResponse
+      }), _error2infraError)
+  },
 })
 
 const _error2infraError = (error: ClientError | HTTPError | JsonDecodingError | ParseError): InfraError => {

@@ -8,7 +8,7 @@ import {restClientLayer} from '../rest/restClientLive.ts';
 import {repositoryRestLayer} from './repositoryRestLive.ts';
 import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
 import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
-import {decodeGetEntriesResponse, type GetEntriesResponse} from './dto/entry/GetEntriesResponse.ts';
+import {decodeGetEntriesResponse, type GetEntriesResponseDto} from './dto/entry/GetEntriesResponse.ts';
 import {Identifier} from '../../domain/identity/Identifier.ts';
 import {Tag} from '../../domain/Tag.ts';
 import {Definition, Entry} from '../../domain/Entry.ts';
@@ -61,7 +61,7 @@ describe('repositoryRest', () => {
     })
     describe('entries', () => {
       it('schemaGetEntriesResponse', () => {
-        const response: GetEntriesResponse = {
+        const response: GetEntriesResponseDto = {
           entries: [
             {
               id: 42,
@@ -114,7 +114,7 @@ describe('repositoryRest', () => {
       });
 
       it('schemaGetEntriesResponse empty', () => {
-        const response: GetEntriesResponse = {
+        const response: GetEntriesResponseDto = {
           entries: []
         };
 
@@ -134,7 +134,7 @@ describe('repositoryRest', () => {
               }
             }
           ]
-        } as unknown as GetEntriesResponse;
+        } as unknown as GetEntriesResponseDto;
 
         expect(() => Effect.runSync(decodeGetEntriesResponse(response))).toThrowError();
       });
@@ -147,7 +147,7 @@ describe('repositoryRest', () => {
               // Missing 'e' property
             }
           ]
-        } as unknown as GetEntriesResponse;
+        } as unknown as GetEntriesResponseDto;
 
         expect(() => Effect.runSync(decodeGetEntriesResponse(response))).toThrowError();
       });

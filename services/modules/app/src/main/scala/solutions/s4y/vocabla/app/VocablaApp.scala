@@ -3,18 +3,40 @@ package solutions.s4y.vocabla.app
 import org.slf4j.LoggerFactory
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.ports.entries_get.{GetEntriesRequest, GetEntriesResponse, GetEntriesUseCase}
-import solutions.s4y.vocabla.app.ports.entry_create.{CreateEntryRequest, CreateEntryResponse, CreateEntryUseCase}
-import solutions.s4y.vocabla.app.ports.entry_get.{GetEntryRequest, GetEntryResponse, GetEntryUseCase}
+import solutions.s4y.vocabla.app.ports.entries_get.{
+  GetEntriesRequest,
+  GetEntriesResponse,
+  GetEntriesUseCase
+}
+import solutions.s4y.vocabla.app.ports.entry_create.{
+  CreateEntryRequest,
+  CreateEntryResponse,
+  CreateEntryUseCase
+}
+import solutions.s4y.vocabla.app.ports.entry_get.{
+  GetEntryRequest,
+  GetEntryResponse,
+  GetEntryUseCase
+}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.lang_get.{GetLanguagesResponse, GetLanguagesUseCase}
-import solutions.s4y.vocabla.app.ports.students.settings.tags.*
+import solutions.s4y.vocabla.app.ports.lang_get.{
+  GetLanguagesResponse,
+  GetLanguagesUseCase
+}
 import solutions.s4y.vocabla.app.ports.students.settings.known_lang.*
-import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{AddLearnLangCommand, AddLearnLangResponse, AddLearnLangUseCase, RemoveLearnLangCommand, RemoveLearnLangResponse, RemoveLearnLangUseCase}
-import solutions.s4y.vocabla.app.ports.students.settings.{GetLearningSettingsCommand, GetLearningSettingsResponse, GetLearningSettingsUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.*
+import solutions.s4y.vocabla.app.ports.students.settings.tags.*
+import solutions.s4y.vocabla.app.ports.students.settings.{
+  GetLearningSettingsCommand,
+  GetLearningSettingsResponse,
+  GetLearningSettingsUseCase
+}
 import solutions.s4y.vocabla.app.repo.*
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.app.repo.tx.{TransactionContext, TransactionManager}
+import solutions.s4y.vocabla.app.repo.tx.{
+  TransactionContext,
+  TransactionManager
+}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
@@ -116,8 +138,13 @@ final class VocablaApp[TX <: TransactionContext](
     ServiceFailure | NotAuthorized,
     CreateTagResponse
   ] = authorized(authorizationService.canCreateTag(command.tag, _)) *>
-    transaction("tagCreate", tagsRepository.create(command.tag)).map(tagId =>
-      CreateTagResponse(tagId)
+    transaction(
+      "tagCreate",
+      for {
+        tagId <- tagsRepository.create(command.tag)
+        userContext <- ZIO.service[UserContext]
+        settings <- userRepository.getLearningSettings(userContext.studentId)
+      } yield CreateTagResponse(tagId, settings)
     )
 
   override def apply(
@@ -138,8 +165,11 @@ final class VocablaApp[TX <: TransactionContext](
       authorizationService.canDeleteTag(command.ownerId, command.tagId, _)
     ) *> transaction(
       "tagDelete",
-      tagsRepository.delete(command.tagId).map(r => DeleteTagResponse(r))
-    )
+      tagsRepository.delete(command.tagId) *> ZIO
+        .serviceWithZIO[UserContext](userContext =>
+          userRepository.getLearningSettings(userContext.studentId)
+        )
+    ).map(settings => DeleteTagResponse(settings))
 
   /** **************************************************************************
     * Users
@@ -206,8 +236,14 @@ final class VocablaApp[TX <: TransactionContext](
     ) *>
       transaction(
         "addKnownLanguage",
-        knownLanguagesRepository.addKnownLanguage(command.studentId, command.langCode)
-      ).as(AddKnownLangResponse(command.langCode))
+        knownLanguagesRepository.addKnownLanguage(
+          command.studentId,
+          command.langCode
+        ) *> ZIO
+          .serviceWithZIO[UserContext](userContext =>
+            userRepository.getLearningSettings(userContext.studentId)
+          )
+      ).map(settings => AddKnownLangResponse(settings))
 
   override def apply(
       command: RemoveKnownLangCommand
@@ -221,8 +257,14 @@ final class VocablaApp[TX <: TransactionContext](
     ) *>
       transaction(
         "removeKnownLanguage",
-        knownLanguagesRepository.removeKnownLanguage(command.studentId, command.langCode)
-      ).as(RemoveKnownLangResponse(command.langCode))
+        knownLanguagesRepository.removeKnownLanguage(
+          command.studentId,
+          command.langCode
+        ) *> ZIO
+          .serviceWithZIO[UserContext](userContext =>
+            userRepository.getLearningSettings(userContext.studentId)
+          )
+      ).map(settings => RemoveKnownLangResponse(settings))
 
   /** **************************************************************************
     * Learn Languages
@@ -240,8 +282,14 @@ final class VocablaApp[TX <: TransactionContext](
     ) *>
       transaction(
         "addLearnLanguage",
-        learnLanguagesRepository.addLearnLanguage(command.studentId, command.langCode)
-      ).as(AddLearnLangResponse(command.langCode))
+        learnLanguagesRepository.addLearnLanguage(
+          command.studentId,
+          command.langCode
+        )
+          *> ZIO.serviceWithZIO[UserContext](userContext =>
+            userRepository.getLearningSettings(userContext.studentId)
+          )
+      ).map(settings => AddLearnLangResponse(settings))
 
   override def apply(
       command: RemoveLearnLangCommand
@@ -255,8 +303,13 @@ final class VocablaApp[TX <: TransactionContext](
     ) *>
       transaction(
         "removeLearnLanguage",
-        learnLanguagesRepository.removeLearnLanguage(command.studentId, command.langCode)
-      ).as(RemoveLearnLangResponse(command.langCode))
+        learnLanguagesRepository.removeLearnLanguage(
+          command.studentId,
+          command.langCode
+        ) *> ZIO.serviceWithZIO[UserContext](userContext =>
+          userRepository.getLearningSettings(userContext.studentId)
+        )
+      ).map(settings => RemoveLearnLangResponse(settings))
 
   /** **************************************************************************
     * privates

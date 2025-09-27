@@ -8,6 +8,7 @@ export interface LangRepository {
     readonly unknownLang: Lang,
     languages: ReadonlyArray<Lang>
   }, InfraError>
+  addLearnLang: (langCode: string) => Effect.Effect<void, InfraError>
 }
 
 export class LangRepositoryTag extends Context.Tag<'LangRepository'>('LangRepository')<

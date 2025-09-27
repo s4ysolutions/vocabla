@@ -12,23 +12,9 @@ export type GetEntriesByOwnerRequest = {
   readonly filter: EntriesFilter
 }
 
-/*
-export const schemaGetEntriesByOwnerRequest = Schema.Struct({
-  ownerId: schemaIdentifier<Student>(),
-  filter: schemaEntriesFilter,
-})
-*/
 export type GetEntriesByOwnerResponse = {
   readonly entries: ReadonlyArray<Identified<Entry>>;
 }
-
-/*
-export const schemaGetEntriesByOwnerResponse = Schema.Struct({
-  entries: Schema.Array(schemaIdentified<Entry>(schemaEntry))
-});
-
-export type GetEntriesByOwnerResponse = typeof schemaGetEntriesByOwnerResponse.Type;
-*/
 
 export interface GetEntriesByOwnerUseCase {
   getEntriesByOwner(request: GetEntriesByOwnerRequest): Effect.Effect<GetEntriesByOwnerResponse, AppError>;

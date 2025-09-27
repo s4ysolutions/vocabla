@@ -276,7 +276,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/tags": {
+    "/rest/v1/students/{studentId}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description - Students Settings
+         *      */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LearningSettings"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/settings/known-languages": {
         parameters: {
             query?: never;
             header?: never;
@@ -285,13 +339,241 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description - Tags
+        /** @description - Students Settings
          *      */
         post: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddKnownLangRequest"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddKnownLangResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/settings/known-languages/{langCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description - Students Settings
+         *      */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                    langCode: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemoveKnownLangResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/settings/learn-languages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description - Students Settings
+         *      */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddLearnLangRequest"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddLearnLangResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/settings/learn-languages/{langCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description - Students Settings
+         *      */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                    langCode: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemoveLearnLangResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/settings/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description - Students Settings
+         *      */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                };
                 cookie?: never;
             };
             requestBody: {
@@ -332,20 +614,21 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/tags/{tagId}": {
+    "/rest/v1/students/{studentId}/settings/{tagId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description - Tags
+        /** @description - Students Settings
          *      */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
+                    studentId: number;
                     tagId: number;
                 };
                 cookie?: never;
@@ -380,7 +663,46 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description - Students Settings
+         *      */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                    tagId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteTagResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -390,6 +712,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Request to add a language the student knows. */
+        AddKnownLangRequest: {
+            /** @description Code of the language to be added as known. */
+            langCode: string;
+        };
+        /** @description Response containing the code of the newly added known language. */
+        AddKnownLangResponse: {
+            /** @description Code of the newly added known language. */
+            langCode: string;
+        };
+        /** @description Request to add a language the student wants to learn. */
+        AddLearnLangRequest: {
+            /** @description Code of the language to be added for learning. */
+            langCode: string;
+        };
+        /** @description Response containing the code of the newly added language to learn. */
+        AddLearnLangResponse: {
+            /** @description Code of the newly added language. */
+            langCode: string;
+        };
         /** @description The request could not be understood or was missing required parameters. */
         BadRequest400: {
             message: string;
@@ -411,8 +753,8 @@ export interface components {
         };
         /** @description Command to create a new tag. */
         CreateTagRequest: {
-            /** @description Tag to be created. */
-            tag: components["schemas"]["Tag"];
+            /** @description The label of the tag to be created. */
+            label: string;
         };
         /** @description CreateTagResponse containing the ID of the newly created tag. */
         CreateTagResponse: {
@@ -425,6 +767,11 @@ export interface components {
         Definition: {
             definition: string;
             langCode: string;
+        };
+        /** @description DeleteTagResponse containing the result of the deletion operation. */
+        DeleteTagResponse: {
+            /** @description Actual deletion status. */
+            deleted: boolean;
         };
         Entry: {
             headword: components["schemas"]["Headword"];
@@ -474,6 +821,22 @@ export interface components {
             code: string;
             flag: string;
             name: string;
+        };
+        /** @description Response containing the learning settings of a student. */
+        LearningSettings: {
+            learnLanguages: string[];
+            knownLanguages: string[];
+            tags: number[];
+        };
+        /** @description Response containing the code of the removed known language. */
+        RemoveKnownLangResponse: {
+            /** @description Code of the removed known language. */
+            langCode: string;
+        };
+        /** @description Response containing the code of the removed learning language. */
+        RemoveLearnLangResponse: {
+            /** @description Code of the removed learning language. */
+            langCode: string;
         };
         Tag: {
             label: string;
