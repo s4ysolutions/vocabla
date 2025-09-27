@@ -6,9 +6,15 @@ import solutions.s4y.infra.pgsql.tx.TransactionContextPg
 import solutions.s4y.infra.pgsql.wrappers.{pgSelectMany, pgSelectOne}
 import solutions.s4y.vocabla.app.repo.UserRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
-import solutions.s4y.vocabla.domain.identity.Identifier
+import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.{Lang, LearningSettings, Tag, User}
+import solutions.s4y.vocabla.domain.{
+  Lang,
+  LearningSettings,
+  Tag,
+  TagSmall,
+  User
+}
 import zio.json.{DecoderOps, JsonCodec}
 import zio.{Chunk, ZIO, ZLayer}
 
@@ -65,11 +71,15 @@ class UserRepositoryPg extends UserRepository[TransactionContextPg]:
         }
       ).zipPar(
         pgSelectMany(
-          """SELECT id
+          """SELECT id, label, ownerId
              FROM tags tags
              WHERE tags.ownerId = ?""",
           st => st.setLong(1, studentId.as[Long]),
-          rs => rs.getLong(1).identifier[Tag]
+          rs =>
+            Identified(
+              rs.getLong(1).identifier[TagSmall],
+              TagSmall(rs.getString(2))
+            )
         )
       )
     } yield LearningSettings(
@@ -77,7 +87,7 @@ class UserRepositoryPg extends UserRepository[TransactionContextPg]:
         languageSettings.map(_.learnLanguages).getOrElse(Chunk.empty),
       knownLanguages =
         languageSettings.map(_.knownLanguages).getOrElse(Chunk.empty),
-      tags = tags
+      tags
     )
 
 private case class LanguageSettings(
@@ -125,38 +135,36 @@ object UserRepositoryPg:
     ZLayer {
       ZIO
         .serviceWithZIO[DataSourcePg] { ds =>
-          ZIO
-            .fromTry {
-              Using.Manager { use =>
-                val connection = use(ds.dataSource.getConnection)
-                val statement = use(connection.createStatement())
+          ZIO.fromTry {
+            Using.Manager { use =>
+              val connection = use(ds.dataSource.getConnection)
+              val statement = use(connection.createStatement())
 
-                try {
-                  init.foreach { sql =>
-                    log.info(s"Executing SQL: $sql")
-                    statement.execute(sql)
-                  }
-                  statement.execute("select count(*) from users")
-                  val rs = statement.getResultSet
-                  rs.next()
-                  val count = rs.getInt(1)
-                  if count == 0 then {
-                    log.info("Inserting default user")
-                    statement.execute(
-                      "INSERT INTO users (student) VALUES (ROW('default_student'))"
-                    )
-                  }
-                } catch {
-                  case th: Throwable =>
-                    log.error(
-                      "Error during UserRepositoryPg initialization",
-                      th
-                    )
-                    throw th
+              try {
+                init.foreach { sql =>
+                  log.info(s"Executing SQL: $sql")
+                  statement.execute(sql)
                 }
+                statement.execute("select count(*) from users")
+                val rs = statement.getResultSet
+                rs.next()
+                val count = rs.getInt(1)
+                if count == 0 then {
+                  log.info("Inserting default user")
+                  statement.execute(
+                    "INSERT INTO users (student) VALUES (ROW('default_student'))"
+                  )
+                }
+              } catch {
+                case th: Throwable =>
+                  log.error(
+                    "Error during UserRepositoryPg initialization",
+                    th
+                  )
+                  throw th
               }
             }
-            .orDie *> ZIO.logDebug("UserRepositoryPg initialized")
+          }.orDie *> ZIO.logDebug("UserRepositoryPg initialized")
         }
         .as(new UserRepositoryPg)
     }

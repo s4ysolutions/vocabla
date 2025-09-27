@@ -9,6 +9,7 @@ import zio.schema.{DeriveSchema, Schema}
 @description("Response containing the learning settings of a student.")
 opaque type GetLearningSettingsResponse = LearningSettings
 
+
 object GetLearningSettingsResponse:
   def apply(
       value: LearningSettings

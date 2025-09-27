@@ -1,13 +1,17 @@
 package solutions.s4y.vocabla.domain
 
-import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.identity.{
+  Identified,
+  Identifier,
+  IdentifierSchema
+}
 import zio.Chunk
 import zio.json.{DeriveJsonCodec, JsonCodec}
 
 final case class LearningSettings(
     learnLanguages: Chunk[Lang.Code],
     knownLanguages: Chunk[Lang.Code],
-    tags: Chunk[Identifier[Tag]]
+    tags: Chunk[Identified[TagSmall]]
 )
 
 object LearningSettings:
