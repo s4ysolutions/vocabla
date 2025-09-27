@@ -46,7 +46,7 @@ object AddLearnLang:
     HttpError,
     AddLearnLangResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / long("studentId") / "settings" / "learn-languages")
+  ] = Endpoint(POST / prefix / long("studentId") / "learning-settings" / "learn-languages")
     .tag(openapiTag)
     .in[AddLearnLangRequest]
     .out[AddLearnLangResponse]

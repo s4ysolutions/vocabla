@@ -1,7 +1,11 @@
 package solutions.s4y.vocabla.endpoint.http.routes.students.settings
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.settings.{GetLearningSettingsCommand, GetLearningSettingsResponse, GetLearningSettingsUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.{
+  GetLearningSettingsCommand,
+  GetLearningSettingsResponse,
+  GetLearningSettingsUseCase
+}
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
@@ -32,7 +36,7 @@ object GetSettings:
     GetLearningSettingsResponse,
     AuthType.Bearer.type
   ] =
-    Endpoint(GET / prefix / long("studentId") / "settings")
+    Endpoint(GET / prefix / long("studentId") / "learning-settings")
       .tag(openapiTag)
       .out[GetLearningSettingsResponse]
       .outErrors[HttpError](

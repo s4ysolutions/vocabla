@@ -38,7 +38,7 @@ object RemoveKnownLang:
   ] = Endpoint(
     DELETE / prefix / long(
       "studentId"
-    ) / "settings" / "known-languages" / string("langCode")
+    ) / "learning-settings" / "known-languages" / string("langCode")
   )
     .tag(openapiTag)
     .out[RemoveKnownLangResponse]

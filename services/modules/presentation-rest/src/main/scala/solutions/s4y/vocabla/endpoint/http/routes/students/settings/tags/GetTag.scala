@@ -31,7 +31,7 @@ object GetTag:
     GetTagResponse,
     AuthType.Bearer.type
   ] =
-    Endpoint(GET / prefix / long("studentId") / "settings" / long("tagId"))
+    Endpoint(GET / prefix / long("studentId") / "learning-settings" / long("tagId"))
       .tag(openapiTag)
       .out[GetTagResponse]
       .outErrors[HttpError](

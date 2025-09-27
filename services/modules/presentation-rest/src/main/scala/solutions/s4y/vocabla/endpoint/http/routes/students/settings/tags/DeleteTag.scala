@@ -34,7 +34,7 @@ object DeleteTag:
     DeleteTagResponse,
     AuthType.Bearer.type
   ] =
-    Endpoint(DELETE / prefix / long("studentId") / "settings" / long("tagId"))
+    Endpoint(DELETE / prefix / long("studentId") / "learning-settings" / long("tagId"))
       .tag(openapiTag)
       .out[DeleteTagResponse]
       .outErrors[HttpError](

@@ -42,7 +42,7 @@ object CreateTag:
     HttpError,
     CreateTagResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / long("studentId") / "settings" / "tags")
+  ] = Endpoint(POST / prefix / long("studentId") / "learning-settings" / "tags")
     .tag(openapiTag)
     .in[CreateTagRequest]
     .out[CreateTagResponse]
