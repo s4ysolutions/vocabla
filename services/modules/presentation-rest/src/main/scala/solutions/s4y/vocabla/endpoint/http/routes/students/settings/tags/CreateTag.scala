@@ -45,7 +45,7 @@ object CreateTag:
   ] = Endpoint(POST / prefix / long("studentId") / "learning-settings" / "tags")
     .tag(openapiTag)
     .in[CreateTagRequest]
-    .out[CreateTagResponse]
+    .out[CreateTagResponse](Status.Created)
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
       HttpCodec.error[Forbidden403](Status.Forbidden)

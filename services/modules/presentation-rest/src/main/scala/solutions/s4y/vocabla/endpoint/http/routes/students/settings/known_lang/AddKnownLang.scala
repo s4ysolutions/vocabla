@@ -46,10 +46,12 @@ object AddKnownLang:
     HttpError,
     AddKnownLangResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / long("studentId") / "learning-settings" / "known-languages")
+  ] = Endpoint(
+    POST / prefix / long("studentId") / "learning-settings" / "known-languages"
+  )
     .tag(openapiTag)
     .in[AddKnownLangRequest]
-    .out[AddKnownLangResponse]
+    .out[AddKnownLangResponse](Status.Created)
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
       HttpCodec.error[Forbidden403](Status.Forbidden)
