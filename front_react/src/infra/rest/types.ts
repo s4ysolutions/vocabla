@@ -276,7 +276,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/settings": {
+    "/rest/v1/students/{studentId}/learning-settings": {
         parameters: {
             query?: never;
             header?: never;
@@ -301,7 +301,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["LearningSettings"];
+                        "application/json": components["schemas"]["GetLearningSettingsResponse"];
                     };
                 };
                 403: {
@@ -330,7 +330,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/settings/known-languages": {
+    "/rest/v1/students/{studentId}/learning-settings/known-languages/{langCode}": {
         parameters: {
             query?: never;
             header?: never;
@@ -347,14 +347,11 @@ export interface paths {
                 header?: never;
                 path: {
                     studentId: number;
+                    langCode: string;
                 };
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["AddKnownLangRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
                 200: {
                     headers: {
@@ -372,6 +369,14 @@ export interface paths {
                         "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnprocessableEntity422"];
+                    };
+                };
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -382,22 +387,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/rest/v1/students/{studentId}/settings/known-languages/{langCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
         /** @description - Students Settings
          *      */
         delete: {
@@ -443,7 +432,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/settings/learn-languages": {
+    "/rest/v1/students/{studentId}/learning-settings/learn-languages/{langCode}": {
         parameters: {
             query?: never;
             header?: never;
@@ -460,14 +449,11 @@ export interface paths {
                 header?: never;
                 path: {
                     studentId: number;
+                    langCode: string;
                 };
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["AddLearnLangRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
                 200: {
                     headers: {
@@ -485,6 +471,14 @@ export interface paths {
                         "application/json": components["schemas"]["Forbidden403"];
                     };
                 };
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnprocessableEntity422"];
+                    };
+                };
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -495,22 +489,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/rest/v1/students/{studentId}/settings/learn-languages/{langCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
         /** @description - Students Settings
          *      */
         delete: {
@@ -556,7 +534,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/settings/tags": {
+    "/rest/v1/students/{studentId}/learning-settings/tags": {
         parameters: {
             query?: never;
             header?: never;
@@ -582,7 +560,7 @@ export interface paths {
                 };
             };
             responses: {
-                200: {
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -614,7 +592,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/settings/{tagId}": {
+    "/rest/v1/students/{studentId}/learning-settings/{tagId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -712,25 +690,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Request to add a language the student knows. */
-        AddKnownLangRequest: {
-            /** @description Code of the language to be added as known. */
-            langCode: string;
-        };
         /** @description Response containing the code of the newly added known language. */
         AddKnownLangResponse: {
-            /** @description Code of the newly added known language. */
-            langCode: string;
-        };
-        /** @description Request to add a language the student wants to learn. */
-        AddLearnLangRequest: {
-            /** @description Code of the language to be added for learning. */
-            langCode: string;
+            /** @description The learning settings associated with the newly added known language. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         /** @description Response containing the code of the newly added language to learn. */
         AddLearnLangResponse: {
-            /** @description Code of the newly added language. */
-            langCode: string;
+            /** @description The learning settings associated with the newly added language to learn. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         /** @description The request could not be understood or was missing required parameters. */
         BadRequest400: {
@@ -763,6 +731,8 @@ export interface components {
              * @description ID of the newly created tag.
              */
             tagId: number;
+            /** @description The learning settings associated with the newly created tag. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         Definition: {
             definition: string;
@@ -770,8 +740,8 @@ export interface components {
         };
         /** @description DeleteTagResponse containing the result of the deletion operation. */
         DeleteTagResponse: {
-            /** @description Actual deletion status. */
-            deleted: boolean;
+            /** @description The learning settings associated with the newly created tag. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         Entry: {
             headword: components["schemas"]["Headword"];
@@ -786,7 +756,7 @@ export interface components {
         /** @description Response containing a list of entries. */
         GetEntriesResponse: {
             /** @description List of retrieved entries. */
-            entries: components["schemas"]["Identified"][];
+            entries: components["schemas"]["IdentifiedEntry"][];
         };
         /** @description CreateTagResponse containing the entry if found. */
         GetEntryResponse: {
@@ -799,6 +769,11 @@ export interface components {
             unknownLang: components["schemas"]["Lang"];
             languages: components["schemas"]["Lang"][];
         };
+        /** @description Response containing the learning settings of a student. */
+        GetLearningSettingsResponse: {
+            /** @description The learning settings of the student. */
+            learningSettings: components["schemas"]["LearningSettings"];
+        };
         /** @description CreateTagResponse containing the tag if found. */
         GetTagResponse: {
             /** @description The retrieved tag. */
@@ -808,10 +783,15 @@ export interface components {
             word: string;
             langCode: string;
         };
-        Identified: {
+        IdentifiedEntry: {
             /** Format: int64 */
             id: number;
             e: components["schemas"]["Entry"];
+        };
+        IdentifiedTagSmall: {
+            /** Format: int64 */
+            id: number;
+            e: components["schemas"]["TagSmall"];
         };
         /** @description Internal server error occurred */
         InternalServerError500: {
@@ -822,26 +802,33 @@ export interface components {
             flag: string;
             name: string;
         };
-        /** @description Response containing the learning settings of a student. */
+        /** @description The learning settings associated with the removed learning language. */
         LearningSettings: {
             learnLanguages: string[];
             knownLanguages: string[];
-            tags: number[];
+            tags: components["schemas"]["IdentifiedTagSmall"][];
         };
         /** @description Response containing the code of the removed known language. */
         RemoveKnownLangResponse: {
-            /** @description Code of the removed known language. */
-            langCode: string;
+            /** @description The learning settings associated with the removed known language. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         /** @description Response containing the code of the removed learning language. */
         RemoveLearnLangResponse: {
-            /** @description Code of the removed learning language. */
-            langCode: string;
+            /** @description The learning settings associated with the removed learning language. */
+            learningSettings: components["schemas"]["LearningSettings"];
         };
         Tag: {
             label: string;
             /** Format: int64 */
             ownerId: number;
+        };
+        TagSmall: {
+            label: string;
+        };
+        /** @description The input data is invalid or cannot be processed. */
+        UnprocessableEntity422: {
+            message: string[];
         };
     };
     responses: never;

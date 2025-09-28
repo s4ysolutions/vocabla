@@ -27,6 +27,12 @@ import {type GetLangByCodeUseCase, GetLangByCodeUseCaseTag} from '../app-ports/l
 import {type GetDefaultLangUseCase, GetDefaultLangUseCaseTag} from '../app-ports/languages/GetDefaultLangUseCase.ts';
 import {defaultFallbackLang, type Lang, unknownFallbackLang} from '../domain/Lang.ts';
 import {type GetAllLanguagesUseCase, GetAllLanguagesUseCaseTag} from '../app-ports/languages/GetAllLanguagesUseCase.ts';
+import type {LearningSettingsUseCases} from '../app-ports/me/LearningSettingsUseCases.ts';
+import {
+  type LearningSettingsRepository,
+  LearningSettingsRepositoryTag
+} from '../app-repo/LearningSettingsRepository.ts';
+import makeLearningSettingsUseCases from './LearningSettingsService.ts';
 
 
 const vocablaApp = (tagsRepository: TagsRepository, entriesRepository: EntriesRepository, defaultLang: Lang, unknownLang: Lang, langByCode: Record<LangCode, Lang>):
@@ -65,16 +71,18 @@ export type UseCases =
   | GetLangByCodeUseCaseTag
   | GetDefaultLangUseCaseTag
   | GetAllLanguagesUseCaseTag
+  | LearningSettingsUseCases
 
 export const vocablaAppLayer: Layer.Layer<
   UseCases,
   never,
-  TagsRepositoryTag | EntriesRepositoryTag | LangRepositoryTag> =
+  TagsRepositoryTag | EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag> =
   Layer.effectContext(
     Effect.gen(function* () {
       const entriesRepository = yield* EntriesRepositoryTag
       const tagsRepository = yield* TagsRepositoryTag
       const langRepository = yield* LangRepositoryTag
+      const learningSettingsRepository = yield* LearningSettingsRepositoryTag
 
       const l = yield* langRepository.getAllLangs().pipe(
         Effect.map(response => ({
@@ -94,6 +102,7 @@ export const vocablaAppLayer: Layer.Layer<
       )
 
       const impl = vocablaApp(tagsRepository, entriesRepository, l.defaultLang, l.unknownLang, l.langsByCode)
+      const learningSettingsService = makeLearningSettingsUseCases(learningSettingsRepository, l.langsByCode)
 
       return Context.empty()
         .pipe(Context.add(CreateTagUseCaseTag, impl))

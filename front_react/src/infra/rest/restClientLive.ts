@@ -18,6 +18,13 @@ export const restClient = (httpClient: HttpClient): RestClient => ({
       httpClient.execute<unknown, RESP>('GET', url),
       // decode unknown response to OUT
       decoder
+    ),
+  delete: <RESP, OUT>({url, decoder}: Get<RESP, OUT>) =>
+    Effect.flatMap(
+      // get unknown response from http client
+      httpClient.execute<unknown, RESP>('DELETE', url),
+      // decode unknown response to OUT
+      decoder
     )
 })
 

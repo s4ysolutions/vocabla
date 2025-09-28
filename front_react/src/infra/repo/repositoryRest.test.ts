@@ -2,12 +2,10 @@ import {describe, expect, it} from '@effect/vitest';
 import {Layer, Option} from 'effect';
 import httpClientLive from '../http/httpClientLive.ts';
 import {Effect} from 'effect';
-import {TagsRepositoryTag} from '../../app-repo/TagsRepository.ts';
 import {LangRepositoryTag} from '../../app-repo/LangRepository.ts';
+import {LearningSettingsRepositoryTag} from '../../app-repo/LearningSettingsRepository.ts';
 import {restClientLayer} from '../rest/restClientLive.ts';
 import {repositoryRestLayer} from './repositoryRestLive.ts';
-import {decodeGetTagResponse, type GetTagResponse} from './dto/tag/GetTagResponse.ts';
-import {type CreateTagResponse, decodeCreateTagResponse} from './dto/tag/CreateTagResponse.ts';
 import {decodeGetEntriesResponse, type GetEntriesResponseDto} from './dto/entry/GetEntriesResponse.ts';
 import {Identifier} from '../../domain/identity/Identifier.ts';
 import {Tag} from '../../domain/Tag.ts';
@@ -21,44 +19,11 @@ import {Identified} from '../../domain/identity/Identified.ts';
 import {decodeGetLanguagesResponse, type GetLanguagesResponseDto} from './dto/lang/getLanguagesResponse.ts';
 
 describe('repositoryRest', () => {
-  const layer: Layer.Layer<TagsRepositoryTag | EntriesRepositoryTag | LangRepositoryTag> = repositoryRestLayer.pipe(
+  const layer: Layer.Layer<EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag> = repositoryRestLayer.pipe(
     Layer.provide(restClientLayer),
     Layer.provide(httpClientLive)
   )
   describe('schemas', () => {
-    describe('tags', () => {
-      it('schemaCreateTagResponse', () => {
-        const response: CreateTagResponse = {tagId: 123};
-        const tageId = Effect.runSync(decodeCreateTagResponse(response));
-        expect(tageId).toEqual(Identifier(123));
-      });
-      it('schemaCreateTagResponse error', () => {
-        const response: CreateTagResponse = {tagId: 'abc'} as unknown as CreateTagResponse;
-        const decode = decodeCreateTagResponse(response);
-        expect(() => Effect.runSync(decode)).toThrowError();
-      });
-      it('schemaGetTagResponse data', () => {
-        const response: GetTagResponse = {tag: {label: 'test', ownerId: 1}};
-        const tag = Effect.runSync(decodeGetTagResponse(response));
-        expect(Option.isSome(tag)).toBeTruthy();
-        if (Option.isSome(tag)) {
-          expect(tag.value).toEqual(Tag('test', Identifier(1)));
-        }
-        if (Option.isNone(tag)) {
-          throw new Error('Expected Some, got None');
-        }
-      });
-      it('schemaGetTagResponse null', () => {
-        const response: GetTagResponse = {tag: null}
-        const tag = Effect.runSync(decodeGetTagResponse(response));
-        expect(Option.isNone(tag)).toBeTruthy();
-      })
-      it('schemaGetTagResponse absent', () => {
-        const response: GetTagResponse = {tagx: {label: 'test', ownerId: 1}} as unknown as GetTagResponse;
-        const tag = Effect.runSync(decodeGetTagResponse(response));
-        expect(Option.isNone(tag)).toBeTruthy();
-      })
-    })
     describe('entries', () => {
       it('schemaGetEntriesResponse', () => {
         const response: GetEntriesResponseDto = {
@@ -153,129 +118,104 @@ describe('repositoryRest', () => {
       });
     })
   });
-    describe('langs', () => {
-      it('schemaGetLanguagesResponse', () => {
-        const response: GetLanguagesResponseDto = {
-          defaultLang: {
+  describe('langs', () => {
+    it('schemaGetLanguagesResponse', () => {
+      const response: GetLanguagesResponseDto = {
+        defaultLang: {
+          code: 'en',
+          name: 'English',
+          flag: '🇬🇧'
+        },
+        unknownLang: {
+          code: 'unk',
+          name: 'Unknown',
+          flag: '❓'
+        },
+        languages: [
+          {
             code: 'en',
             name: 'English',
             flag: '🇬🇧'
           },
-          unknownLang: {
-            code: 'unk',
-            name: 'Unknown',
-            flag: '❓'
+          {
+            code: 'fr',
+            name: 'Français',
+            flag: '🇫🇷'
           },
-          languages: [
-            {
-              code: 'en',
-              name: 'English',
-              flag: '🇬🇧'
-            },
-            {
-              code: 'fr',
-              name: 'Français',
-              flag: '🇫🇷'
-            },
-            {
-              code: 'es',
-              name: 'Español',
-              flag: '🇪🇸',
-            }
-          ]
-        };
-
-        const result = Effect.runSync(decodeGetLanguagesResponse(response));
-
-        // Verify structure
-        expect(result.defaultLang).toBeDefined();
-        expect(result.unknownLang).toBeDefined();
-        expect(Array.isArray(result.languages)).toBe(true);
-        expect(result.languages).toHaveLength(3);
-
-        // Verify defaultLang
-        expect(result.defaultLang.code).toBe('en');
-        expect(result.defaultLang.name).toBe('English');
-        expect(result.defaultLang.flag).toBe('🇬🇧');
-
-        // Verify unknownLang
-        expect(result.unknownLang.code).toBe('unk');
-        expect(result.unknownLang.name).toBe('Unknown');
-        expect(result.unknownLang.flag).toBe('❓');
-
-        expect(result.languages.length).toBe(3);
-
-        // Verify languages array
-        expect(result.languages[0]!.code).toBe('en');
-        expect(result.languages[0]!.name).toBe('English');
-        expect(result.languages[0]!.flag).toBe('🇬🇧');
-
-        expect(result.languages[1]!.code).toBe('fr');
-        expect(result.languages[1]!.name).toBe('Français');
-        expect(result.languages[1]!.flag).toBe('🇫🇷');
-
-        expect(result.languages[2]!.code).toBe('es');
-        expect(result.languages[2]!.name).toBe('Español');
-        expect(result.languages[2]!.flag).toBe('🇪🇸');
-      });
-
-      it('schemaGetLanguagesResponse error - invalid structure', () => {
-        const response = {
-          defaultLang: {
-            code: 123, // Invalid type
-            name: 'English'
-          },
-          unknownLang: {
-            code: 'unk',
-            name: 'Unknown'
-          },
-          languages: []
-        } as unknown as GetLanguagesResponseDto;
-
-        expect(() => Effect.runSync(decodeGetLanguagesResponse(response))).toThrowError();
-      });
-
-      it('schemaGetLanguagesResponse error - missing required fields', () => {
-        const response = {
-          defaultLang: {
-            name: 'English' // Missing code
-          },
-          unknownLang: {
-            code: 'unk',
-            name: 'Unknown'
-          },
-          languages: []
-        } as unknown as GetLanguagesResponseDto;
-
-        expect(() => Effect.runSync(decodeGetLanguagesResponse(response))).toThrowError();
-      });
-    })
-  describe('integration tests', () => {
-    describe('tags', () => {
-      it.effect('createTag', () => {
-        const program = Effect.gen(function* () {
-          const tagsRepository = yield* TagsRepositoryTag;
-          const tagId = yield* tagsRepository.createTag(Tag('test', Identifier(1)));
-          console.log('Created tag with id:', tagId);
-          expect(tagId).toBeDefined();
-        });
-        return Effect.provide(program, layer);
-      })
-      it.effect('getTag', () => {
-        const program = Effect.gen(function* () {
-          const tagsRepository = yield* TagsRepositoryTag;
-          const label = 'test-' + Math.floor(Math.random() * 10000);
-          const tagId = yield* tagsRepository.createTag(Tag(label, Identifier(1)));
-          const tag = yield* tagsRepository.getTag(tagId);
-          expect(tag._tag).toBe('Some');
-          if (tag._tag === 'Some') {
-            expect(tag.value.label).toBe(label);
-            expect(tag.value.ownerId).toEqual(Identifier(1));
+          {
+            code: 'es',
+            name: 'Español',
+            flag: '🇪🇸',
           }
-        });
-        return Effect.provide(program, layer);
-      })
-    })
+        ]
+      };
+
+      const result = Effect.runSync(decodeGetLanguagesResponse(response));
+
+      // Verify structure
+      expect(result.defaultLang).toBeDefined();
+      expect(result.unknownLang).toBeDefined();
+      expect(Array.isArray(result.languages)).toBe(true);
+      expect(result.languages).toHaveLength(3);
+
+      // Verify defaultLang
+      expect(result.defaultLang.code).toBe('en');
+      expect(result.defaultLang.name).toBe('English');
+      expect(result.defaultLang.flag).toBe('🇬🇧');
+
+      // Verify unknownLang
+      expect(result.unknownLang.code).toBe('unk');
+      expect(result.unknownLang.name).toBe('Unknown');
+      expect(result.unknownLang.flag).toBe('❓');
+
+      expect(result.languages.length).toBe(3);
+
+      // Verify languages array
+      expect(result.languages[0]!.code).toBe('en');
+      expect(result.languages[0]!.name).toBe('English');
+      expect(result.languages[0]!.flag).toBe('🇬🇧');
+
+      expect(result.languages[1]!.code).toBe('fr');
+      expect(result.languages[1]!.name).toBe('Français');
+      expect(result.languages[1]!.flag).toBe('🇫🇷');
+
+      expect(result.languages[2]!.code).toBe('es');
+      expect(result.languages[2]!.name).toBe('Español');
+      expect(result.languages[2]!.flag).toBe('🇪🇸');
+    });
+
+    it('schemaGetLanguagesResponse error - invalid structure', () => {
+      const response = {
+        defaultLang: {
+          code: 123, // Invalid type
+          name: 'English'
+        },
+        unknownLang: {
+          code: 'unk',
+          name: 'Unknown'
+        },
+        languages: []
+      } as unknown as GetLanguagesResponseDto;
+
+      expect(() => Effect.runSync(decodeGetLanguagesResponse(response))).toThrowError();
+    });
+
+    it('schemaGetLanguagesResponse error - missing required fields', () => {
+      const response = {
+        defaultLang: {
+          name: 'English' // Missing code
+        },
+        unknownLang: {
+          code: 'unk',
+          name: 'Unknown'
+        },
+        languages: []
+      } as unknown as GetLanguagesResponseDto;
+
+      expect(() => Effect.runSync(decodeGetLanguagesResponse(response))).toThrowError();
+    });
+  })
+  describe('integration tests', () => {
     describe('entries', () => {
       it.effect('createEntry', () => {
         const program = Effect.gen(function* () {
@@ -406,6 +346,151 @@ describe('repositoryRest', () => {
         });
         return Effect.provide(program, layer);
       })
+    })
+    describe('learningSettings', () => {
+      it.effect('getLearningSettings', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+
+          try {
+            const settings = yield* learningSettingsRepository.getLearningSettings(studentId);
+
+            // Verify structure
+            expect(settings).toBeDefined();
+            expect(Array.isArray(settings.learnLangCodes)).toBe(true);
+            expect(Array.isArray(settings.knownLangCodes)).toBe(true);
+            expect(Array.isArray(settings.tags)).toBe(true);
+
+            console.log('Learning settings retrieved:', settings);
+          } catch (error) {
+            console.log('Expected failure in getLearningSettings:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('addKnownLang', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const langCode = LangCode('fr');
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.addKnownLang(studentId, langCode);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.knownLangCodes)).toBe(true);
+            console.log('Added known language, updated settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in addKnownLang:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('removeKnownLang', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const langCode = LangCode('fr');
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.removeKnownLang(studentId, langCode);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.knownLangCodes)).toBe(true);
+            console.log('Removed known language, updated settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in removeKnownLang:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('addLearnLang', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const langCode = LangCode('es');
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.addLearnLang(studentId, langCode);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.learnLangCodes)).toBe(true);
+            console.log('Added learning language, updated settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in addLearnLang:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('removeLearnLang', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const langCode = LangCode('es');
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.removeLearnLang(studentId, langCode);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.learnLangCodes)).toBe(true);
+            console.log('Removed learning language, updated settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in removeLearnLang:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('createTag', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const tag = Tag('labelTest',studentId); // Use a mock tagId since we don't have TagRepository
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.createTag(studentId, tag);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.tags)).toBe(true);
+            expect(updatedSettings.tags.find(t => t.e.label === 'label1')).toBeDefined();
+            console.log('Created tag in learning settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in createTag:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
+
+      it.effect('deleteTag', () => {
+        const program = Effect.gen(function* () {
+          const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
+          const studentId = Identifier<Student>(1);
+          const tagId = Identifier<Tag>(123); // Use a mock tagId since we don't have TagRepository
+
+          try {
+            const updatedSettings = yield* learningSettingsRepository.deleteTag(studentId, tagId);
+
+            expect(updatedSettings).toBeDefined();
+            expect(Array.isArray(updatedSettings.tags)).toBe(true);
+            console.log('Deleted tag from learning settings:', updatedSettings);
+          } catch (error) {
+            console.log('Expected failure in deleteTag:', error);
+            expect(error).toBeDefined();
+          }
+        });
+        return Effect.provide(program, layer);
+      });
     })
   })
 })

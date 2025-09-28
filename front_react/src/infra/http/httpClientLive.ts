@@ -5,14 +5,21 @@ import {tt} from '../../translable/Translatable.ts';
 import type {JsonDecodingError} from './errors/JsonDecodingError.ts';
 import {HttpClientTag} from './HttpClient.ts';
 import {clientError, type ClientError} from './errors/ClientError.ts';
+import loglevel from 'loglevel'
+
+const log = loglevel.getLogger('http')
+log.setLevel('trace')
 
 const _handleOk = <RESP>(response: Response): Effect.Effect<RESP, JsonDecodingError> =>
   Effect.tryPromise(() => response.json() as Promise<RESP>).pipe(
-    Effect.mapError((error): JsonDecodingError => ({
-      error,
-      response
-    } as JsonDecodingError))
-  );
+    Effect.tap(b => log.debug(`Response body: ${JSON.stringify(b)}`)
+    ),
+    Effect
+      .mapError((error): JsonDecodingError => ({
+        error,
+        response
+      } as JsonDecodingError))
+  )
 
 const _handleHttpError = (response: Response): Effect.Effect<never, HTTPError> =>
   Effect.tryPromise(() => response.text()).pipe(
@@ -69,6 +76,9 @@ const _httpRequestWithFetch = <REQ, RESP>(
       body: body ? JSON.stringify(body) : null,
     })
   ).pipe(
+    Effect.tap(() => {
+      log.debug(`HTTP ${method} ${url}`)
+    }),
     Effect.mapError((error): ClientError => {
         if (error._tag === 'UnknownException' && 'cause' in error) {
           const cause0 = error.cause;
