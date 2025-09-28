@@ -8,7 +8,7 @@ import solutions.s4y.vocabla.domain.errors.{
 }
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.owner.Owned
-import zio.prelude.{EqualOps, Validation}
+import zio.prelude.{AssociativeBothCovariantOps, EqualOps, Validation}
 
 object authorizationService:
   opaque type AuthorizedOperation = String

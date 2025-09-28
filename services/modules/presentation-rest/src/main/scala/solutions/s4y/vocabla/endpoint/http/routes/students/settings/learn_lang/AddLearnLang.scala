@@ -6,63 +6,55 @@ import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.{
   AddLearnLangResponse,
   AddLearnLangUseCase
 }
-import solutions.s4y.vocabla.domain.errors.NotAuthorized
+import solutions.s4y.vocabla.domain.errors.{InvalidLangCode, NotAuthorized}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.domain.{Lang, User, UserContext}
+import solutions.s4y.vocabla.domain.{User, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
-  InternalServerError500
+  InternalServerError500,
+  UnprocessableEntity422
 }
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.openapiTag
-import zio.ZIO
 import zio.http.*
 import zio.http.Method.POST
 import zio.http.codec.HttpCodec
 import zio.http.endpoint.{AuthType, Endpoint}
-import zio.schema.annotation.description
-import zio.schema.{Schema, derived}
+import zio.{NonEmptyChunk, ZIO}
 
 import java.util.Locale
 
 object AddLearnLang:
-  @description("Request to add a language the student wants to learn.")
-  final case class AddLearnLangRequest(
-      @description("Code of the language to be added for learning.")
-      langCode: Lang.Code
-  )
-
-  object AddLearnLangRequest:
-    given (using IdentifierSchema): Schema[AddLearnLangRequest] = Schema.derived
-
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
-    Long,
+    (Long, String),
     AddLearnLangCommand,
     HttpError,
     AddLearnLangResponse,
     AuthType.Bearer.type
-  ] = Endpoint(POST / prefix / long("studentId") / "learning-settings" / "learn-languages")
+  ] = Endpoint(
+    POST / prefix / long(
+      "studentId"
+    ) / "learning-settings" / "learn-languages" / string("langCode")
+  )
     .tag(openapiTag)
-    .in[AddLearnLangRequest]
-    .out[AddLearnLangResponse](Status.Created)
+    .out[AddLearnLangResponse]
     .outErrors[HttpError](
       HttpCodec.error[InternalServerError500](Status.InternalServerError),
-      HttpCodec.error[Forbidden403](Status.Forbidden)
+      HttpCodec.error[Forbidden403](Status.Forbidden),
+      HttpCodec.error[UnprocessableEntity422](Status.UnprocessableEntity)
     )
     .auth(AuthType.Bearer)
-    .transformIn((studentId, request) =>
+    .transformIn((studentId, langCode) =>
       AddLearnLangCommand(
-        langCode = request.langCode,
+        langCode = langCode,
         studentId = studentId.identifier[User.Student]
       )
-    )(command =>
-      (command.studentId.as[Long], AddLearnLangRequest(command.langCode))
-    )
+    )(command => (command.studentId.as[Long], command.langCode))
 
   def route(using
       IdentifierSchema
@@ -74,6 +66,8 @@ object AddLearnLang:
             case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
               InternalServerError500(e.message.localized)
+            case e: InvalidLangCode =>
+              UnprocessableEntity422(NonEmptyChunk(e.message.localized))
           }
         )
       }

@@ -1,6 +1,8 @@
 package solutions.s4y.vocabla.app
 
 import org.slf4j.LoggerFactory
+import solutions.s4y.i18n.ResourcesStringsResolver.default
+import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
 import solutions.s4y.vocabla.app.ports.entries_get.{
@@ -37,9 +39,14 @@ import solutions.s4y.vocabla.app.repo.tx.{
   TransactionContext,
   TransactionManager
 }
-import solutions.s4y.vocabla.domain.errors.NotAuthorized
+import solutions.s4y.vocabla.domain.errors.{InvalidLangCode, NotAuthorized}
 import solutions.s4y.vocabla.domain.identity.Identifier
-import solutions.s4y.vocabla.domain.{User, UserContext, authorizationService}
+import solutions.s4y.vocabla.domain.{
+  Lang,
+  User,
+  UserContext,
+  authorizationService
+}
 import zio.prelude.Validation
 import zio.{IO, UIO, ZIO, ZLayer}
 
@@ -228,21 +235,22 @@ final class VocablaApp[TX <: TransactionContext](
       command: AddKnownLangCommand
   ): ZIO[
     UserContext,
-    ServiceFailure | NotAuthorized,
+    ServiceFailure | NotAuthorized | InvalidLangCode,
     AddKnownLangResponse
   ] =
     authorized(
       authorizationService.canChooseKnownLang(command.studentId, _)
-    ) *>
+    ) *> validateLangCode(command.langCode).toZIO *>
       transaction(
         "addKnownLanguage",
         knownLanguagesRepository.addKnownLanguage(
           command.studentId,
           command.langCode
-        ) *> ZIO
-          .serviceWithZIO[UserContext](userContext =>
-            userRepository.getLearningSettings(userContext.studentId)
-          )
+        ) *>
+          ZIO
+            .serviceWithZIO[UserContext](userContext =>
+              userRepository.getLearningSettings(userContext.studentId)
+            )
       ).map(settings => AddKnownLangResponse(settings))
 
   override def apply(
@@ -274,12 +282,15 @@ final class VocablaApp[TX <: TransactionContext](
       command: AddLearnLangCommand
   ): ZIO[
     UserContext,
-    ServiceFailure | NotAuthorized,
+    ServiceFailure | NotAuthorized | InvalidLangCode,
     AddLearnLangResponse
   ] =
     authorized(
-      authorizationService.canChooseLearnLang(command.studentId, _)
-    ) *>
+      authorizationService.canChooseLearnLang(
+        command.studentId,
+        _
+      )
+    ) *> validateLangCode(command.langCode).toZIO *>
       transaction(
         "addLearnLanguage",
         learnLanguagesRepository.addLearnLanguage(
@@ -323,9 +334,23 @@ final class VocablaApp[TX <: TransactionContext](
   private def transaction[R, T](
       log: String,
       unitOfWork: TX ?=> ZIO[R, InfraFailure, T]
-  ): ZIO[R, ServiceFailure, T] =
+  ): ZIO[R, ServiceFailure, T] = {
     tm.transaction(log, unitOfWork).mapInfraFailure
+  }
 
+  private def validateLangCode(
+      langCode: Lang.Code
+  ): Validation[InvalidLangCode, Unit] =
+    if allowedLangCodes.contains(langCode) then Validation.succeed(())
+    else
+      Validation.fail(
+        InvalidLangCode(
+          langCode,
+          t"Language code $langCode is not in the list of allowed languages"
+        )
+      )
+
+  private val allowedLangCodes = langRepository.getLangs.map(_.code).toSet
 end VocablaApp
 
 object VocablaApp:

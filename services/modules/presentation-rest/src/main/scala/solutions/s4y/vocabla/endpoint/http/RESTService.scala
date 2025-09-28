@@ -47,7 +47,6 @@ import solutions.s4y.vocabla.endpoint.http.routes.students.settings.learn_lang.{
   AddLearnLang,
   RemoveLearnLang
 }
-import solutions.s4y.vocabla.endpoint.http.schema.given
 import zio.http.*
 import zio.http.Middleware.CorsConfig
 import zio.http.endpoint.openapi.{OpenAPI, OpenAPIGen, SwaggerUI}

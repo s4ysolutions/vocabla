@@ -2,7 +2,7 @@ package solutions.s4y.vocabla.app.ports.students.settings.known_lang
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.UserContext
-import solutions.s4y.vocabla.domain.errors.NotAuthorized
+import solutions.s4y.vocabla.domain.errors.{InvalidLangCode, NotAuthorized}
 import zio.ZIO
 import zio.schema.annotation.description
 
@@ -12,6 +12,6 @@ trait AddKnownLangUseCase:
       command: AddKnownLangCommand
   ): ZIO[
     UserContext,
-    ServiceFailure | NotAuthorized,
+    ServiceFailure | NotAuthorized | InvalidLangCode,
     AddKnownLangResponse
   ]
