@@ -1,7 +1,11 @@
 package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.settings.tags.{DeleteTagCommand, DeleteTagResponse, DeleteTagUseCase}
+import solutions.s4y.vocabla.app.ports.students.settings.tags.{
+  DeleteTagCommand,
+  DeleteTagResponse,
+  DeleteTagUseCase
+}
 import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
@@ -34,7 +38,11 @@ object DeleteTag:
     DeleteTagResponse,
     AuthType.Bearer.type
   ] =
-    Endpoint(DELETE / prefix / long("studentId") / "learning-settings" / long("tagId"))
+    Endpoint(
+      DELETE / prefix / long("studentId") / "learning-settings" / "tags" / long(
+        "tagId"
+      )
+    )
       .tag(openapiTag)
       .out[DeleteTagResponse]
       .outErrors[HttpError](
