@@ -8,7 +8,7 @@ import zio.schema.{Schema, derived}
 @description("Response containing the code of the newly added known language.")
 final case class AddKnownLangResponse(
     @description("The learning settings associated with the newly added known language.")
-    settings: LearningSettings
+    learningSettings: LearningSettings
 )
 
 object AddKnownLangResponse:
