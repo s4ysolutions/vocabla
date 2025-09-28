@@ -14,7 +14,7 @@ val enclosingClass: LogFormat =
         case Some(clazz) =>
           builder.appendText(clazz.getClassName + ":" + clazz.getLineNumber)
         case None =>
-          builder.appendText("class not-available")
+          builder.appendText("-=-")
       }
     } else {
       builder.appendText("trace not-available")
