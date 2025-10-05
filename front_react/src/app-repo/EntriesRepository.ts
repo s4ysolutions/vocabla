@@ -1,6 +1,6 @@
 import type {Entry} from '../domain/Entry.ts';
 import {Context, Effect, Option} from 'effect';
-import type {InfraError} from './infraError.ts';
+import type {InfraError} from './InfraError.ts';
 import type {Identifier} from '../domain/identity/Identifier.ts';
 import type {Tag} from '../domain/Tag.ts';
 import type {Student} from '../domain/Student.ts';

@@ -1,6 +1,6 @@
 import {Effect, Option} from 'effect';
 import {type RestClient} from '../rest/RestClient.ts';
-import {infraError, type InfraError} from '../../app-repo/infraError.ts';
+import {infraError, type InfraError} from '../../app-repo/InfraError.ts';
 import {tt} from '../../translable/Translatable.ts';
 import type {ClientError} from '../http/errors/ClientError.ts';
 import type {HTTPError} from '../http/errors/HTTPError.ts';
@@ -36,6 +36,10 @@ import {
   type RemoveLearnLangResponseDto
 } from './dto/learning_settings/RemoveLearnLangResponse.ts';
 import type {CreateTagRequestDto} from './dto/learning_settings/CreateTagRequestDto.ts';
+import logLevel from 'loglevel';
+
+const log = logLevel.getLogger('repositoryRest')
+log.setLevel(logLevel.levels.DEBUG)
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 //const urlBase = 'http://localhost:8080/rest/v1'
@@ -107,6 +111,7 @@ export const makeRepositoryRest = (restClient: RestClient): EntriesRepository & 
   },
   // LearningSettingsRepository methods
   getLearningSettings: (studentId) => {
+    log.debug('LearningSettingsRepository.getLearningSettings', {studentId})
     return Effect.mapError(
       restClient.get<GetLearningSettingsResponseDto, LearningSettingsR>({
         url: `${urlBase}/students/${studentId}/learning-settings`,

@@ -6,7 +6,7 @@ import {makeRepositoryRest} from './repositoryRest.ts';
 import {restClientLive} from '../rest/restClientLive.ts';
 import {LearningSettingsRepositoryTag} from '../../app-repo/LearningSettingsRepository.ts';
 
-export const repositoryRestLayer: Layer.Layer< EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag, never, RestClientTag> =
+export const repositoryRestLayer: Layer.Layer<EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag, never, RestClientTag> =
   Layer.effectContext(
     Effect.gen(function* () {
       const restClient = yield* RestClientTag
@@ -19,6 +19,6 @@ export const repositoryRestLayer: Layer.Layer< EntriesRepositoryTag | LangReposi
     })
   )
 
-export const repositoryRestLive: Layer.Layer< EntriesRepositoryTag | LangRepositoryTag> = repositoryRestLayer.pipe(
+export const repositoryRestLive: Layer.Layer<EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag> = repositoryRestLayer.pipe(
   Layer.provide(restClientLive)
 )

@@ -455,7 +455,7 @@ describe('repositoryRest', () => {
         const program = Effect.gen(function* () {
           const learningSettingsRepository = yield* LearningSettingsRepositoryTag;
           const studentId = Identifier<Student>(1);
-          const tag = Tag('labelTest',studentId); // Use a mock tagId since we don't have TagRepository
+          const tag = {label: 'labelTest'}; // Use a mock tagId since we don't have TagRepository
 
           try {
             const updatedSettings = yield* learningSettingsRepository.createTag(studentId, tag);

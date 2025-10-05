@@ -1,12 +1,14 @@
 import React from 'react';
 import useAllLanguages from '../shared/hooks/useAllLanguages.ts';
+import type {LangCode} from '../../../domain/LangCode.ts';
 
 interface LanguagesSelectorProps {
-    selected: Set<string>; // Set of selected language IDs
-    toggle: (id: string) => void; // Function to toggle selection
+  selected: Set<LangCode>; // Set of selected language IDs
+  addLang: (code: LangCode) => void; // Function to toggle selection
+  removeLang: (code: LangCode) => void; // Function to toggle selection
 }
 
-const LanguagesSelector: React.FC<LanguagesSelectorProps> = ({selected, toggle }) => {
+const LanguagesSelector: React.FC<LanguagesSelectorProps> = ({selected, addLang, removeLang}) => {
   const languages = useAllLanguages();
 
   return <div className="space-y-2">
@@ -16,7 +18,9 @@ const LanguagesSelector: React.FC<LanguagesSelectorProps> = ({selected, toggle }
           <input
             type="checkbox"
             checked={selected.has(lang.code)}
-            onChange={() => toggle(lang.code)}
+            onChange={(el) => el.target.checked
+              ? addLang(lang.code)
+              : removeLang(lang.code)}
             className="cursor-pointer"
           />
           <span>{lang.flag} {lang.name} </span>

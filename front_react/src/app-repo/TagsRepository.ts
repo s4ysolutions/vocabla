@@ -2,7 +2,7 @@ import type {Identifier} from '../domain/identity/Identifier.ts';
 import type {Tag} from '../domain/Tag.ts';
 import type {Effect} from 'effect/Effect';
 import {Context, Option} from 'effect';
-import type {InfraError} from './infraError.ts';
+import type {InfraError} from './InfraError.ts';
 
 export interface TagsRepository {
   createTag: (tag: Tag) => Effect<Identifier<Tag>, InfraError>

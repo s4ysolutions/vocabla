@@ -1,12 +1,13 @@
 import {Context, Effect} from 'effect';
 import type {Lang} from '../domain/Lang.ts';
-import type {InfraError} from './infraError.ts';
+import type {InfraError} from './InfraError.ts';
 
 export type AllLangsR = {
   readonly defaultLang: Lang,
   readonly unknownLang: Lang,
   languages: ReadonlyArray<Lang>
 }
+
 export interface LangRepository {
   getAllLangs: () => Effect.Effect<AllLangsR, InfraError>
 }
