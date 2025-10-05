@@ -10,9 +10,16 @@ interface LanguagesSelectorProps {
 const LanguagesSelector = ({selected, addLang, removeLang}: LanguagesSelectorProps) => {
   const languages = useAllLanguages();
 
+  const selectedLangs = languages.filter(lang => selected.has(lang.code))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const availableLangs = languages.filter(lang => !selected.has(lang.code))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const orderedLangs = [...selectedLangs, ...availableLangs];
+
   return <div className="space-y-2">
     {
-      languages.map((lang) => (
+      orderedLangs.map((lang) => (
         <div key={lang.code} className="flex items-center space-x-2">
           <input
             type="checkbox"
