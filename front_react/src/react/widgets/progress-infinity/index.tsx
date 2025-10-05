@@ -1,4 +1,6 @@
 const ProgressInfinity = () =>
-    <div className="text-center text-gray-500">Loading...</div>
+  <div className="flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
 
 export default ProgressInfinity

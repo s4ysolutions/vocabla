@@ -1,4 +1,3 @@
-import React from 'react';
 import useAllLanguages from '../shared/hooks/useAllLanguages.ts';
 import type {LangCode} from '../../../domain/LangCode.ts';
 
@@ -8,7 +7,7 @@ interface LanguagesSelectorProps {
   removeLang: (code: LangCode) => void; // Function to toggle selection
 }
 
-const LanguagesSelector: React.FC<LanguagesSelectorProps> = ({selected, addLang, removeLang}) => {
+const LanguagesSelector = ({selected, addLang, removeLang}: LanguagesSelectorProps) => {
   const languages = useAllLanguages();
 
   return <div className="space-y-2">

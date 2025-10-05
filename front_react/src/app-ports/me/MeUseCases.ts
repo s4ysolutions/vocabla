@@ -4,7 +4,7 @@ import type {AppError} from '../errors/AppError.ts';
 import {Context, Effect} from 'effect';
 
 export interface MeUseCases {
-  lastStudentId: Effect.Effect<AsyncData<StudentId, AppError>>
+  currentStudentId: Effect.Effect<AsyncData<StudentId, AppError>>
 }
 
 export class MeUseCasesTag extends Context.Tag('MeUseCasesTag')<MeUseCasesTag, MeUseCases>() {

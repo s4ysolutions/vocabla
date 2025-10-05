@@ -1,6 +1,6 @@
-import {Effect, Match, PubSub, Ref, Stream} from 'effect';
+import {Effect, PubSub, Ref, Stream} from 'effect';
 import {LearningSettings} from '../domain/LearningSettings.ts';
-import {type AsyncData, LoadingData, SuccessData} from '../app-ports/types.ts';
+import {type AsyncData, LoadingData, matchAsyncData, SuccessData} from '../app-ports/types.ts';
 import type {Lang} from '../domain/Lang.ts';
 import {type LearningSettingsR, type LearningSettingsRepository} from '../app-repo/LearningSettingsRepository.ts';
 import type {LangCode} from '../domain/LangCode.ts';
@@ -16,7 +16,8 @@ log.getLogger('makeLearningSettingsUseCases').setLevel('debug')
 
 export class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
   private constructor(
-    private readonly ref: Ref.Ref<AsyncData<LearningSettings, AppError>>,
+    private readonly refLastLearningSettings: Ref.Ref<AsyncData<LearningSettings, AppError>>,
+    private readonly refLastStudentId: Ref.Ref<StudentId | null>,
     private readonly hub: PubSub.PubSub<AsyncData<LearningSettings, AppError>>,
     public readonly lastLearningSettings: Effect.Effect<AsyncData<LearningSettings, AppError>>,
     public readonly streamLearningSettings: Stream.Stream<AsyncData<LearningSettings, AppError>>,
@@ -32,14 +33,16 @@ export class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
     langByCode: (code: LangCode) => Lang
   ): Effect.Effect<LearningSettingsUseCases> {
     return Effect.gen(function* () {
-      const ref = yield* Ref.make(LoadingData<LearningSettings, AppError>())
+      const refLastSettings = yield* Ref.make(LoadingData<LearningSettings, AppError>())
+      const refStudentId = yield* Ref.make<StudentId | null>(null)
       const hub = yield* PubSub.sliding<AsyncData<LearningSettings, AppError>>(1)
-      const stream = Stream.fromPubSub(hub).pipe(Stream.tap((data) => Ref.set(ref, data)))
+      const stream = Stream.fromPubSub(hub).pipe(Stream.tap((data) => Ref.set(refLastSettings, data)))
 
       return new LearningSettingsUseCasesLive(
-        ref,
+        refLastSettings,
+        refStudentId,
         hub,
-        Ref.get(ref),
+        Ref.get(refLastSettings),
         stream,
         repository,
         meUseCases,
@@ -49,7 +52,7 @@ export class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
   }
 
   private setState(data: AsyncData<LearningSettings, AppError>) {
-    return Ref.set(this.ref, data).pipe(
+    return Ref.set(this.refLastLearningSettings, data).pipe(
       Effect.flatMap(() => PubSub.publish(this.hub, data))
     )
   }
@@ -68,31 +71,47 @@ export class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
     )
   }
 
-  private withLastStudentId<A>(
-    f: (studentId: StudentId) => Effect.Effect<A, AppError>
-  ): Effect.Effect<A, AppError> {
-    const self = this
-    return Effect.gen(function* () {
-      const lastStudentId = yield* self.meUseCases.lastStudentId
-      log.debug('LearningSettingsUseCasesLive.withLastStudentId: lastStudentId', lastStudentId)
-      return yield* Match.value(lastStudentId).pipe(
-        Match.when({_state: 'loading'}, () => Effect.succeed(LearningSettings.empty as A)),
-        Match.when({_state: 'error'}, ({error}) => Effect.fail(error)),
-        Match.when({_state: 'success'}, ({data}) => f(data)),
-        Match.exhaustive
-      )
+  private prevSettings(currentStudentId?: StudentId): Effect.Effect<LearningSettings, AppError> {
+    return Effect.gen(function* (this: LearningSettingsUseCasesLive) {
+      const prevStudentId = yield* Ref.get(this.refLastStudentId)
+
+      if (!currentStudentId || prevStudentId !== currentStudentId) {
+        return LearningSettings.empty
+      }
+
+      const cachedData = yield* Ref.get(this.refLastLearningSettings)
+      return cachedData._state === 'success'
+        ? cachedData.data
+        : LearningSettings.empty
     })
   }
 
+  private withStudentId(
+    f: (studentId: StudentId) => Effect.Effect<LearningSettings, AppError>
+  ): Effect.Effect<LearningSettings, AppError> {
+    return this.meUseCases.currentStudentId.pipe(
+      Effect.tap((studentId) => Effect.sync(() =>
+        log.debug('LearningSettingsUseCasesLive.withStudentId:', studentId)
+      )),
+      Effect.flatMap((lastStudentId) =>
+        matchAsyncData(lastStudentId,
+          (previous) => this.prevSettings(previous),
+          (error) => Effect.fail(error),
+          (studentId) => f(studentId)
+        )
+      )
+    )
+  }
+
   private processStudent(f: (studentId: StudentId) => Effect.Effect<LearningSettingsR, InfraError>): Effect.Effect<LearningSettings, AppError> {
-    return this.withLastStudentId((studentId) => this.process(f(studentId)))
+    return this.withStudentId((studentId) => this.process(f(studentId)))
   }
 
   private processStudentAndLangCode(
     f: (studentId: StudentId, langCode: LangCode) => Effect.Effect<LearningSettingsR, InfraError>
   ) {
     return (langCode: LangCode) =>
-      this.withLastStudentId((studentId) => this.process(f(studentId, langCode)))
+      this.withStudentId((studentId) => this.process(f(studentId, langCode)))
   }
 
   refreshLearningSettings(): Effect.Effect<LearningSettings, AppError> {

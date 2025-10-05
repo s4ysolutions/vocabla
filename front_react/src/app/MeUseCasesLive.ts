@@ -5,7 +5,7 @@ import {type AsyncData, SuccessData} from '../app-ports/types.ts';
 import type {AppError} from '../app-ports/errors/AppError.ts';
 
 class MeUseCasesLive implements MeUseCases {
-  get lastStudentId(): Effect.Effect<AsyncData<StudentId, AppError>> {
+  get currentStudentId(): Effect.Effect<AsyncData<StudentId, AppError>> {
     return Effect.succeed(SuccessData<StudentId, AppError>(1));
   }
 }
