@@ -6,7 +6,7 @@ export type InfraError = {
   _tag?: 'InfraError';
 };
 
-export const infraError = (message: Translatable, cause?: unknown): InfraError => ({
+export const InfraError = (message: Translatable, cause?: unknown): InfraError => ({
   message,
   cause,
 });

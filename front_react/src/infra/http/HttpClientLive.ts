@@ -3,12 +3,12 @@ import type {Method} from './Method.ts';
 import type {HTTPError} from './errors/HTTPError.ts';
 import {tt} from '../../translable/Translatable.ts';
 import type {JsonDecodingError} from './errors/JsonDecodingError.ts';
-import {HttpClientTag} from './HttpClient.ts';
+import {type HttpClient, HttpClientTag} from './HttpClient.ts';
 import {clientError, type ClientError} from './errors/ClientError.ts';
 import loglevel from 'loglevel'
 
 const log = loglevel.getLogger('http')
-log.setLevel('trace')
+log.setLevel(loglevel.levels.INFO);
 
 const _handleOk = <RESP>(response: Response): Effect.Effect<RESP, JsonDecodingError> =>
   Effect.tryPromise(() => response.json() as Promise<RESP>).pipe(
@@ -112,16 +112,14 @@ const _httpRequestWithFetch = <REQ, RESP>(
         Effect.logError('httpRequestWithFetch failed: ' + _prettyPrintError(error))
       ));
 
+class HttpClientLive implements HttpClient {
+  readonly execute = _httpRequestWithFetch
 
-/**
- * Live implementation of HttpClient using Fetch API
- */
+  static make(): Effect.Effect<HttpClientLive> {
+    return Effect.succeed(new HttpClientLive());
+  }
 
-const httpClientLive: Layer.Layer<HttpClientTag> = Layer.succeed(
-  HttpClientTag,
-  HttpClientTag.of({
-    execute: _httpRequestWithFetch
-  })
-)
+  static readonly layer: Layer.Layer<HttpClientTag> = Layer.effect(HttpClientTag, HttpClientLive.make());
+}
 
-export default httpClientLive
+export default HttpClientLive

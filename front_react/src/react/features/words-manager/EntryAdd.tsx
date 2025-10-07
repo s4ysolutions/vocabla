@@ -1,15 +1,17 @@
 import React, {type JSX, useState} from 'react'
 import PrimaryButton from '../../widgets/buttons/PrimaryButton.tsx'
-import useLearningLanguages from './hooks/useLearningLanguages.ts'
 import LanguageSelect from '../../widgets/selectors/LanguageSelect.tsx'
-import useIUnderstandLanguages from './hooks/useIUnderstandLanguages.ts'
 import InputText from '../../widgets/inputs/InputText.tsx'
 import Textarea from '../../widgets/textarea/Textarea.tsx'
-import type {LangCode} from '../../../domain/LangCode.ts';
+import {emptyLangCode, isEmptyLangCode, type LangCode} from '../../../domain/LangCode.ts';
 import type {Identifier} from '../../../domain/identity/Identifier.ts';
 import type {Tag} from '../../../domain/Tag.ts';
-import useDefaultLanguage from '../shared/hooks/useDefaultLanguage.ts';
 import log from 'loglevel'
+import useLearnLanguages from './hooks/useLearnLanguages.ts';
+import useKnownLanguages from './hooks/useKnownLanguages.ts';
+import useDefaultLanguage from '../shared/hooks/useDefaultLanguage.ts';
+import useUnknownLanguage from '../shared/hooks/useUnknownLanguage.ts';
+
 const logRender = log.getLogger('render')
 
 type EntryAddProps = {
@@ -17,42 +19,58 @@ type EntryAddProps = {
         wordLang: LangCode,
         definition: string,
         definitionLang: LangCode,
-        tagLabels: Identifier<Tag>[]) => Promise<void>
+        tagIds: Identifier<Tag>[],
+  ) => Promise<void>,
 }
 
 const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
-  logRender.debug('Rendering EntryAdd component')
-  const {languages: learningLanguages, loading: lll} = useLearningLanguages()
-  const {languages: understandLanguages, loading: lul} = useIUnderstandLanguages()
   const defaultLanguage = useDefaultLanguage()
+  const unknownLangauge = useUnknownLanguage()
+  const {learnLanguages, loading: lll} = useLearnLanguages()
+  const {knownLanguages, loading: lkl} = useKnownLanguages()
+
+  const learnFallback = learnLanguages.length > 0 ? learnLanguages[0]!.code : unknownLangauge?.code || emptyLangCode
+  const [learnSelected, setLearnSelected] = useState(learnFallback)
+  const knownFallback = knownLanguages.length > 0 ? knownLanguages[0]!.code : defaultLanguage?.code || emptyLangCode
+  const [knownSelected, setKnownSelected] = useState(knownFallback)
+
   const [word, setWord] = useState<string>('')
   const [definition, setDescription] = useState<string>('')
-  const [learningLanguage, setLearningLanguage] = useState(learningLanguages[0] || defaultLanguage)
-  const [understandLanguage, setUnderstandLanguage] = useState(understandLanguages[0] || defaultLanguage)
 
-  log.debug({
-    learningLanguages, understandLanguages, learningLanguage, understandLanguage
-  })
+  logRender.debug('Rendering EntryAdd component', {lll, learnSelected})
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     log.debug('Submitting new entry:', {
       word,
       definition: definition,
-      learningLanguage,
-      understandLanguage,
+      learningLanguage: learnSelected,
+      knownLanguage: knownSelected,
     })
-    add(word, learningLanguage.code, definition, understandLanguage.code, [])
+    if (!word || !definition) {
+      log.warn('Word or definition is empty, aborting submission.')
+      return
+    }
+    if (!learnSelected) {
+      log.warn('No learning language selected, aborting submission.')
+      return
+    }
+    if (!knownSelected) {
+      log.warn('No known language selected, aborting submission.')
+      return
+    }
+
+    add(word, learnSelected, definition, knownSelected, [])
     // Add logic to handle form submission
   }
 
   return <form onSubmit={handleSubmit}>
     <div className="flex items-center space-x-4">
       <LanguageSelect
-        languages={learningLanguages}
-        defaultLanguage={learningLanguages[0]}
-        loading={lll}
-        onChange={(lang) => setLearningLanguage(lang)}
+        languages={learnLanguages}
+        selectedCode={learnSelected}
+        loading={lll || isEmptyLangCode(learnFallback)}
+        onChange={(lang) => setLearnSelected(lang.code)}
       />
 
       <InputText
@@ -68,10 +86,11 @@ const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
     <br/>
     <div className="flex items-center space-x-4">
       <LanguageSelect
-        languages={understandLanguages}
-        defaultLanguage={learningLanguages[0]}
-        loading={lul}
-        onChange={(s) => setUnderstandLanguage(s)}/>
+        languages={knownLanguages}
+        //fallbackLanguage={defaultLanguage || knownLanguages[0]!}
+        selectedCode={knownSelected}
+        loading={lkl || isEmptyLangCode(knownFallback)}
+        onChange={(lang) => setKnownSelected(lang.code)}/>
       <Textarea
         placeholder="Enter a description"
         defaultValue={definition}

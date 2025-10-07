@@ -2,7 +2,7 @@ import {Effect, Stream} from 'effect';
 import {
   type LearningSettingsUseCases,
   LearningSettingsUseCasesTag
-} from '../../../../app-ports/me/LearningSettingsUseCases.ts';
+} from '../../../../app-ports/LearningSettingsUseCases.ts';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {type AsyncData, LoadingData, matchAsyncData, SuccessData} from '../../../../app-ports/types.ts';
 import {LearningSettings} from '../../../../domain/LearningSettings.ts';

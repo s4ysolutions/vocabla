@@ -1,6 +1,3 @@
-/**
- * Defines a REST client interface with methods for making POST and GET requests.
- */
 import {Context, Effect} from 'effect';
 import type {HTTPError} from '../http/errors/HTTPError.ts';
 import type {JsonDecodingError} from '../http/errors/JsonDecodingError.ts';

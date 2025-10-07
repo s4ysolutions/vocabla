@@ -6,13 +6,13 @@ import {LanguagesUseCasesTag} from '../../../../app-ports/LanguagesUseCases.ts';
 import type {AppError} from '../../../../app-ports/errors/AppError.ts';
 
 const program: Effect.Effect<Lang, AppError, LanguagesUseCasesTag> =
-  Effect.flatMap(LanguagesUseCasesTag, useCase => useCase.defaultLang)
+  Effect.flatMap(LanguagesUseCasesTag, useCase => useCase.unknownLang)
 
 
-const useDefaultLanguage = (): Lang | undefined => {
+const useUnknownLanguage = (): Lang | undefined => {
   const [lang, setLang] = useState<Lang | undefined>(undefined)
-  promiseAppEffect(program).then(defaultLang => setLang(defaultLang))
+  promiseAppEffect(program).then(unknownLang => setLang(unknownLang))
   return lang
 }
 
-export default useDefaultLanguage;
+export default useUnknownLanguage;

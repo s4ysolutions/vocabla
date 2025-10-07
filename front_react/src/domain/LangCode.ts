@@ -48,3 +48,6 @@ void ('' as Schema.Schema.Type<typeof schemaLangCode> satisfies LangCode)
 export const LangCode =
   (langCode: string) => langCode as LangCode // TODO: validate?
 export const isLangCode = Schema.is(schemaLangCode)
+
+export const emptyLangCode: LangCode = LangCode('')
+export const isEmptyLangCode = (lc: LangCode) => lc === emptyLangCode

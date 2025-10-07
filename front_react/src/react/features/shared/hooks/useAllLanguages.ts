@@ -2,12 +2,11 @@ import type {Lang} from '../../../../domain/Lang.ts';
 import {Effect} from 'effect';
 import {useState} from 'react';
 import {promiseAppEffect} from '../../../../app/effect-runtime.ts';
-import {GetAllLanguagesUseCaseTag} from '../../../../app-ports/languages/GetAllLanguagesUseCase.ts';
+import {LanguagesUseCasesTag} from '../../../../app-ports/LanguagesUseCases.ts';
+import type {AppError} from '../../../../app-ports/errors/AppError.ts';
 
-const program: Effect.Effect<ReadonlyArray<Lang>, never, GetAllLanguagesUseCaseTag> = Effect.gen(function* () {
-  const useCase = yield* GetAllLanguagesUseCaseTag
-  return useCase.allLanguages
-})
+const program: Effect.Effect<ReadonlyArray<Lang>, AppError, LanguagesUseCasesTag> =
+  Effect.flatMap(LanguagesUseCasesTag,useCases => useCases.allLanguages)
 
 
 const useAllLanguages = (): ReadonlyArray<Lang> => {

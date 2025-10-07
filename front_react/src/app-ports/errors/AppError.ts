@@ -5,6 +5,7 @@ export type AppError = {
   _tag?: 'AppError'
 }
 
-export const appError = (message: Translatable): AppError => ({
+export const AppError = (message: Translatable): AppError => ({
   message,
+  _tag: 'AppError'
 });

@@ -1,15 +1,18 @@
-import React, {type ReactElement, useState} from 'react'
+import React, {type ReactElement, useEffect, useMemo, useState} from 'react'
 import PrimaryButton from '../../widgets/buttons/PrimaryButton.tsx'
 import InputText from '../../widgets/inputs/InputText.tsx'
 import CancelButton from '../../widgets/buttons/CancelButton copy.tsx'
 import LanguageSelect from '../../widgets/selectors/LanguageSelect.tsx'
-import useLearningLanguages from './hooks/useLearningLanguages.ts'
-import useIUnderstandLanguages from './hooks/useIUnderstandLanguages.ts'
 import DefinitionEdit from './DefinitionEdit.tsx'
 import type {Entry} from '../../../domain/Entry.ts';
-import type {LangCode} from '../../../domain/LangCode.ts';
-import useDefaultLanguage from '../shared/hooks/useDefaultLanguage.ts';
-import {Lang} from '../../../domain/Lang.ts';
+import {emptyLangCode, type LangCode} from '../../../domain/LangCode.ts';
+import {hashString} from '../../../domain/hash/hashString.ts';
+import useLearnLanguages from './hooks/useLearnLanguages.ts';
+import useKnownLanguages from './hooks/useKnownLanguages.ts';
+import useUnknownLanguage from '../shared/hooks/useUnknownLanguage.ts';
+import loglevel from 'loglevel';
+
+const log = loglevel.getLogger('render')
 
 interface DefintionHolder {
   readonly id: number
@@ -17,28 +20,37 @@ interface DefintionHolder {
   s: string
 }
 
-const createDefinitionHolder = (language: LangCode, s: string): DefintionHolder => ({
-  id: Math.floor(Math.random() * 32000),
-  language,
+const createDefinitionHolder = (definitionLangCode: LangCode, s: string): DefintionHolder => ({
+  id: s.trim() == '' ? new Date().getTime() : hashString(definitionLangCode + '|' + s),
+  language: definitionLangCode,
   s,
 })
 
-const arrangeDefinitionHolders = (language: LangCode, defintionHolders: DefintionHolder[]): DefintionHolder[] => {
-  if (defintionHolders.length === 0) {
-    return [createDefinitionHolder(language, '')]
+// make sure there's always one empty definition holder at the end
+const addEmtptyDefinitionHolder = (
+  knownLanguageCode: LangCode,
+  definitionHolders: DefintionHolder[],
+  changedDefId: number | null): DefintionHolder[] => {
+
+  if (definitionHolders.length === 0) {
+    return [createDefinitionHolder(knownLanguageCode, '')]
   }
 
-  const hole = defintionHolders.findIndex((d) => d.s.trim() === '')
+  const hole = definitionHolders.findIndex((d) => d.s.trim() === '')
 
-  if (hole === defintionHolders.length - 1) {
-    return defintionHolders
-  }
+  // empty hole is already at the end
+  if (hole === definitionHolders.length - 1)
+    return definitionHolders
 
-  if (hole === -1) {
-    return defintionHolders.concat(createDefinitionHolder(language, ''))
-  }
+  // there's no empty hole, add one
+  if (hole === -1)
+    return definitionHolders.concat(createDefinitionHolder(knownLanguageCode, ''))
 
-  return defintionHolders.filter((d) => d.s.trim() !== '').concat(createDefinitionHolder(language, ''))
+  const noEmpties = definitionHolders.filter((d) => (d.s.trim() !== '' || d.id == changedDefId))
+
+  return noEmpties.filter(d => d.s.trim() === '').length === 0
+    ? noEmpties.concat(createDefinitionHolder(knownLanguageCode, ''))
+    : noEmpties
 }
 
 interface Props {
@@ -48,31 +60,40 @@ interface Props {
 
 const EntryEdit: React.FC<Props> = ({entry, onComplete}): ReactElement => {
 
-  const {languages: learningLanguages, loading: lll} = useLearningLanguages()
-  const [learningLanguage, setLearningLanguage] = useState(entry.word.langCode)
-  const defaultLanguage = useDefaultLanguage()
   const [word, setWord] = useState<string>(entry.word.s)
-  const wordLang = Lang(entry.word.langCode)
+  const [wordLangCode, setWordLangCode] = useState(entry.word.langCode)
 
-  const {languages: languagesIUnderstand} = useIUnderstandLanguages()
-  const languageIUnderstand = languagesIUnderstand ? languagesIUnderstand[0] : defaultLanguage
+  const {learnLanguages, loading: lll} = useLearnLanguages()
+  const {knownLanguages, loading: lkl} = useKnownLanguages()
+  const unknownLanguage = useUnknownLanguage()
+  const knownLanguageCode = useMemo(() =>
+      knownLanguages.length > 0
+        ? knownLanguages[0]!.code
+        : unknownLanguage?.code || emptyLangCode,
+    [knownLanguages, unknownLanguage])
 
-  const [definitions, setDefinitions] =
-    useState<DefintionHolder[]>(
-      languageIUnderstand
-        ? arrangeDefinitionHolders(languageIUnderstand.code, entry.definitions
-          .map((d) => createDefinitionHolder(d.localized.langCode, d.localized.s)))
-        : [])
+  const initDefinitions = useMemo(() =>
+      lkl
+        ? []
+        : addEmtptyDefinitionHolder(
+          knownLanguageCode,
+          entry.definitions
+            .map((d) => createDefinitionHolder(d.localized.langCode, d.localized.s))
+          , null)
+    , [entry, lkl, knownLanguageCode])
 
-  // derty hack to init the definition holders after the languageIUnderstand is loaded
-  if (languageIUnderstand !== undefined && definitions.length === 0) {
-    setDefinitions(arrangeDefinitionHolders(languageIUnderstand.code, []))
-  }
+  const [definitions, setDefinitions] = useState<DefintionHolder[]>(initDefinitions)
+
+  log.debug('Rendering EntryEdit component', {entry, definitions, lkl})
+
+  useEffect(() => {
+    setDefinitions(initDefinitions)
+  }, [initDefinitions])
 
   const handleSave = () => {
     console.log({
       word,
-      learningLanguage,
+      //learningLanguage: learnLanguage,
       // definition: definition,
       // learningLanguage,
       // understandLanguage,
@@ -85,10 +106,11 @@ const EntryEdit: React.FC<Props> = ({entry, onComplete}): ReactElement => {
       {/* Language Selector and Word Input */}
       <div className="flex items-center space-x-4" id="word-input">
         <LanguageSelect
-          languages={learningLanguages}
-          defaultLanguage={wordLang}
+          languages={learnLanguages}
+          selectedCode={wordLangCode}
+          //defaultLanguage={wordLang}
           loading={lll}
-          onChange={(lang) => setLearningLanguage(lang.code)}
+          onChange={(langCode) => setWordLangCode(langCode.code)}
         />
         <InputText
           id="word"
@@ -100,18 +122,18 @@ const EntryEdit: React.FC<Props> = ({entry, onComplete}): ReactElement => {
       <div className="overflow-y-auto  max-h-full" id="definition-edit">
         <label className="block text-sm font-medium text-gray-700">Definitions</label>
         <ul className="space-y-2">
-          {languageIUnderstand === undefined
+          {lkl
             ? <p>Loading...</p>
             : definitions.map((def) =>
               <DefinitionEdit
                 key={def.id}
-                languagesIUnderstand={languagesIUnderstand}
-                defaultDefinition={def.s}
+                knownLanguages={knownLanguages}
+                definition={def.s}
                 onChangeDefinition={s => {
                   def.s = s;
-                  setDefinitions(arrangeDefinitionHolders(languageIUnderstand.code, definitions))
+                  setDefinitions(addEmtptyDefinitionHolder(knownLanguageCode, definitions, def.id))
                 }}
-                defaultLanguage={Lang(def.language)}
+                langCode={def.language}
                 onChangeLanguage={(lang) => def.language = lang.code}
               />
             )}

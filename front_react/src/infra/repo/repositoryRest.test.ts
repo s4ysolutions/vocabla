@@ -1,11 +1,8 @@
 import {describe, expect, it} from '@effect/vitest';
 import {Layer, Option} from 'effect';
-import httpClientLive from '../http/httpClientLive.ts';
 import {Effect} from 'effect';
 import {LangRepositoryTag} from '../../app-repo/LangRepository.ts';
 import {LearningSettingsRepositoryTag} from '../../app-repo/LearningSettingsRepository.ts';
-import {restClientLayer} from '../rest/restClientLive.ts';
-import {repositoryRestLayer} from './repositoryRestLive.ts';
 import {decodeGetEntriesResponse, type GetEntriesResponseDto} from './dto/entry/GetEntriesResponse.ts';
 import {Identifier} from '../../domain/identity/Identifier.ts';
 import {Tag} from '../../domain/Tag.ts';
@@ -17,11 +14,14 @@ import type {Student} from '../../domain/Student.ts';
 import {EntriesRepositoryTag} from '../../app-repo/EntriesRepository.ts';
 import {Identified} from '../../domain/identity/Identified.ts';
 import {decodeGetLanguagesResponse, type GetLanguagesResponseDto} from './dto/lang/getLanguagesResponse.ts';
+import RestClientLive from '../rest/RestClientLive.ts';
+import HttpClientLive from '../http/HttpClientLive.ts';
+import RepositoryRestLive from './RepositoryRestLive.ts';
 
 describe('repositoryRest', () => {
-  const layer: Layer.Layer<EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag> = repositoryRestLayer.pipe(
-    Layer.provide(restClientLayer),
-    Layer.provide(httpClientLive)
+  const layer: Layer.Layer<EntriesRepositoryTag | LangRepositoryTag | LearningSettingsRepositoryTag> = RepositoryRestLive.layer.pipe(
+    Layer.provide(RestClientLive.layer),
+    Layer.provide(HttpClientLive.layer)
   )
   describe('schemas', () => {
     describe('entries', () => {

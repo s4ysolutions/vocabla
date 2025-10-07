@@ -1,3 +1,8 @@
+import loglevel from 'loglevel';
+
+const log = loglevel.getLogger('AsyncData');
+log.setLevel(loglevel.levels.INFO);
+
 export type AsyncData<T, E = Error> =
   | { _state: 'loading', previous?: T }
   | { _state: 'error'; error: E }
@@ -24,12 +29,16 @@ export const matchAsyncData = <T, E, R = void>(data: AsyncData<T, E>,
 ): R => {
   switch (data._state) {
     case 'loading':
+      log.debug('matchAsyncData: loading', data.previous);
       return loading(data.previous);
     case 'error':
+      log.debug('matchAsyncData: error', data.error);
       return error(data.error);
     case 'success':
+      log.debug('matchAsyncData: success', data.data);
       return success(data.data);
     default: {
+      log.error('matchAsyncData: Unhandled case', data);
       // noinspection UnnecessaryLocalVariableJS
       const _exhaustiveCheck: never = data;
       throw new Error(`Unhandled case: ${JSON.stringify(_exhaustiveCheck)}`);
