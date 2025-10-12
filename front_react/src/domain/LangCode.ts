@@ -1,39 +1,24 @@
-import {Brand, ParseResult, Schema} from 'effect'
+import {Brand, Schema} from 'effect'
 
 
 export type LangCode = string & Brand.Brand<'LangCode'>
 
-const LANG_CODE_REGEX = /^[a-z]{2}[a-z]?(-[A-Z]{2}[A-Z]?)?$/
+//const LANG_CODE_REGEX = /^[a-z]{2}[a-z]?(-[A-Z]{2}[A-Z]?)?$/
+const LANG_CODE_REGEX = /^[a-z]{2}[a-z]?$/
 const isValidLangCode = (lc: string): boolean =>
   LANG_CODE_REGEX.test(lc) || lc === 'map-bms'
-/*
+
 export const schemaLangCode: Schema.Schema<LangCode, string> = Schema.String.pipe(
-  Schema.filter(isValidLangCode, {
-    message: () => 'Invalid language code format'
+  Schema.filter((input) =>{
+    const b = isValidLangCode(input)
+    if (!b)
+      console.warn(`Invalid language code format: ${input}`)
+    return b
+  }, {
+    message: (s) =>
+      'Invalid language code format: ' + s
   }),
   Schema.brand('LangCode'),
-)
-*/
-
-//export const schemaLangCode: Schema.Schema<LangCode> = Schema.declare(
-export const schemaLangCode = Schema.declare(
-  (input): input is LangCode =>
-    typeof input === 'string' && isValidLangCode(input),
-  {
-    decode: (input: unknown) => {
-      if (typeof input !== 'string') {
-        return ParseResult.fail(new ParseResult.Type(Schema.String.ast, input))
-      }
-
-      if (!isValidLangCode(input)) {
-        return ParseResult.fail(new ParseResult.Type(schemaLangCode.ast, input))
-      }
-
-      return ParseResult.succeed(input as LangCode)
-    },
-
-    encode: (langCode: unknown) => ParseResult.succeed(langCode)
-  }
 )
 
 const _check1: LangCode = '' as Schema.Schema.Type<typeof schemaLangCode>
@@ -51,3 +36,26 @@ export const isLangCode = Schema.is(schemaLangCode)
 
 export const emptyLangCode: LangCode = LangCode('')
 export const isEmptyLangCode = (lc: LangCode) => lc === emptyLangCode
+
+//export const schemaLangCode: Schema.Schema<LangCode> = Schema.declare(
+/*
+export const schemaLangCode = Schema.declare(
+  (input): input is LangCode =>
+    typeof input === 'string' && isValidLangCode(input),
+  {
+    decode: (input: unknown) => {
+      if (typeof input !== 'string') {
+        return ParseResult.fail(new ParseResult.Type(Schema.String.ast, input, 'Input must be a string'))
+      }
+
+      if (!isValidLangCode(input)) {
+        return ParseResult.fail(new ParseResult.Type(Schema.String.ast, input, 'Invalid language code format'))
+      }
+
+      return ParseResult.succeed(input as LangCode)
+    },
+
+    encode: (langCode: unknown) => ParseResult.succeed(langCode),
+  }
+)
+ */

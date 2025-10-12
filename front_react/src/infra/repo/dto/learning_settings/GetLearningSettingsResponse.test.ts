@@ -298,7 +298,7 @@ describe('decodeGetLearningSettingsResponse', () => {
   });
   it('{"learningSettings":{"learnLanguages":[],"knownLanguages":["en","fr"],"tags":[]}}', () => {
     const response: GetLearningSettingsResponseDto =
-      JSON.parse('{"learningSettings":{"learnLanguages":[],"knownLanguages":["string","fr"],"tags":[]}}');
+      JSON.parse('{"learningSettings":{"learnLanguages":[],"knownLanguages":["en","fr"],"tags":[]}}');
 
     const result = Effect.runSync(decodeGetLearningSettingsResponse(response));
     expect(result).toEqual({
