@@ -173,7 +173,6 @@ val langRoRepository: LangRepository = new LangRepository:
       Lang("map-bms", "🇮🇩", "Basa Banyumasan"),
       Lang("btk", "🇮🇩", "Hata Batak"),
       Lang("rej", "🇮🇩", "Bahasa Rejang"),
-      Lang("lv", "🇱🇻", "Latviešu"),
       Lang("war", "🇵🇭", "Winaray"),
       Lang("hil", "🇵🇭", "Hiligaynon"),
       Lang("ilo", "🇵🇭", "Ilokano"),
