@@ -10,4 +10,4 @@ export const menuItems: MenuItem[] = [
   { id: 'learning-settings', title: T`Learning Settings` },
 ]
 
-export const defaultMenuItem : MenuItem = menuItems[0]!;
+export const defaultMenuItem : MenuItem = menuItems[1]!;

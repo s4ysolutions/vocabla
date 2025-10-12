@@ -18,15 +18,17 @@ import loglevel from 'loglevel';
 const log = loglevel.getLogger('effect-runtime')
 log.setLevel(loglevel.levels.INFO)
 
-const te = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => {
+const te = <A, E, R>(effect: Effect.Effect<A, E, R & UseCases>): Effect.Effect<A, E, R & UseCases> => {
   if (!effect)
-    log.trace('Running undefined effect')
+    log.error('Running undefined effect')
+  log.trace('Running effect', effect)
   return effect
 }
 
 const tf = <A, E>(fiber: Fiber.Fiber<A, E>): Fiber.Fiber<A, E> => {
   if (!fiber)
-    log.trace('Handling undefined fiber')
+    log.error('Runnng undefined fiber')
+  log.trace('Running fiber', fiber)
   return fiber
 }
 
@@ -67,14 +69,21 @@ export const promiseAppEffectExit = <A, E, R>(
 
 export const forkAppEffect = <A, E, R>(
   effect: Effect.Effect<A, E, R & UseCases>
-) =>
-  appRuntime.runFork(te(effect).pipe(
+) => {
+  const eLogged: Effect.Effect<A, E, R & UseCases> = te(effect)
+  const eSafe: Effect.Effect<A, E, R & UseCases> = eLogged.pipe(
+    Effect.tapError(error =>
+      Effect.sync(() => log.error('Error in forked effect:', error))
+    )
+    /*
     Effect.catchAll((error) => {
       console.error('Unhandled error:', error)
       // Optionally set error state or retry
-      return Effect.unit
-    })
-  ));
+      return Effect.succeed(null)
+    })*/
+  )
+  return appRuntime.runFork(eSafe)
+};
 
 export const interruptFiber = <A, E>(fiber: Fiber.Fiber<A, E>) =>
   Fiber.interrupt(tf(fiber)) as unknown as void;

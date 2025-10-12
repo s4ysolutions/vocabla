@@ -24,7 +24,8 @@ import {
   LearningSettingsRepositoryTag
 } from '../../app-repo/LearningSettingsRepository.ts';
 import {
-  decodeGetLearningSettingsResponse, type GetLearningSettingsResponseDto,
+  decodeGetLearningSettingsResponse,
+  type GetLearningSettingsResponseDto,
 } from './dto/learning_settings/GetLearningSettingsResponse.ts';
 import {
   type AddKnownLangResponseDto,
@@ -44,7 +45,7 @@ import logLevel from 'loglevel';
 import type {EntriesFilter} from '../../domain/EntriesFilter.ts';
 
 const log = logLevel.getLogger('repositoryRest')
-log.setLevel(logLevel.levels.INFO)
+log.setLevel(logLevel.levels.DEBUG)
 
 const urlBase = 'http://vocabla:3000/rest/v1'
 
@@ -142,14 +143,11 @@ class RepositoryRestLive implements EntriesRepository, LangRepository, LearningS
 
   // LearningSettingsRepository methods
   getLearningSettings(studentId: number): Effect.Effect<LearningSettingsR, InfraError> {
-    log.debug('LearningSettingsRepository.getLearningSettings', {studentId, this: this})
-    const effect = Effect.mapError(
+    return Effect.mapError(
       this.restClient.get<GetLearningSettingsResponseDto, LearningSettingsR>({
         url: `${urlBase}/students/${studentId}/learning-settings`,
         decoder: decodeGetLearningSettingsResponse
       }), _error2infraError)
-    log.debug('LearningSettingsRepository.getLearningSettings effect created', {studentId, effect})
-    return effect
   }
 
   addKnownLang(studentId: number, langCode: string) {

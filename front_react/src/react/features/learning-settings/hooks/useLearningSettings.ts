@@ -10,16 +10,18 @@ import {forkAppEffect, interruptFiber, promiseAppEffect} from '../../../../app/e
 import type {LangCode} from '../../../../domain/LangCode.ts';
 import type {AppError} from '../../../../app-ports/errors/AppError.ts';
 
-import log from 'loglevel'
 import type {TagId} from '../../../../domain/Tag.ts';
 import type {Identifier} from '../../../../domain/identity/Identifier.ts';
 import type {TagSmall} from '../../../../domain/TagSmall.ts';
+import loglevel from 'loglevel';
 
-log.getLogger('useLearningSettings').setLevel('debug')
+const log = loglevel.getLogger('useLearningSettings')
+log.setLevel(loglevel.levels.INFO)
 
-const effect = (f: (useCases: LearningSettingsUseCases) => Effect.Effect<LearningSettings, AppError>) =>
-  promiseAppEffect(LearningSettingsUseCasesTag.pipe(Effect.flatMap(f)))
+const withUseCases = (f: (useCases: LearningSettingsUseCases) => Effect.Effect<LearningSettings, AppError>) =>
+  LearningSettingsUseCasesTag.pipe(Effect.flatMap(f))
 
+const refreshLearningSettings = withUseCases(useCases => useCases.refreshLearningSettings());
 
 const useLearningSettings = () => {
   const [learningSettings, setLearningSettings] = useState<AsyncData<LearningSettings, AppError>>(LoadingData())
@@ -32,20 +34,29 @@ const useLearningSettings = () => {
         Stream.runForEach((data) => Effect.sync(() => setLearningSettings(data)))
       )
     }))
+    promiseAppEffect(refreshLearningSettings).catch(e => log.error('Error refreshing learning settings', e))
     return () => {
       interruptFiber(fiber)
     }
   }, []);
 
-  const withLearningSettings = useCallback((f: (useCases: LearningSettingsUseCases) => Effect.Effect<LearningSettings, AppError>) => {
+  const runWithLearningSettings = useCallback((f: (useCases: LearningSettingsUseCases) => Effect.Effect<LearningSettings, AppError>) => {
+    // TODO: should exit if already loading?
+
+    // Keep previous settings while loading new ones
     const prevLearningSettings = learningSettings
-    log.debug('Loading learning settings with previous', prevLearningSettings)
+    // change state to loading, keeping previous data if any
     setLearningSettings(matchAsyncData(learningSettings,
       (previous) => LoadingData(previous),
       () => LoadingData(LearningSettings.empty),
       (data) => LoadingData(data)))
-    return effect(f).then(
+
+    // Run the effect
+    return promiseAppEffect(withUseCases(f)).then(
+      // on success, update the state with new data
       (ls) => setLearningSettings(SuccessData(ls)),
+      // on error, log it and restore previous state
+      // TODO: should be always Success in order to cancel loading state?
       (error) => {
         log.error('Error loading learning settings', error)
         setLearningSettings(prevLearningSettings)
@@ -54,28 +65,28 @@ const useLearningSettings = () => {
   }, [learningSettings])
 
   const addLearnLang = useCallback((langCode: LangCode) =>
-      withLearningSettings(useCases => useCases.addLearnLang(langCode)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.addLearnLang(langCode)),
+    [runWithLearningSettings])
 
   const removeLearnLang = useCallback((langCode: LangCode) =>
-      withLearningSettings(useCases => useCases.removeLearnLang(langCode)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.removeLearnLang(langCode)),
+    [runWithLearningSettings])
 
   const addKnownLang = useCallback((langCode: LangCode) =>
-      withLearningSettings(useCases => useCases.addKnownLang(langCode)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.addKnownLang(langCode)),
+    [runWithLearningSettings])
 
   const removeKnownLang = useCallback((langCode: LangCode) =>
-      withLearningSettings(useCases => useCases.removeKnownLang(langCode)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.removeKnownLang(langCode)),
+    [runWithLearningSettings])
 
   const addTag = useCallback((tag: { label: string }) =>
-      withLearningSettings(useCases => useCases.addTag(tag)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.addTag(tag)),
+    [runWithLearningSettings])
 
   const removeTag = useCallback((tagId: Identifier<TagSmall>) =>
-      withLearningSettings(useCases => useCases.removeTag(tagId as TagId)),
-    [withLearningSettings])
+      runWithLearningSettings(useCases => useCases.removeTag(tagId as TagId)),
+    [runWithLearningSettings])
 
   return useMemo(() => ({
     learningSettings,

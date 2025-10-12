@@ -19,7 +19,7 @@ import {type LanguagesUseCases, LanguagesUseCasesTag} from '../app-ports/Languag
 import infra2appError from './infra2appError.ts';
 
 const log = loglevel.getLogger('makeLearningSettingsUseCases')
-log.setLevel(loglevel.levels.INFO)
+log.setLevel(loglevel.levels.DEBUG)
 
 /*
 const df = (o: unknown): unknown => {
@@ -86,7 +86,6 @@ class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
   process(effect: Effect.Effect<LearningSettingsR, InfraError>): Effect.Effect<LearningSettings, AppError> {
     const self = this
     return Effect.gen(function* () {
-        log.debug('LearningSettingsUseCasesLive.process: started')
         const als = yield* self.lastLearningSettings
         if (als._state === 'success') {
           yield* self.setState(LoadingData(als.data))
@@ -94,9 +93,7 @@ class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
           yield* self.setState(LoadingData())
         }
 
-        log.debug('LearningSettingsUseCasesLive.process: fetching learning settings...')
         const learnSettingsR = yield* effect.pipe(Effect.mapError(infra2appError))
-        log.debug('LearningSettingsUseCasesLive.process: fetched learning settings', learnSettingsR)
         const learnLangs =
           yield* Effect.all(learnSettingsR.learnLangCodes.map(code => self.languagesUseCases.getLangByCode(code)))
         const knownLangs =
@@ -131,22 +128,12 @@ class LearningSettingsUseCasesLive implements LearningSettingsUseCases {
   private withStudentId(f: (studentId: StudentId) => Effect.Effect<LearningSettings, AppError>):
     Effect.Effect<LearningSettings, AppError> {
     return this.meUseCases.currentStudentId.pipe(
-      Effect.tap((studentId) => Effect.sync(() =>
-        log.debug('LearningSettingsUseCasesLive.withStudentId:', studentId)
-      )),
-      Effect.flatMap((lastStudentId) => {
-        log.debug('LearningSettingsUseCasesLive.withStudentId: got student id', lastStudentId)
-        const effect = matchAsyncData(lastStudentId,
+      Effect.flatMap((lastStudentId) => matchAsyncData(lastStudentId,
           (previous) => this.prevSettings(previous),
           (error) => Effect.fail(error),
           (studentId) => f(studentId)
         )
-        log.debug('LearningSettingsUseCasesLive.withStudentId: processing by effect', effect)
-        return effect
-      }),
-      Effect.tap((learningSettings) => Effect.sync(() => {
-        log.debug('LearningSettingsUseCasesLive.withStudentId: got learning settings', learningSettings)
-      })),
+      ),
     )
   }
 
