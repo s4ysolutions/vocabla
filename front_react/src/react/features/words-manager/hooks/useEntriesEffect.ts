@@ -10,6 +10,10 @@ import type {AppError} from '../../../../app-ports/errors/AppError.ts';
 import type {Tag} from '../../../../domain/Tag.ts';
 import {EntriesUseCasesTag} from '../../../../app-ports/EntriesUseCases.ts';
 import {type EntriesFilter} from '../../../../domain/EntriesFilter.ts';
+import loglevel from 'loglevel';
+
+const log = loglevel.getLogger('useEntriesEffect')
+log.setLevel(loglevel.levels.INFO)
 
 const programGetEntries = (
   filter: EntriesFilter
@@ -82,12 +86,39 @@ const useEntries = (filter: EntriesFilter): {
     tagIds: ReadonlyArray<Identifier<Tag>>,
     filter: EntriesFilter
   ) => {
+    log.debug('Adding entry:', {word, wordLang, definition, definitionLang, tagIds, filter});
+    setLoading(true);
     try {
       const refreshedEntries = await promiseAppEffect(
         programAddEntry(Localized(wordLang, word), [Definition(Localized(definitionLang, definition))], tagIds, filter));
       setEntries(refreshedEntries.map(e => e));
     } catch (error) {
-      console.error('Failed to add entry:', error);
+      log.error('Failed to add entry:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteEntry = async (entryId: Identifier<Entry>) => {
+    log.debug('Deleting entry:', {entryId});
+    setLoading(true);
+    try {
+      // Assuming there's a deleteEntry use case method
+      await promiseAppEffect(
+        EntriesUseCasesTag.pipe(
+          Effect.flatMap(useCase => useCase.(entryId)),
+          Effect.catchAll((error: AppError) =>
+            Effect.log('Application error deleting entry: ' + error.message)
+          )
+        )
+      );
+      // Refresh entries after deletion
+      const refreshedEntries = await promiseAppEffect(programGetEntries(filter));
+      setEntries(refreshedEntries.map(e => e));
+    } catch (error) {
+      log.error('Failed to delete entry:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

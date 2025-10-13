@@ -9,7 +9,7 @@ import {type Identifier} from '../../domain/identity/Identifier.ts';
 import {ParseError} from 'effect/ParseResult';
 import {type EntriesRepository, EntriesRepositoryTag} from '../../app-repo/EntriesRepository.ts';
 import type {CreateEntryRequest} from './dto/entry/CreateEntryRequest.ts';
-import {type Entry} from '../../domain/Entry.ts';
+import {Definition, type Entry} from '../../domain/Entry.ts';
 import {type CreateTagResponseDto, decodeCreateTagResponse} from './dto/learning_settings/CreateTagResponseDto.ts';
 import {type CreateEntryResponse, decodeCreateEntryResponse} from './dto/entry/CreateEntryResponse.ts';
 import {decodeGetEntryResponse, type GetEntryResponse} from './dto/entry/GetEntryResponse.ts';
@@ -43,6 +43,8 @@ import {
 import type {CreateTagRequestDto} from './dto/learning_settings/CreateTagRequestDto.ts';
 import logLevel from 'loglevel';
 import type {EntriesFilter} from '../../domain/EntriesFilter.ts';
+import type {Student} from '../../domain/Student.ts';
+import type {Localized} from '../../domain/Localized.ts';
 
 const log = logLevel.getLogger('repositoryRest')
 log.setLevel(logLevel.levels.DEBUG)
@@ -74,38 +76,46 @@ class RepositoryRestLive implements EntriesRepository, LangRepository, LearningS
   )
 
   // EntriesRepository methods
-  createEntry(entry: Entry, tagIds: ReadonlyArray<number>) {
+  createEntry(
+    studentId: Identifier<Student>,
+    word: Localized,
+    definitions: Readonly<Definition[]>,
+    tagIds: ReadonlyArray<number>) {
     const request: CreateEntryRequest = {
       entry: {
-        headword: {word: entry.word.s, langCode: entry.word.langCode},
-        definitions: entry.definitions.map(definition => ({
+        headword: {word: word.s, langCode: word.langCode},
+        definitions: definitions.map(definition => ({
           definition: definition.localized.s,
           langCode: definition.localized.langCode
         })),
-        ownerId: entry.ownerId,
+        ownerId: studentId
       },
       tagIds: tagIds as number[]
     }
     return Effect.mapError(
       this.restClient.post<CreateEntryRequest, CreateEntryResponse, Identifier<Entry>>({
-        url: `${urlBase}/entries`,
+        url: `${urlBase}/students/${studentId}/entries`,
         body: request,
         decoder: decodeCreateEntryResponse,
       }), _error2infraError
     )
   }
 
-  getEntry(entryId: number) {
+  getEntry(
+    studentId: Identifier<Student>,
+    entryId: number) {
     return Effect.mapError(
       this.restClient.get<GetEntryResponse, Option.Option<Entry>>({
-        url: `${urlBase}/entries/${entryId}`,
+        url: `${urlBase}/students/${studentId}/entries/${entryId}`,
         decoder: decodeGetEntryResponse,
       }), _error2infraError)
   }
 
-  getEntriesByOwner(ownerId: number, filter: EntriesFilter) {
+  getEntries(
+    studentId: Identifier<Student>,
+    filter: EntriesFilter) {
     const queryParams = new URLSearchParams();
-    queryParams.append('ownerId', ownerId.toString());
+    queryParams.append('ownerId', studentId.toString());
 
     if (filter.tagIds.length > 0) {
       filter.tagIds.forEach((tagId: number) => queryParams.append('tagId', tagId.toString()));
@@ -125,6 +135,16 @@ class RepositoryRestLive implements EntriesRepository, LangRepository, LearningS
       this.restClient.get<GetEntriesResponseDto, { readonly entries: ReadonlyArray<Identified<Entry>> }>({
         url: `${urlBase}/entries?${queryParams.toString()}`,
         decoder: decodeGetEntriesResponse,
+      }), _error2infraError)
+  }
+
+  deleteEntry(
+    studentId: Identifier<Student>,
+    entryId: number) {
+    return Effect.mapError(
+      this.restClient.delete<GetEntryResponse, Option.Option<Entry>>({
+        url: `${urlBase}/students/${studentId}/entries/${entryId}`,
+        decoder: decodeGetEntryResponse,
       }), _error2infraError)
   }
 

@@ -54,7 +54,7 @@ class EntriesUseCasesLive implements EntriesUseCases {
 
         const studentId = aStudentId.data
 
-        return this.entriesRepository.getEntriesByOwner(studentId, filter).pipe(
+        return this.entriesRepository.getEntries(studentId, filter).pipe(
           Effect.mapError(infra2appError),
           Effect.map(r => r.entries)
         )

@@ -1,4 +1,4 @@
-import React, {type JSX, useState} from 'react'
+import React, {type JSX, useCallback, useEffect, useState} from 'react'
 import PrimaryButton from '../../widgets/buttons/PrimaryButton.tsx'
 import LanguageSelect from '../../widgets/selectors/LanguageSelect.tsx'
 import InputText from '../../widgets/inputs/InputText.tsx'
@@ -29,17 +29,26 @@ const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
   const {learnLanguages, loading: lll} = useLearnLanguages()
   const {knownLanguages, loading: lkl} = useKnownLanguages()
 
-  const learnFallback = learnLanguages.length > 0 ? learnLanguages[0]!.code : unknownLangauge?.code || emptyLangCode
-  const [learnSelected, setLearnSelected] = useState(learnFallback)
-  const knownFallback = knownLanguages.length > 0 ? knownLanguages[0]!.code : defaultLanguage?.code || emptyLangCode
-  const [knownSelected, setKnownSelected] = useState(knownFallback)
+  const learnLangInit = learnLanguages.length > 0 ? learnLanguages[0]!.code : unknownLangauge?.code || emptyLangCode
+  const knownLangInit = knownLanguages.length > 0 ? knownLanguages[0]!.code : defaultLanguage?.code || emptyLangCode
+
+  const [learnSelected, setLearnSelected] = useState(learnLangInit)
+  const [knownSelected, setKnownSelected] = useState(knownLangInit)
 
   const [word, setWord] = useState<string>('')
   const [definition, setDescription] = useState<string>('')
 
-  logRender.debug('Rendering EntryAdd component', {lll, learnSelected})
+  logRender.debug('Rendering EntryAdd component', {learnSelected, knownSelected, word, definition})
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setLearnSelected(learnLangInit)
+  }, [learnLangInit]);
+
+  useEffect(() => {
+    setKnownSelected(knownLangInit)
+  }, [knownLangInit]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     log.debug('Submitting new entry:', {
       word,
@@ -62,14 +71,14 @@ const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
 
     add(word, learnSelected, definition, knownSelected, [])
     // Add logic to handle form submission
-  }
+  }, [add, word, definition, learnSelected, knownSelected])
 
   return <form onSubmit={handleSubmit}>
     <div className="flex items-center space-x-4">
       <LanguageSelect
         languages={learnLanguages}
         selectedCode={learnSelected}
-        loading={lll || isEmptyLangCode(learnFallback)}
+        loading={lll || isEmptyLangCode(learnLangInit)}
         onChange={(lang) => setLearnSelected(lang.code)}
       />
 
@@ -89,7 +98,7 @@ const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
         languages={knownLanguages}
         //fallbackLanguage={defaultLanguage || knownLanguages[0]!}
         selectedCode={knownSelected}
-        loading={lkl || isEmptyLangCode(knownFallback)}
+        loading={lkl || isEmptyLangCode(knownLangInit)}
         onChange={(lang) => setKnownSelected(lang.code)}/>
       <Textarea
         placeholder="Enter a description"

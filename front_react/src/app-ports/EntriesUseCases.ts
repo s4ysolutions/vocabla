@@ -11,6 +11,8 @@ export interface EntriesUseCases {
   createEntry(word: Localized, definitions: Readonly<Definition[]>, tagIds: ReadonlyArray<Identifier<Tag>>): Effect.Effect<Identifier<Entry>, AppError>
 
   getEntriesByOwner(filter: EntriesFilter): Effect.Effect<ReadonlyArray<Identified<Entry>>, AppError>;
+
+  deleteEntry(entryId: Identifier<Entry>): Effect.Effect<void, AppError>;
 }
 
 export class EntriesUseCasesTag extends Context.Tag('EntriesUseCasesTag')<
