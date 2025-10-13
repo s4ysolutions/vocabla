@@ -40,7 +40,7 @@ object DeleteTag:
   ] =
     Endpoint(
       DELETE / prefix / long("studentId") / "learning-settings" / "tags" / long(
-        "tagIds"
+        "tagId"
       )
     )
       .tag(openapiTag)
