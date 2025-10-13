@@ -4,10 +4,11 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.ports.entries_get.GetEntriesUseCase
-import solutions.s4y.vocabla.app.ports.entry_create.CreateEntryUseCase
-import solutions.s4y.vocabla.app.ports.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.lang_get.GetLanguagesUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entries_get.GetEntriesUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entry_create.CreateEntryUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entry_delete.DeleteEntryUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entry_get.GetEntryUseCase
 import solutions.s4y.vocabla.app.ports.students.settings.GetLearningSettingsUseCase
 import solutions.s4y.vocabla.app.ports.students.settings.tags.{
   CreateTagUseCase,
@@ -27,12 +28,8 @@ import solutions.s4y.vocabla.domain.identity.IdentifierSchema
 import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAuthWithContext
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.browserLocale
 import solutions.s4y.vocabla.endpoint.http.routes.Ping
-import solutions.s4y.vocabla.endpoint.http.routes.entries.{
-  CreateEntry,
-  GetEntries,
-  GetEntry
-}
 import solutions.s4y.vocabla.endpoint.http.routes.languages.GetLanguages
+import solutions.s4y.vocabla.endpoint.http.routes.students.entries.{CreateEntry, DeleteEntry, GetEntries, GetEntry}
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.GetSettings
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags.{
   CreateTag,
@@ -62,6 +59,7 @@ final class RESTService(
     private val createTagUseCase: CreateTagUseCase,
     private val deleteTagUseCase: DeleteTagUseCase,
     private val getEntryUseCase: GetEntryUseCase,
+    private val deleteEntryUseCase: DeleteEntryUseCase,
     private val getEntriesUseCase: GetEntriesUseCase,
     private val getTagUseCase: GetTagUseCase,
     private val getLanguagesUseCase: GetLanguagesUseCase,
@@ -82,6 +80,7 @@ final class RESTService(
       DeleteTag.endpoint,
       CreateEntry.endpoint,
       GetEntry.endpoint,
+      DeleteEntry.endpoint,
       GetEntries.endpoint,
       GetLanguages.endpoint,
       GetSettings.endpoint,
@@ -101,7 +100,7 @@ final class RESTService(
 
   private val routes: Routes[
     PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
-      GetEntryUseCase & GetEntriesUseCase & GetTagUseCase & DeleteTagUseCase &
+      GetEntryUseCase & DeleteEntryUseCase & GetEntriesUseCase & GetTagUseCase & DeleteTagUseCase &
       GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
       RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     Response
@@ -116,6 +115,7 @@ final class RESTService(
             DeleteTag.route,
             CreateEntry.route,
             GetEntry.route,
+            DeleteEntry.route,
             GetEntries.route,
             GetSettings.route,
             AddKnownLang.route,
@@ -158,6 +158,7 @@ final class RESTService(
         .add(getTagUseCase)
         .add(createEntryUseCase)
         .add(getEntryUseCase)
+        .add(deleteEntryUseCase)
         .add(getEntriesUseCase)
         .add(getLanguagesUseCase)
         .add(getLearningSettingsUseCase)
@@ -181,7 +182,7 @@ object RESTService:
 
   val layer: ZLayer[
     CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
-      GetEntriesUseCase & CreateTagUseCase & GetTagUseCase & DeleteTagUseCase &
+      DeleteEntryUseCase & GetEntriesUseCase & CreateTagUseCase & GetTagUseCase & DeleteTagUseCase &
       GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
       RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     InfraFailure,
@@ -190,7 +191,7 @@ object RESTService:
     RestConfig.layer
       >>> httpServerLayer
       >>> ZLayer.fromFunction(
-        new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _)
+        new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)
       )
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

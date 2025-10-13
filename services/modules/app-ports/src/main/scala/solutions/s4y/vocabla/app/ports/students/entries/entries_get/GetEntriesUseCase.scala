@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.entries_get
+package solutions.s4y.vocabla.app.ports.students.entries.entries_get
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.UserContext
@@ -9,5 +9,5 @@ import zio.schema.annotation.description
 @description("Use case for retrieving entries with optional filters.")
 trait GetEntriesUseCase:
   def apply(
-      command: GetEntriesRequest
+      command: GetEntriesCommand
   ): ZIO[UserContext, ServiceFailure | NotAuthorized, GetEntriesResponse]

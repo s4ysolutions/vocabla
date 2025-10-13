@@ -1,21 +1,22 @@
-package solutions.s4y.vocabla.endpoint.http.routes.entries
+package solutions.s4y.vocabla.endpoint.http.routes.students.entries
 
-import solutions.s4y.vocabla.app.ports.entry_get.{
-  GetEntryRequest,
+import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
+import solutions.s4y.vocabla.app.ports.students.entries.entry_get.{
+  GetEntryCommand,
   GetEntryResponse,
   GetEntryUseCase
 }
-import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
-import solutions.s4y.vocabla.domain.{Entry, UserContext}
+import solutions.s4y.vocabla.domain.{Entry, User, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
   InternalServerError500
 }
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
+import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
 import zio.ZIO
 import zio.http.Method.GET
 import zio.http.codec.{HttpCodec, PathCodec}
@@ -29,22 +30,25 @@ object GetEntry:
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
-    Long,
-    GetEntryRequest,
+    (Long, Long),
+    GetEntryCommand,
     HttpError,
     GetEntryResponse,
     None
   ] =
-    Endpoint(GET / prefix / long("entryId"))
-      .tag("Vocabulary Entries")
+    Endpoint(GET / prefix / long("studentId") / "entries" / long("entryId"))
+      .tag(openapiTag)
       .out[GetEntryResponse]
       .outErrors[HttpError](
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
-      .transformIn(entryId => GetEntryRequest(entryId.identifier[Entry]))(
-        command => command.entryId.as[Long]
-      )
+      .transformIn((userId, entryId) =>
+        GetEntryCommand(
+          userId = userId.identifier[User],
+          entryId = entryId.identifier[Entry]
+        )
+      )(command => (command.userId.as[Long], command.entryId.as[Long]))
 
   def route(using
       IdentifierSchema

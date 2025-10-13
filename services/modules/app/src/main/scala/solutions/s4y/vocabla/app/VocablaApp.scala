@@ -5,25 +5,30 @@ import solutions.s4y.i18n.ResourcesStringsResolver.default
 import solutions.s4y.i18n.t
 import solutions.s4y.vocabla.app.VocablaApp.mapInfraFailure
 import solutions.s4y.vocabla.app.ports.*
-import solutions.s4y.vocabla.app.ports.entries_get.{
-  GetEntriesRequest,
-  GetEntriesResponse,
-  GetEntriesUseCase
-}
-import solutions.s4y.vocabla.app.ports.entry_create.{
-  CreateEntryRequest,
-  CreateEntryResponse,
-  CreateEntryUseCase
-}
-import solutions.s4y.vocabla.app.ports.entry_get.{
-  GetEntryRequest,
-  GetEntryResponse,
-  GetEntryUseCase
-}
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
 import solutions.s4y.vocabla.app.ports.lang_get.{
   GetLanguagesResponse,
   GetLanguagesUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.entries.entries_get.{
+  GetEntriesCommand,
+  GetEntriesResponse,
+  GetEntriesUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.entries.entry_create.{
+  CreateEntryCommand,
+  CreateEntryResponse,
+  CreateEntryUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.entries.entry_delete.{
+  DeleteEntryCommand,
+  DeleteEntryResponse,
+  DeleteEntryUseCase
+}
+import solutions.s4y.vocabla.app.ports.students.entries.entry_get.{
+  GetEntryCommand,
+  GetEntryResponse,
+  GetEntryUseCase
 }
 import solutions.s4y.vocabla.app.ports.students.settings.known_lang.*
 import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.*
@@ -71,7 +76,8 @@ final class VocablaApp[TX <: TransactionContext](
       AddLearnLangUseCase,
       AddKnownLangUseCase,
       RemoveLearnLangUseCase,
-      RemoveKnownLangUseCase:
+      RemoveKnownLangUseCase,
+      DeleteEntryUseCase:
   VocablaApp.logger.debug("Creating VocablaApp instance")
 
   /** **************************************************************************
@@ -88,7 +94,7 @@ final class VocablaApp[TX <: TransactionContext](
     * Entries
     */
   override def apply(
-      command: CreateEntryRequest
+      command: CreateEntryCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
@@ -102,14 +108,14 @@ final class VocablaApp[TX <: TransactionContext](
       )
 
   override def apply(
-      command: GetEntryRequest
+      command: GetEntryCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
     GetEntryResponse
   ] =
     authorized(
-      authorizationService.canGetEntry(command.entryId, _)
+      authorizationService.canGetEntry(command.entryId, command.userId, _)
     ) *> transaction(
       "entryGet",
       entriesRepository
@@ -117,7 +123,7 @@ final class VocablaApp[TX <: TransactionContext](
     ).map(entry => GetEntryResponse(entry))
 
   override def apply(
-      command: GetEntriesRequest
+      command: GetEntriesCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
@@ -129,11 +135,25 @@ final class VocablaApp[TX <: TransactionContext](
       "entriesGet",
       entriesRepository.get(
         ownerId = command.ownerId,
-        tagIds = command.tagId,
-        langCodes = command.lang,
+        tagIds = command.tagIds,
+        langCodes = command.langs,
         text = command.text
       )
     ).map(entriesMap => GetEntriesResponse(entriesMap))
+
+  override def apply(
+      command: DeleteEntryCommand
+  ): ZIO[
+    UserContext,
+    ServiceFailure | NotAuthorized,
+    DeleteEntryResponse
+  ] =
+    authorized(
+      authorizationService.canDeleteEntry(command.entryId, command.userId, _)
+    ) *> transaction(
+      "entryDelete",
+      entriesRepository.delete(command.entryId)
+    ).map(deleted => DeleteEntryResponse(deleted))
 
   /** **************************************************************************
     * Tags

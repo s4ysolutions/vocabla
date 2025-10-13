@@ -1,16 +1,15 @@
-package solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags
+package solutions.s4y.vocabla.endpoint.http.routes.students.entries
 
 import solutions.s4y.vocabla.app.ports.errors.ServiceFailure
-import solutions.s4y.vocabla.app.ports.students.settings.tags.{
-  GetTagCommand,
-  GetTagResponse,
-  GetTagUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entry_delete.{
+  DeleteEntryCommand,
+  DeleteEntryResponse,
+  DeleteEntryUseCase
 }
-import solutions.s4y.vocabla.domain.User.Student
 import solutions.s4y.vocabla.domain.errors.NotAuthorized
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
-import solutions.s4y.vocabla.domain.identity.IdentifierSchema
-import solutions.s4y.vocabla.domain.{Tag, UserContext}
+import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
+import solutions.s4y.vocabla.domain.{Entry, User, UserContext}
 import solutions.s4y.vocabla.endpoint.http.error.HttpError
 import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
   Forbidden403,
@@ -18,48 +17,45 @@ import solutions.s4y.vocabla.endpoint.http.error.HttpError.{
 }
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.withLocale
 import solutions.s4y.vocabla.endpoint.http.routes.students.prefix
-import solutions.s4y.vocabla.endpoint.http.routes.students.settings.openapiTag
 import zio.ZIO
-import zio.http.Method.GET
-import zio.http.codec.{HttpCodec, PathCodec}
-import zio.http.endpoint.{AuthType, Endpoint}
+import zio.http.Method.DELETE
+import zio.http.codec.HttpCodec
+import zio.http.endpoint.AuthType.None
+import zio.http.endpoint.Endpoint
 import zio.http.{Response, Route, Status, long}
 
 import java.util.Locale
 
-object GetTag:
-
+object DeleteEntry:
   def endpoint(using
       IdentifierSchema
   ): Endpoint[
     (Long, Long),
-    GetTagCommand,
+    DeleteEntryCommand,
     HttpError,
-    GetTagResponse,
-    AuthType.Bearer.type
+    DeleteEntryResponse,
+    None
   ] =
-    Endpoint(
-      GET / prefix / long("studentId") / "learning-settings" / "tags" / long(
-        "tagIds"
-      )
-    )
+    Endpoint(DELETE / prefix / long("studentId") / "entries" / long("entryId"))
       .tag(openapiTag)
-      .out[GetTagResponse]
+      .out[DeleteEntryResponse]
       .outErrors[HttpError](
         HttpCodec.error[InternalServerError500](Status.InternalServerError),
         HttpCodec.error[Forbidden403](Status.Forbidden)
       )
-      .transformIn((studentId, tagId) =>
-        GetTagCommand(studentId.identifier[Student], tagId.identifier[Tag])
-      )(command => (command.ownerId.as[Long], command.tagId.as[Long]))
-      .auth(AuthType.Bearer)
+      .transformIn((userId, entryId) =>
+        DeleteEntryCommand(
+          userId = userId.identifier[User],
+          entryId = entryId.identifier[Entry]
+        )
+      )(command => (command.userId.as[Long], command.entryId.as[Long]))
 
   def route(using
       IdentifierSchema
-  ): Route[GetTagUseCase & Locale & UserContext, Response] =
+  ): Route[DeleteEntryUseCase & Locale & UserContext, Response] =
     endpoint.implement { command =>
       withLocale {
-        ZIO.serviceWithZIO[GetTagUseCase] { useCase =>
+        ZIO.serviceWithZIO[DeleteEntryUseCase] { useCase =>
           useCase(command).mapError {
             case e: NotAuthorized => Forbidden403(e.message.localized)
             case e: ServiceFailure =>
@@ -68,3 +64,4 @@ object GetTag:
         }
       }
     }
+

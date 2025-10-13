@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.entries_get
+package solutions.s4y.vocabla.app.ports.students.entries.entries_get
 
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.{Identified, IdentifierSchema}

@@ -6,7 +6,7 @@ private val rootHandler: Handler[Any, Nothing, Request, Response] =
   Handler.fromFunction { _ =>
     val html =
       """<!DOCTYPE html>
-<html lang="en">
+<html langs="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -8,7 +8,7 @@ import solutions.s4y.vocabla.domain.errors.{
 }
 import solutions.s4y.vocabla.domain.identity.Identifier
 import solutions.s4y.vocabla.domain.owner.Owned
-import zio.prelude.{AssociativeBothCovariantOps, EqualOps, Validation}
+import zio.prelude.{EqualOps, Validation}
 
 object authorizationService:
   opaque type AuthorizedOperation = String
@@ -81,11 +81,30 @@ object authorizationService:
 
   def canGetEntry(
       entryId: Identifier[Entry],
+      userId: Identifier[User],
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
     if userContext.user.isAdmin then return Validation.succeed(())
     if !userContext.user.isStudent then
       return Validation.fail(NeitherAdminNotStudent("GetEntry"))
+    if userId !== userContext.id then
+      return Validation.fail(
+        NotTheOwner("GetEntry", entryId.toString, Some(userId.toString))
+      )
+    Validation.succeed(())
+
+  def canDeleteEntry(
+      entryId: Identifier[Entry],
+      userId: Identifier[User],
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("DeleteEntry"))
+    if userId !== userContext.id then
+      return Validation.fail(
+        NotTheOwner("DeleteEntry", entryId.toString, Some(userId.toString))
+      )
     Validation.succeed(())
 
   def canGetEntries(

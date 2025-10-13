@@ -1,4 +1,4 @@
-package solutions.s4y.vocabla.app.ports.entry_create
+package solutions.s4y.vocabla.app.ports.students.entries.entry_create
 
 import solutions.s4y.vocabla.domain.Entry
 import solutions.s4y.vocabla.domain.identity.{Identifier, IdentifierSchema}
