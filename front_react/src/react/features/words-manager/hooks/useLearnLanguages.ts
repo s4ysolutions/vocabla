@@ -41,7 +41,7 @@ const useLearnLanguages = () => {
         const suc = yield* LearningSettingsUseCasesTag
 
         // Get default language once
-        const fallbackLang = yield* luc.defaultLang
+        const fallbackLang = yield* luc.unknownLang
         // And create a mapper with it
         const mapper = learningSettings2learnLangs(fallbackLang)
 
