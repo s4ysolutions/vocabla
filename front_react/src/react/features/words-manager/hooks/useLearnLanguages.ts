@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {type AsyncData, isSuccess, matchAsyncData} from '../../../../app-ports/types.ts';
+import {type AsyncData, isSuccess, matchAsyncData, SuccessData} from '../../../../app-ports/types.ts';
 import {forkAppEffect, interruptFiber} from '../../../../app/effect-runtime.ts';
 import {Effect, Stream} from 'effect';
 import {LearningSettingsUseCasesTag} from '../../../../app-ports/LearningSettingsUseCases.ts';
@@ -49,22 +49,21 @@ const useLearnLanguages = () => {
         const initialSettings = yield* suc.lastLearningSettings
         setLS(mapper(initialSettings))
 
+        log.debug('Initial settings', initialSettings)
 
-        log.debug('Initial learning settings', initialSettings, isSuccess(initialSettings))
         if (!isSuccess(initialSettings)) {
           log.debug('Refreshed learning settings...')
-          yield* suc.refreshLearningSettings()
+          setLS(mapper(SuccessData(yield* suc.refreshLearningSettings())))
           log.debug('Refreshed learning settings')
         }
 
         log.debug('Subscribing to learning settings changes...')
-        // Subscribe to updates
-        yield* suc.streamLearningSettings.pipe(
+        suc.streamLearningSettings.pipe(
           Stream.runForEach((ls) => {
               log.debug('Learning settings changed', ls)
               return Effect.sync(() => setLS(mapper(ls)))
             }
-          )
+          ),
         )
       })
     )

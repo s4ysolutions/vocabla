@@ -9,7 +9,6 @@ import {entriesFilterEmpty} from '../../../domain/EntriesFilter.ts';
 import type {LangCode} from '../../../domain/LangCode.ts';
 import type {Identifier} from '../../../domain/identity/Identifier.ts';
 import type {Tag} from '../../../domain/Tag.ts';
-import type {TagSmall} from '../../../domain/TagSmall.ts';
 import type {Entry} from '../../../domain/Entry.ts';
 
 const renderLog = loglevel.getLogger('render')
@@ -17,9 +16,9 @@ const renderLog = loglevel.getLogger('render')
 const WordManager: React.FC = () => {
   renderLog.debug('Rendering WordManager component')
   const filter = entriesFilterEmpty
-  const {entries, loading, addEntry, removeEntry} = useEntries(filter)
+  const {entries, loading, addEntry, deleteEntry} = useEntries(filter)
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [entryToDelete, setEntryToDelete] = useState<Identifier<Entry>| null>(null);
+  const [entryToDelete, setEntryToDelete] = useState<Identifier<Entry> | null>(null);
   /*
   const entries = []
   const loading = false
@@ -49,9 +48,10 @@ const WordManager: React.FC = () => {
     filter
   )
 
-  const deleteEntry = () => {
+  const deleteEntryFilter = () => {
     if (entryToDelete) {
-      removeEntry(entryToDelete);
+      //removeEntry(entryToDelete);
+      deleteEntry(entryToDelete, filter);
       setEntryToDelete(null);
       setIsDeletePopupOpen(false);
     }
@@ -88,7 +88,7 @@ const WordManager: React.FC = () => {
             </button>
             <button
               className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              onClick={deleteEntry}
+              onClick={deleteEntryFilter}
             >
               Delete
             </button>

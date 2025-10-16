@@ -47,7 +47,7 @@ const EntryCard: React.FC<Props> = ({ entry }): ReactElement => {
                         <PrimaryButton onClick={handleEditClick}>
                             Edit
                         </PrimaryButton>
-                        <DangerButton onClick>
+                        <DangerButton>
                             Delete
                         </DangerButton>
                     </div>

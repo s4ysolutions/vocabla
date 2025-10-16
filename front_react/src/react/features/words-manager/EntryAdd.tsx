@@ -38,9 +38,10 @@ const EntryAdd = ({add}: EntryAddProps): JSX.Element => {
   const [word, setWord] = useState<string>('')
   const [definition, setDescription] = useState<string>('')
 
-  logRender.debug('Rendering EntryAdd component', {learnSelected, knownSelected, word, definition})
+  logRender.debug('Rendering EntryAdd component', {learnSelected, lll, learnLangInit, knownSelected, word, definition})
 
   useEffect(() => {
+    log.debug('Learn languages or default language changed, updating selected learning language.', {learnLangInit})
     setLearnSelected(learnLangInit)
   }, [learnLangInit]);
 

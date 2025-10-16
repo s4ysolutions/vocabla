@@ -49,9 +49,9 @@ import type {Localized} from '../../domain/Localized.ts';
 const log = logLevel.getLogger('repositoryRest')
 log.setLevel(logLevel.levels.DEBUG)
 
-const urlBase = 'http://vocabla:3000/rest/v1'
+//const urlBase = 'http://vocabla:3000/rest/v1'
 
-//const urlBase = 'http://localhost:8080/rest/v1'
+const urlBase = 'http://localhost:8080/rest/v1'
 
 class RepositoryRestLive implements EntriesRepository, LangRepository, LearningSettingsRepository {
   private constructor(
@@ -82,14 +82,11 @@ class RepositoryRestLive implements EntriesRepository, LangRepository, LearningS
     definitions: Readonly<Definition[]>,
     tagIds: ReadonlyArray<number>) {
     const request: CreateEntryRequest = {
-      entry: {
-        headword: {word: word.s, langCode: word.langCode},
-        definitions: definitions.map(definition => ({
-          definition: definition.localized.s,
-          langCode: definition.localized.langCode
-        })),
-        ownerId: studentId
-      },
+      headword: {word: word.s, langCode: word.langCode},
+      definitions: definitions.map(definition => ({
+        definition: definition.localized.s,
+        langCode: definition.localized.langCode
+      })),
       tagIds: tagIds as number[]
     }
     return Effect.mapError(
@@ -133,7 +130,7 @@ class RepositoryRestLive implements EntriesRepository, LangRepository, LearningS
 
     return Effect.mapError(
       this.restClient.get<GetEntriesResponseDto, { readonly entries: ReadonlyArray<Identified<Entry>> }>({
-        url: `${urlBase}/entries?${queryParams.toString()}`,
+        url: `${urlBase}/students/${studentId}/entries?${queryParams.toString()}`,
         decoder: decodeGetEntriesResponse,
       }), _error2infraError)
   }

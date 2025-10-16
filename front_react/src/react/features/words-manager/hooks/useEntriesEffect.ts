@@ -49,6 +49,25 @@ const programAddEntry = (
     )
   )
 
+const programDeleteEntry = (
+  entryId: Identifier<Entry>,
+  filter: EntriesFilter
+): Effect.Effect<ReadonlyArray<Identified<Entry>>, never, EntriesUseCasesTag> =>
+  EntriesUseCasesTag.pipe(
+    Effect.flatMap((entriesUseCases) =>
+      entriesUseCases.deleteEntry(entryId).pipe(
+        Effect.flatMap(() => programGetEntries(filter)),
+        Effect.catchAll((error: AppError) =>
+          Effect.log('Application error deleting entry: ' + error.message).pipe(
+            Effect.map(() =>
+              ([] as ReadonlyArray<Identified<Entry>>)
+            )
+          )
+        )
+      )
+    )
+  )
+
 const useEntries = (filter: EntriesFilter): {
   entries: ReadonlyArray<Identified<Entry>>;
   loading: boolean;
@@ -59,7 +78,8 @@ const useEntries = (filter: EntriesFilter): {
     definitionLang: LangCode,
     tagIds: ReadonlyArray<Identifier<Tag>>,
     filter: EntriesFilter
-  ) => Promise<void>;
+  ) => Promise<void>,
+  deleteEntry: (entryId: Identifier<Entry>, filter: EntriesFilter) => Promise<void>,
 } => {
   const [entries, setEntries] = useState<ReadonlyArray<Identified<Entry>>>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -99,21 +119,12 @@ const useEntries = (filter: EntriesFilter): {
     }
   };
 
-  const deleteEntry = async (entryId: Identifier<Entry>) => {
+  const deleteEntry = async (entryId: Identifier<Entry>, filter: EntriesFilter) => {
     log.debug('Deleting entry:', {entryId});
     setLoading(true);
     try {
-      // Assuming there's a deleteEntry use case method
-      await promiseAppEffect(
-        EntriesUseCasesTag.pipe(
-          Effect.flatMap(useCase => useCase.(entryId)),
-          Effect.catchAll((error: AppError) =>
-            Effect.log('Application error deleting entry: ' + error.message)
-          )
-        )
-      );
-      // Refresh entries after deletion
-      const refreshedEntries = await promiseAppEffect(programGetEntries(filter));
+      const refreshedEntries = await promiseAppEffect(
+        programDeleteEntry(entryId, filter));
       setEntries(refreshedEntries.map(e => e));
     } catch (error) {
       log.error('Failed to delete entry:', error);
@@ -122,7 +133,7 @@ const useEntries = (filter: EntriesFilter): {
     }
   };
 
-  return {entries, loading, addEntry};
+  return {entries, loading, addEntry, deleteEntry};
 };
 
 export default useEntries;

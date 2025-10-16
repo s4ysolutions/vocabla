@@ -37,8 +37,7 @@ class EntriesUseCasesLive implements EntriesUseCases {
           return Effect.fail(AppError(tt`User not logged in`))
         }
 
-        const entry = Entry(word, definitions, aStudentId.data)
-        return this.entriesRepository.createEntry(entry, tagIds).pipe(
+        return this.entriesRepository.createEntry(aStudentId.data, word, definitions, tagIds).pipe(
           Effect.mapError(infra2appError)
         )
       })
@@ -61,6 +60,22 @@ class EntriesUseCasesLive implements EntriesUseCases {
       })
     )
   }
+
+  deleteEntry(entryId: Identifier<Entry>): Effect.Effect<void, AppError> {
+    return this.meUseCases.currentStudentId.pipe(
+      Effect.flatMap((aStudentId) => {
+        if (aStudentId._state !== 'success') {
+          return Effect.fail(AppError(tt`User not logged in`))
+        }
+
+        const studentId = aStudentId.data
+
+        return this.entriesRepository.deleteEntry(studentId, entryId).pipe(
+          Effect.mapError(infra2appError)
+        )
+      })
+    )
+  };
 }
 
 export default EntriesUseCasesLive

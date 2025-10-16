@@ -4,171 +4,6 @@
  */
 
 export interface paths {
-    "/rest/v1/entries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description - Vocabulary Entries
-         *      */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description ID of the owner to filter entries by.
-                     *
-                     *      */
-                    ownerId?: number | null;
-                    tagId?: number;
-                    lang?: string;
-                    /** @description Text to search for in entries.
-                     *
-                     *      */
-                    text?: string | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["GetEntriesResponse"];
-                    };
-                };
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BadRequest400"];
-                    };
-                };
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Forbidden403"];
-                    };
-                };
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InternalServerError500"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** @description - Vocabulary Entries
-         *      */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateEntryRequest"];
-                };
-            };
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CreateEntryResponse"];
-                    };
-                };
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Forbidden403"];
-                    };
-                };
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InternalServerError500"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/rest/v1/entries/{entryId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description - Vocabulary Entries
-         *      */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    entryId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["GetEntryResponse"];
-                    };
-                };
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Forbidden403"];
-                    };
-                };
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InternalServerError500"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/rest/v1/languages": {
         parameters: {
             query?: never;
@@ -276,6 +111,215 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rest/v1/students/{studentId}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description - Student's Vocabulary Entries
+         *      */
+        get: {
+            parameters: {
+                query?: {
+                    tagId?: number;
+                    /** @description Text to search for in entries.
+                     *
+                     *      */
+                    text?: string | null;
+                    lang?: string;
+                    /** @description ID of the owner to filter entries by.
+                     *
+                     *      */
+                    ownerId?: number | null;
+                };
+                header?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetEntriesResponse"];
+                    };
+                };
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BadRequest400"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** @description - Student's Vocabulary Entries
+         *      */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateEntryRequest"];
+                };
+            };
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateEntryResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rest/v1/students/{studentId}/entries/{entryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description - Student's Vocabulary Entries
+         *      */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                    entryId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetEntryResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** @description - Student's Vocabulary Entries
+         *      */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                    entryId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteEntryResponse"];
+                    };
+                };
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Forbidden403"];
+                    };
+                };
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InternalServerError500"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/rest/v1/students/{studentId}/learning-settings": {
         parameters: {
             query?: never;
@@ -283,7 +327,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         get: {
             parameters: {
@@ -339,7 +383,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         post: {
             parameters: {
@@ -387,7 +431,7 @@ export interface paths {
                 };
             };
         };
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         delete: {
             parameters: {
@@ -441,7 +485,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         post: {
             parameters: {
@@ -489,7 +533,7 @@ export interface paths {
                 };
             };
         };
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         delete: {
             parameters: {
@@ -543,7 +587,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         post: {
             parameters: {
@@ -592,14 +636,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/rest/v1/students/{studentId}/learning-settings/{tagId}": {
+    "/rest/v1/students/{studentId}/learning-settings/tags/{tagId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         get: {
             parameters: {
@@ -641,7 +685,7 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        /** @description - Students Settings
+        /** @description - Student's Settings
          *      */
         delete: {
             parameters: {
@@ -704,10 +748,12 @@ export interface components {
         BadRequest400: {
             message: string;
         };
-        /** @description Command to create a new vocabulary entry. */
+        /** @description Request to create a new vocabulary entry. */
         CreateEntryRequest: {
-            /** @description Entry to be added to the vocabulary. */
-            entry: components["schemas"]["Entry"];
+            /** @description The headword of the entry to be created. */
+            headword: components["schemas"]["Headword"];
+            /** @description The definitions of the entry to be created. */
+            definitions: components["schemas"]["Definition"][];
             /** @description IDs of tags to be associated with the entry. */
             tagIds: number[];
         };
@@ -737,6 +783,11 @@ export interface components {
         Definition: {
             definition: string;
             langCode: string;
+        };
+        /** @description Response indicating whether the entry was successfully deleted. */
+        DeleteEntryResponse: {
+            /** @description True if the entry was deleted, false if it didn't exist. */
+            deleted: boolean;
         };
         /** @description DeleteTagResponse containing the result of the deletion operation. */
         DeleteTagResponse: {

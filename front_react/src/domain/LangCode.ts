@@ -7,19 +7,37 @@ export type LangCode = string & Brand.Brand<'LangCode'>
 const LANG_CODE_REGEX = /^[a-z]{2}[a-z]?$/
 const isValidLangCode = (lc: string): boolean =>
   LANG_CODE_REGEX.test(lc) || lc === 'map-bms'
-
-export const schemaLangCode: Schema.Schema<LangCode, string> = Schema.String.pipe(
+/*
+const schemaLangCodeStrict: Schema.Schema<LangCode, string> = Schema.String.pipe(
   Schema.filter((input) =>{
     const b = isValidLangCode(input)
     if (!b)
-      console.warn(`Invalid language code format: ${input}`)
+      console.trace(`Invalid language code format: ${input}`)
     return b
   }, {
-    message: (s) =>
+    message: (s) => // TODO: s is ParseIssue should not be treated as string
       'Invalid language code format: ' + s
   }),
   Schema.brand('LangCode'),
 )
+*/
+
+export const schemaLangCode: Schema.Schema<LangCode, string> = Schema.String.pipe(
+  Schema.transform(
+    Schema.String.pipe(Schema.brand('LangCode')), // Apply brand to a base schema for the target
+    {
+      decode: (input) => {
+        if (isValidLangCode(input)) {
+          return input as LangCode;
+        } else {
+          console.trace(`Invalid language code format: ${input}`); // Logging preserved
+          return '' as LangCode; // Default value on invalid input
+        }
+      },
+      encode: (branded) => branded,
+    }
+  ),
+);
 
 const _check1: LangCode = '' as Schema.Schema.Type<typeof schemaLangCode>
 void _check1
