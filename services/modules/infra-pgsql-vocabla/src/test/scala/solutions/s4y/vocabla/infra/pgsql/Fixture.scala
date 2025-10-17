@@ -33,9 +33,7 @@ object Fixture:
     TransactionManagerPg & TagRepositoryPg & EntryRepositoryPg &
       TagAssociationRepositoryPg
   ] =
-    /*(layerWithDataSourcePg >>> ZLayer.fromZIO(
-      cleardb
-    )) >>> (*/ layerWithDataSourcePg >>> TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer
+    layerWithDataSourcePg >>> TransactionManagerPg.layer ++ TagRepositoryPg.layer ++ EntryRepositoryPg.layer ++ TagAssociationRepositoryPg.layer
 
   val layerWithUserRepository: ZLayer[
     Any,

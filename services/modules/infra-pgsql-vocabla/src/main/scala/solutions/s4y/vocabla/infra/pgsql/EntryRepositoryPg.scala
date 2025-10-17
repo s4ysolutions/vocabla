@@ -15,7 +15,7 @@ import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import zio.{Chunk, IO, ZIO, ZLayer}
 
-import java.sql.PreparedStatement
+import scala.collection.mutable.ListBuffer
 import scala.util.Using
 
 class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
@@ -82,7 +82,7 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
       tagIds: Chunk[Identifier[Tag]] = Chunk.empty,
       langCodes: Chunk[Lang.Code] = Chunk.empty,
       text: Option[String] = None,
-      limit: Int = 100
+      limit: Int = 1000
   )(using
       TransactionContextPg
   ): ZIO[R, InfraFailure, Chunk[Identified[Entry]]] =
@@ -194,53 +194,54 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
       definitions: Option[Chunk[Entry.Definition]],
       tagIds: Option[Chunk[Identifier[Tag]]]
   )(using TransactionContextPg): IO[InfraFailure, Boolean] =
-    val updates = scala.collection.mutable.ListBuffer[String]()
-    val params =
-      scala.collection.mutable.ListBuffer[PreparedStatement => Unit]()
+    val updates = List(
+      Option.when(headword.isDefined)("word = ?, langCode = ?"),
+      Option.when(definitions.isDefined)("definitions = ?")
+    ).flatten
 
-    headword.foreach { hw =>
-      updates += "word = ?, langCode = ?"
-      params += (st => { st.setString(1, hw.word) })
-      params += (st => { st.setString(2, hw.langCode) })
-    }
+    for {
+      entryUpdated <-
+        if updates.isEmpty then ZIO.succeed(false)
+        else
+          val setClause = updates.mkString(", ")
+          val sql = s"UPDATE entries SET $setClause WHERE id = ?"
 
-    definitions.foreach { defs =>
-      updates += "definitions = ?"
-      params += (st => {
-        val defsArray = defs.map { defn =>
-          val obj = new PGobject()
-          obj.setType("definition")
-          obj.setValue(s"(${defn.definition},${defn.langCode})")
-          obj.asInstanceOf[Object]
-        }.toArray
-        st.setArray(1, st.getConnection.createArrayOf("definition", defsArray))
-      })
-    }
+          pgUpdateOne(
+            sql,
+            st => {
+              var paramIndex = 1
+              headword.foreach { hw =>
+                st.setString(paramIndex, hw.word)
+                paramIndex += 1
+                st.setString(paramIndex, hw.langCode)
+                paramIndex += 1
+              }
+              definitions.foreach { defs =>
+                val defsArray = defs.map { defn =>
+                  val obj = new PGobject()
+                  obj.setType("definition")
+                  obj.setValue(s"(${defn.definition},${defn.langCode})")
+                  obj.asInstanceOf[Object]
+                }.toArray
+                st.setArray(
+                  paramIndex,
+                  st.getConnection.createArrayOf("definition", defsArray)
+                )
+                paramIndex += 1
+              }
+              st.setLong(paramIndex, entryId.as[Long])
+            }
+          )
 
-    if updates.isEmpty then ZIO.succeed(false)
-    else
-      val setClause = updates.mkString(", ")
-      val sql = s"UPDATE entries SET $setClause WHERE id = ?"
-
-      val combinedParams: PreparedStatement => Unit = st => {
-        var paramIndex = 1
-        params.foreach { param =>
-          param(st)
-          paramIndex += 1
-        }
-        st.setLong(paramIndex, entryId.as[Long])
-      }
-
-      for {
-        updated <- pgUpdateOne(sql, combinedParams)
-        _ <- tagIds match
-          case Some(tags) =>
-            pgUpdateOne(
-              "DELETE FROM tag_entry_associations WHERE entry_id = ?",
-              st => st.setLong(1, entryId.as[Long])
-            ) *>
-              ZIO.when(tags.nonEmpty) {
-                pgUpdateOne(
+      tagsUpdated <- tagIds match
+        case Some(tags) =>
+          pgUpdateOne(
+            "DELETE FROM tag_entry_associations WHERE entry_id = ?",
+            st => st.setLong(1, entryId.as[Long])
+          ) *>
+            ZIO
+              .when(tags.nonEmpty) {
+                pgUpdateBatch(
                   "INSERT INTO tag_entry_associations (tag_id, entry_id) VALUES (?, ?)",
                   st =>
                     tags.foreach { tagId =>
@@ -248,10 +249,11 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
                       st.setLong(2, entryId.as[Long])
                       st.addBatch()
                     }
-                )
+                ).map(_.sum)
               }
-          case None => ZIO.unit
-      } yield updated
+              .map(_.getOrElse(1))
+        case None => ZIO.succeed(0)
+    } yield entryUpdated || tagsUpdated > 0
 end EntryRepositoryPg
 
 object EntryRepositoryPg:

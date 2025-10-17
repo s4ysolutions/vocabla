@@ -13,8 +13,7 @@ import scala.util.Using
 class DataSourcePg(val dataSource: HikariDataSource):
 
   def getConnection: IO[InfraFailure, Connection] = ZIO
-    .attemptBlocking(
-      dataSource.getConnection)
+    .attemptBlocking(dataSource.getConnection)
     .mapThrowable(t"Failed to get connection from DataSource")
 
   def close(): IO[InfraFailure, Unit] = ZIO
@@ -38,6 +37,7 @@ object DataSourcePg {
           hc.setSchema(config.schema)
           hc
         }
+        _ <- ZIO.logDebug(s"PgSqlConfig: $config")
         ds <- ZIO.acquireRelease(
           ZIO.attempt {
             val ds = new DataSourcePg(new HikariDataSource(hikariConfig))

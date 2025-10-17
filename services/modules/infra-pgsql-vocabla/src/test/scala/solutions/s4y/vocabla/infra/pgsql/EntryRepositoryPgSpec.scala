@@ -5,8 +5,8 @@ import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Entry, Tag, User}
 import solutions.s4y.vocabla.infra.pgsql.Fixture.layerWithClearDb
 import solutions.s4y.zio.{consoleColorDebugLogger, consoleColorTraceLogger}
-import zio.{Chunk, Scope, ZIO}
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assert}
+import zio.{Chunk, Scope, ZIO}
 
 object EntryRepositoryPgSpec extends ZIOSpecDefault {
 
@@ -127,7 +127,9 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
-            assert(results.forall(_.e.ownerId == 1L.identifier[User.Student]))(zio.test.Assertion.isTrue)
+            assert(results.forall(_.e.ownerId == 1L.identifier[User.Student]))(
+              zio.test.Assertion.isTrue
+            )
         },
         test("get entries filtered by language codes") {
           for {
@@ -159,7 +161,11 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
-            assert(results.forall(e => e.e.headword.langCode == "en" || e.e.headword.langCode == "es"))(zio.test.Assertion.isTrue)
+            assert(
+              results.forall(e =>
+                e.e.headword.langCode == "en" || e.e.headword.langCode == "es"
+              )
+            )(zio.test.Assertion.isTrue)
         },
         test("get entries filtered by text search in word") {
           for {
@@ -191,7 +197,9 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
-            assert(results.forall(_.e.headword.word.contains("Hello")))(zio.test.Assertion.isTrue)
+            assert(results.forall(_.e.headword.word.contains("Hello")))(
+              zio.test.Assertion.isTrue
+            )
         },
         test("get entries filtered by text search in definitions") {
           for {
@@ -223,9 +231,13 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
-            assert(results.forall(e =>
-              e.e.definitions.exists(_.definition.toLowerCase.contains("special"))
-            ))(zio.test.Assertion.isTrue)
+            assert(
+              results.forall(e =>
+                e.e.definitions.exists(
+                  _.definition.toLowerCase.contains("special")
+                )
+              )
+            )(zio.test.Assertion.isTrue)
         },
         test("get entries with combined filters") {
           for {
@@ -267,13 +279,15 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(1)) &&
-            assert(results.head.e)(zio.test.Assertion.equalTo(
-              Entry(
-                Entry.Headword("Hello", "en"),
-                Chunk(Entry.Definition("Greeting word", "en")),
-                1L.identifier[User.Student]
+            assert(results.head.e)(
+              zio.test.Assertion.equalTo(
+                Entry(
+                  Entry.Headword("Hello", "en"),
+                  Chunk(Entry.Definition("Greeting word", "en")),
+                  1L.identifier[User.Student]
+                )
               )
-            ))
+            )
         },
         test("get entries with limit") {
           for {
@@ -401,7 +415,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
               zio.test.Assertion.equalTo(Entry.Headword("Word", "en"))
             )
         },
-        test("update tags") {
+        test("update tags only") {
           for {
             transactionManager <- ZIO.service[TransactionManagerPg]
             result <- transactionManager.transaction {
@@ -428,8 +442,8 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                   Some(Chunk(tagId1, tagId2))
                 )
                 // Get entry with tags through the search method
-                entries <- repo.get(tagIds = Chunk(tagId1))
-              } yield (updated, entries)
+                entries1 <- repo.get(tagIds = Chunk(tagId1))
+              } yield (updated, entries1)
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
             assert(result._2.size)(zio.test.Assertion.equalTo(1))
@@ -520,10 +534,44 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
             assert(result._2)(zio.test.Assertion.isEmpty)
+        },
+        test("update only tags without changing other fields") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                // Create a tag
+                tag = Tag("testtag", 1L.identifier[User.Student])
+                tagId <- tagRepo.create(tag)
+                // Create entry without tags
+                entry = Entry(
+                  Entry.Headword("Word", "en"),
+                  Chunk(Entry.Definition("Definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                entryId <- repo.create(entry)
+                // Update only tags, no other fields
+                updated <- repo.update(
+                  entryId,
+                  None,
+                  None,
+                  Some(Chunk(tagId))
+                )
+                // Verify through search
+                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+              } yield (updated, entriesWithTag)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2.size)(zio.test.Assertion.equalTo(1))
         }
       )
     ).provideLayer(
-      consoleColorTraceLogger >>> layerWithClearDb >>> (Fixture.layerWithEntryRepository ++ Fixture.layerWithTagRepository)
+      consoleColorDebugLogger >>>
+        Fixture.layerWithClearDb >>>
+        (Fixture.layerWithTagRepository ++ Fixture.layerWithEntryRepository) >>>
+        Fixture.layerWithTagAssociationRepository
     ) @@ TestAspect.before(
       Fixture.testSystem
     ) @@ TestAspect.sequential // @@ TestAspect.ignore
