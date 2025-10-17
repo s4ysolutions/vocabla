@@ -3,8 +3,7 @@ package solutions.s4y.vocabla.infra.pgsql
 import solutions.s4y.infra.pgsql.tx.TransactionManagerPg
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
 import solutions.s4y.vocabla.domain.{Entry, Tag, User}
-import solutions.s4y.vocabla.infra.pgsql.Fixture.layerWithClearDb
-import solutions.s4y.zio.{consoleColorDebugLogger, consoleColorTraceLogger}
+import solutions.s4y.zio.consoleColorDebugLogger
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assert}
 import zio.{Chunk, Scope, ZIO}
 
@@ -88,11 +87,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 entry2 = Entry(
                   Entry.Headword("Hola", "es"),
                   Chunk(Entry.Definition("Saludo", "es")),
-                  2L.identifier[User.Student]
+                  1L.identifier[User.Student]
                 )
-                id1 <- repo.create(entry1)
-                id2 <- repo.create(entry2)
-                entries <- repo.get()
+                (id1, id2) <- repo.create(entry1) <&> repo.create(entry2)
+                entries <- repo.get(1L.identifier[User], Chunk.empty)
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2))
@@ -123,7 +121,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 id2 <- repo.create(entry2)
                 id3 <- repo.create(entry3)
                 // Filter by owner 1
-                entries <- repo.get(ownerId = Some(1L.identifier[User]))
+                entries <- repo.get(ownerId = 1L.identifier[User])
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
@@ -157,7 +155,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 id2 <- repo.create(entryEs)
                 id3 <- repo.create(entryFr)
                 // Filter by English and Spanish
-                entries <- repo.get(langCodes = Chunk("en", "es"))
+                entries <- repo.get(
+                  1L.identifier[User],
+                  langCodes = Chunk("en", "es")
+                )
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
@@ -193,7 +194,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 id2 <- repo.create(entry2)
                 id3 <- repo.create(entry3)
                 // Search for "Hello"
-                entries <- repo.get(text = Some("Hello"))
+                entries <- repo.get(1L.identifier[User], text = Some("Hello"))
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
@@ -227,7 +228,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 id2 <- repo.create(entry2)
                 id3 <- repo.create(entry3)
                 // Search for "special"
-                entries <- repo.get(text = Some("special"))
+                entries <- repo.get(1L.identifier[User], text = Some("special"))
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(2)) &&
@@ -272,7 +273,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 id4 <- repo.create(entry4)
                 // Filter by owner=1, lang=en, text="Hello"
                 entries <- repo.get(
-                  ownerId = Some(1L.identifier[User]),
+                  ownerId = 1L.identifier[User],
                   langCodes = Chunk("en"),
                   text = Some("Hello")
                 )
@@ -305,7 +306,7 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 }
                 _ <- ZIO.foreachDiscard(testEntries)(repo.create)
                 // Get with limit of 3
-                entries <- repo.get(limit = 3)
+                entries <- repo.get(1L.identifier[User], limit = 3)
               } yield entries
             }
           } yield assert(results.size)(zio.test.Assertion.equalTo(3))
@@ -324,7 +325,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 )
                 id <- repo.create(entry)
                 // Search for non-existent text
-                entries <- repo.get(text = Some("NonExistentWord"))
+                entries <- repo.get(
+                  1L.identifier[User],
+                  text = Some("NonExistentWord")
+                )
               } yield entries
             }
           } yield assert(results)(zio.test.Assertion.isEmpty)
@@ -342,8 +346,14 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                 )
                 id <- repo.create(entry)
                 // Search with different case
-                entriesLower <- repo.get(text = Some("hello"))
-                entriesUpper <- repo.get(text = Some("GREETING"))
+                entriesLower <- repo.get(
+                  1L.identifier[User],
+                  text = Some("hello")
+                )
+                entriesUpper <- repo.get(
+                  1L.identifier[User],
+                  text = Some("GREETING")
+                )
               } yield (entriesLower, entriesUpper)
             }
           } yield assert(result._1.size)(zio.test.Assertion.equalTo(1)) &&
@@ -442,7 +452,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                   Some(Chunk(tagId1, tagId2))
                 )
                 // Get entry with tags through the search method
-                entries1 <- repo.get(tagIds = Chunk(tagId1))
+                entries1 <- repo.get(
+                  1L.identifier[User],
+                  tagIds = Chunk(tagId1)
+                )
               } yield (updated, entries1)
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
@@ -473,7 +486,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                   Some(Chunk(tagId))
                 )
                 entryOpt <- repo.get(entryId)
-                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+                entriesWithTag <- repo.get(
+                  1L.identifier[User],
+                  tagIds = Chunk(tagId)
+                )
               } yield (updated, entryOpt, entriesWithTag)
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
@@ -529,7 +545,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                   None,
                   Some(Chunk.empty)
                 )
-                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+                entriesWithTag <- repo.get(
+                  1L.identifier[User],
+                  tagIds = Chunk(tagId)
+                )
               } yield (updated, entriesWithTag)
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
@@ -560,7 +579,10 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
                   Some(Chunk(tagId))
                 )
                 // Verify through search
-                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+                entriesWithTag <- repo.get(
+                  1L.identifier[User],
+                  tagIds = Chunk(tagId)
+                )
               } yield (updated, entriesWithTag)
             }
           } yield assert(result._1)(zio.test.Assertion.isTrue) &&
