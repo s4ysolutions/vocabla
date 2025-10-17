@@ -31,8 +31,6 @@ import java.util.Locale
 object GetEntries:
   @description("Request to get entries with optional filters.")
   final case class GetEntriesRequest(
-      @description("ID of the owner to filter entries by.")
-      ownerId: Option[Identifier[User]],
       @description("Tag IDs to filter entries by.")
       tagId: Chunk[Identifier[Tag]],
       @description("Languages to filter entries by.")
@@ -69,7 +67,6 @@ object GetEntries:
       .transformIn((studentId, req) =>
         GetEntriesCommand(
           userId = studentId.identifier[User],
-          ownerId = req.ownerId,
           tagIds = req.tagId,
           langs = req.lang,
           text = req.text
@@ -78,7 +75,6 @@ object GetEntries:
         (
           command.userId.as[Long],
           GetEntriesRequest(
-            ownerId = command.ownerId,
             tagId = command.tagIds,
             lang = command.langs,
             text = command.text

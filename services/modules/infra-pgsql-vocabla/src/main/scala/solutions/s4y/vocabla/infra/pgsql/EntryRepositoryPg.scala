@@ -15,7 +15,6 @@ import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import zio.{Chunk, IO, ZIO, ZLayer}
 
-import scala.collection.mutable.ListBuffer
 import scala.util.Using
 
 class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
@@ -78,7 +77,7 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
     )
 
   override def get[R](
-      ownerId: Option[Identifier[User]] = None,
+      ownerId: Identifier[User],
       tagIds: Chunk[Identifier[Tag]] = Chunk.empty,
       langCodes: Chunk[Lang.Code] = Chunk.empty,
       text: Option[String] = None,
@@ -99,10 +98,8 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
         var paramIndex = 1
 
         // Set parameters in the same order as the WHERE clause
-        ownerId.foreach { id =>
-          st.setLong(paramIndex, id.as[Long])
-          paramIndex += 1
-        }
+        st.setLong(paramIndex, ownerId.as[Long])
+        paramIndex += 1
 
         if (tagIds.nonEmpty) {
           val tagArray = st.getConnection
@@ -155,7 +152,7 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
     )
 
   private def buildWhereClause(
-      ownerId: Option[Identifier[User]],
+      ownerId: Identifier[User],
       tagIds: Chunk[Identifier[Tag]],
       langCodes: Chunk[Lang.Code],
       text: Option[String]
@@ -163,7 +160,7 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
     val conditions = scala.collection.mutable.ListBuffer[String]()
     var joinClause = ""
 
-    ownerId.foreach(_ => conditions += "e.ownerId = ?")
+    conditions += "e.ownerId = ?"
 
     if (tagIds.nonEmpty) {
       joinClause =

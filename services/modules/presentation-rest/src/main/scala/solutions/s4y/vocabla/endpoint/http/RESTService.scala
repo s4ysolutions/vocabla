@@ -9,6 +9,7 @@ import solutions.s4y.vocabla.app.ports.students.entries.entries_get.GetEntriesUs
 import solutions.s4y.vocabla.app.ports.students.entries.entry_create.CreateEntryUseCase
 import solutions.s4y.vocabla.app.ports.students.entries.entry_delete.DeleteEntryUseCase
 import solutions.s4y.vocabla.app.ports.students.entries.entry_get.GetEntryUseCase
+import solutions.s4y.vocabla.app.ports.students.entries.entry_update.UpdateEntryUseCase
 import solutions.s4y.vocabla.app.ports.students.settings.GetLearningSettingsUseCase
 import solutions.s4y.vocabla.app.ports.students.settings.tags.{
   CreateTagUseCase,
@@ -29,7 +30,13 @@ import solutions.s4y.vocabla.endpoint.http.middleware.BearerUserContext.bearerAu
 import solutions.s4y.vocabla.endpoint.http.middleware.BrowserLocale.browserLocale
 import solutions.s4y.vocabla.endpoint.http.routes.Ping
 import solutions.s4y.vocabla.endpoint.http.routes.languages.GetLanguages
-import solutions.s4y.vocabla.endpoint.http.routes.students.entries.{CreateEntry, DeleteEntry, GetEntries, GetEntry}
+import solutions.s4y.vocabla.endpoint.http.routes.students.entries.{
+  CreateEntry,
+  DeleteEntry,
+  GetEntries,
+  GetEntry,
+  UpdateEntry
+}
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.GetSettings
 import solutions.s4y.vocabla.endpoint.http.routes.students.settings.tags.{
   CreateTag,
@@ -59,6 +66,7 @@ final class RESTService(
     private val createTagUseCase: CreateTagUseCase,
     private val deleteTagUseCase: DeleteTagUseCase,
     private val getEntryUseCase: GetEntryUseCase,
+    private val updateEntryUseCase: UpdateEntryUseCase,
     private val deleteEntryUseCase: DeleteEntryUseCase,
     private val getEntriesUseCase: GetEntriesUseCase,
     private val getTagUseCase: GetTagUseCase,
@@ -80,6 +88,7 @@ final class RESTService(
       DeleteTag.endpoint,
       CreateEntry.endpoint,
       GetEntry.endpoint,
+      UpdateEntry.endpoint,
       DeleteEntry.endpoint,
       GetEntries.endpoint,
       GetLanguages.endpoint,
@@ -100,7 +109,7 @@ final class RESTService(
 
   private val routes: Routes[
     PingUseCase & GetUserUseCase & CreateEntryUseCase & CreateTagUseCase &
-      GetEntryUseCase & DeleteEntryUseCase & GetEntriesUseCase & GetTagUseCase & DeleteTagUseCase &
+      GetEntryUseCase & UpdateEntryUseCase & DeleteEntryUseCase & GetEntriesUseCase & GetTagUseCase & DeleteTagUseCase &
       GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
       RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     Response
@@ -115,6 +124,7 @@ final class RESTService(
             DeleteTag.route,
             CreateEntry.route,
             GetEntry.route,
+            UpdateEntry.route,
             DeleteEntry.route,
             GetEntries.route,
             GetSettings.route,
@@ -158,6 +168,7 @@ final class RESTService(
         .add(getTagUseCase)
         .add(createEntryUseCase)
         .add(getEntryUseCase)
+        .add(updateEntryUseCase)
         .add(deleteEntryUseCase)
         .add(getEntriesUseCase)
         .add(getLanguagesUseCase)
@@ -182,7 +193,7 @@ object RESTService:
 
   val layer: ZLayer[
     CreateEntryUseCase & GetUserUseCase & PingUseCase & GetEntryUseCase &
-      DeleteEntryUseCase & GetEntriesUseCase & CreateTagUseCase & GetTagUseCase & DeleteTagUseCase &
+      UpdateEntryUseCase & DeleteEntryUseCase & GetEntriesUseCase & CreateTagUseCase & GetTagUseCase & DeleteTagUseCase &
       GetLanguagesUseCase & GetLearningSettingsUseCase & AddKnownLangUseCase &
       RemoveKnownLangUseCase & AddLearnLangUseCase & RemoveLearnLangUseCase,
     InfraFailure,
@@ -191,7 +202,7 @@ object RESTService:
     RestConfig.layer
       >>> httpServerLayer
       >>> ZLayer.fromFunction(
-        new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)
+        new RESTService(_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _)
       )
 
   private val logger = LoggerFactory.getLogger(RESTService.getClass)

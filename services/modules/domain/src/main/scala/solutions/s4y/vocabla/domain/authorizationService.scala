@@ -73,7 +73,7 @@ object authorizationService:
   ): Validation[NotAuthorized, Unit] =
     isMe(ownerId, userContext, "DeleteTag")
 
-  def canCreateEntry(
+  def canCreateOrUpdateEntry(
       entry: Entry,
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
@@ -93,9 +93,29 @@ object authorizationService:
       )
     Validation.succeed(())
 
+  def canUpdateEntry(
+      entryId: Identifier[Entry],
+      userId: Identifier[User],
+      entry: Entry,
+      userContext: UserContext
+  ): Validation[NotAuthorized, Unit] =
+    if userContext.user.isAdmin then return Validation.succeed(())
+    if !userContext.user.isStudent then
+      return Validation.fail(NeitherAdminNotStudent("DeleteEntry"))
+    if userId !== userContext.id then
+      return Validation.fail(
+        NotTheOwner("UpdateEntry", entryId.toString, Some(userId.toString))
+      )
+    if entry.ownerId !== userContext.studentId then
+      return Validation.fail(
+        NotTheOwner("UpdateEntry", entryId.toString, Some(userId.toString))
+      )
+    Validation.succeed(())
+
   def canDeleteEntry(
       entryId: Identifier[Entry],
       userId: Identifier[User],
+      entry: Entry,
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
     if userContext.user.isAdmin then return Validation.succeed(())
@@ -105,29 +125,22 @@ object authorizationService:
       return Validation.fail(
         NotTheOwner("DeleteEntry", entryId.toString, Some(userId.toString))
       )
+    if entry.ownerId !== userContext.studentId then
+      return Validation.fail(
+        NotTheOwner("DeleteEntry", entryId.toString, Some(userId.toString))
+      )
     Validation.succeed(())
 
   def canGetEntries(
-      ownerId: Option[Identifier[User]],
+      ownerId: Identifier[User],
       userContext: UserContext
   ): Validation[NotAuthorized, Unit] =
     if userContext.user.isAdmin then return Validation.succeed(())
     if !userContext.user.isStudent then
       return Validation.fail(NeitherAdminNotStudent("GetEntries"))
-
-    // If ownerId filter is provided, it must match the current user
-    ownerId match {
-      case Some(requestOwnerId)
-          if requestOwnerId == userContext.studentId
-            .asInstanceOf[Identifier[User]] =>
-        Validation.succeed(())
-      case Some(_) =>
-        Validation.fail(NotTheOwner("GetEntries", "entries", None))
-      case None =>
-        Validation.fail(
-          NotTheOwner("GetEntries", "entries must be filtered by ownerId", None)
-        )
-    }
+    if ownerId == userContext.studentId.asInstanceOf[Identifier[User]] then
+      return Validation.succeed(())
+    Validation.fail(NotTheOwner("GetEntries", "entries", None))
 
   def canChooseKnownLang(
       studentId: Identifier[User.Student],

@@ -9,15 +9,13 @@ import zio.schema.{DeriveSchema, Schema}
 
 @description("Request to get entries with optional filters.")
 final case class GetEntriesCommand(
-                                    @description("ID of the user making the request.")
+    @description("ID of the user making the request.")
     userId: Identifier[User],
-                                    @description("ID of the owner to filter entries by.")
-    ownerId: Option[Identifier[User]],
-                                    @description("Tag IDs to filter entries by.")
+    @description("Tag IDs to filter entries by.")
     tagIds: Chunk[Identifier[Tag]],
-                                    @description("Languages to filter entries by.")
+    @description("Languages to filter entries by.")
     langs: Chunk[Lang.Code],
-                                    @description("Text to search for in entries.")
+    @description("Text to search for in entries.")
     text: Option[String]
 )
 

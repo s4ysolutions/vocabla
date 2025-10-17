@@ -25,3 +25,6 @@ object Entry:
 
   final case class Headword(word: String, langCode: Lang.Code):
     override def toString: String = s"Headword ($langCode) $word"
+
+  object Headword:
+    given Schema[Headword] = Schema.derived

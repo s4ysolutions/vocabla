@@ -16,7 +16,7 @@ trait EntryRepository[TX <: TransactionContext]:
   )(using TX): ZIO[R, InfraFailure, Option[Entry]]
 
   def get[R](
-      ownerId: Option[Identifier[User]] = None,
+      ownerId: Identifier[User],
       tagIds: Chunk[Identifier[Tag]] = Chunk.empty,
       langCodes: Chunk[Lang.Code] = Chunk.empty,
       text: Option[String] = None,

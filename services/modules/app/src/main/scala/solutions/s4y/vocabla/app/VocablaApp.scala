@@ -30,6 +30,11 @@ import solutions.s4y.vocabla.app.ports.students.entries.entry_get.{
   GetEntryResponse,
   GetEntryUseCase
 }
+import solutions.s4y.vocabla.app.ports.students.entries.entry_update.{
+  UpdateEntryCommand,
+  UpdateEntryResponse,
+  UpdateEntryUseCase
+}
 import solutions.s4y.vocabla.app.ports.students.settings.known_lang.*
 import solutions.s4y.vocabla.app.ports.students.settings.learn_lang.*
 import solutions.s4y.vocabla.app.ports.students.settings.tags.*
@@ -77,7 +82,8 @@ final class VocablaApp[TX <: TransactionContext](
       AddKnownLangUseCase,
       RemoveLearnLangUseCase,
       RemoveKnownLangUseCase,
-      DeleteEntryUseCase:
+      DeleteEntryUseCase,
+      UpdateEntryUseCase:
   VocablaApp.logger.debug("Creating VocablaApp instance")
 
   /** **************************************************************************
@@ -101,7 +107,7 @@ final class VocablaApp[TX <: TransactionContext](
     CreateEntryResponse
   ] =
     authorized(
-      authorizationService.canCreateEntry(command.entry, _)
+      authorizationService.canCreateOrUpdateEntry(command.entry, _)
     ) *> transaction("entryCreate", entriesRepository.create(command.entry))
       .map(
         CreateEntryResponse(_)
@@ -130,11 +136,11 @@ final class VocablaApp[TX <: TransactionContext](
     GetEntriesResponse
   ] =
     authorized(
-      authorizationService.canGetEntries(command.ownerId, _)
+      authorizationService.canGetEntries(command.userId, _)
     ) *> transaction(
       "entriesGet",
       entriesRepository.get(
-        ownerId = command.ownerId,
+        ownerId = command.userId,
         tagIds = command.tagIds,
         langCodes = command.langs,
         text = command.text
@@ -142,18 +148,68 @@ final class VocablaApp[TX <: TransactionContext](
     ).map(entriesMap => GetEntriesResponse(entriesMap))
 
   override def apply(
+      command: UpdateEntryCommand
+  ): ZIO[UserContext, ServiceFailure | NotAuthorized, UpdateEntryResponse] =
+    for {
+      entryOpt <- transaction(
+        "entryGetForUpdate",
+        entriesRepository.get(command.entryId)
+      ).mapError(f => ServiceFailure(f.message, f.cause))
+
+      entry <- ZIO
+        .fromOption(entryOpt)
+        .orElseFail(ServiceFailure(t"Entry not found", None))
+
+      _ <- authorized(
+        authorizationService.canUpdateEntry(
+          command.entryId,
+          command.userId,
+          entry,
+          _
+        )
+      )
+
+      updated <- transaction(
+        "entryUpdate",
+        entriesRepository.update(
+          command.entryId,
+          command.headword,
+          command.definitions,
+          command.tagIds
+        )
+      ).mapError(f => ServiceFailure(f.message, f.cause))
+    } yield UpdateEntryResponse(updated)
+
+  override def apply(
       command: DeleteEntryCommand
   ): ZIO[
     UserContext,
     ServiceFailure | NotAuthorized,
     DeleteEntryResponse
-  ] =
-    authorized(
-      authorizationService.canDeleteEntry(command.entryId, command.userId, _)
-    ) *> transaction(
-      "entryDelete",
+  ] = for {
+    entryOpt <- transaction(
+      "entryGetForDelete",
+      entriesRepository.get(command.entryId)
+    ).mapError(f => ServiceFailure(f.message, f.cause))
+
+    entry <- ZIO
+      .fromOption(entryOpt)
+      .orElseFail(ServiceFailure(t"Entry not found", None))
+
+    _ <- authorized(
+      authorizationService.canUpdateEntry(
+        command.entryId,
+        command.userId,
+        entry,
+        _
+      )
+    )
+
+    deleted <- transaction(
+      "entryUpdate",
       entriesRepository.delete(command.entryId)
-    ).map(deleted => DeleteEntryResponse(deleted))
+    ).mapError(f => ServiceFailure(f.message, f.cause))
+  } yield DeleteEntryResponse(deleted)
 
   /** **************************************************************************
     * Tags
