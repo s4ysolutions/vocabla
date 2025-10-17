@@ -335,9 +335,195 @@ object EntryRepositoryPgSpec extends ZIOSpecDefault {
           } yield assert(result._1.size)(zio.test.Assertion.equalTo(1)) &&
             assert(result._2.size)(zio.test.Assertion.equalTo(1))
         }
+      ),
+      suite("Entry: update")(
+        test("update headword") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                entry = Entry(
+                  Entry.Headword("Original", "en"),
+                  Chunk(Entry.Definition("Definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                id <- repo.create(entry)
+                updated <- repo.update(
+                  id,
+                  Some(Entry.Headword("Updated", "fr")),
+                  None,
+                  None
+                )
+                entryOpt <- repo.get(id)
+              } yield (updated, entryOpt)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2.get.headword)(
+              zio.test.Assertion.equalTo(Entry.Headword("Updated", "fr"))
+            ) &&
+            assert(result._2.get.definitions)(
+              zio.test.Assertion.equalTo(
+                Chunk(Entry.Definition("Definition", "en"))
+              )
+            )
+        },
+        test("update definitions") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                entry = Entry(
+                  Entry.Headword("Word", "en"),
+                  Chunk(Entry.Definition("Old definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                id <- repo.create(entry)
+                newDefs = Chunk(
+                  Entry.Definition("New definition 1", "en"),
+                  Entry.Definition("New definition 2", "fr")
+                )
+                updated <- repo.update(id, None, Some(newDefs), None)
+                entryOpt <- repo.get(id)
+              } yield (updated, entryOpt)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2.get.definitions)(
+              zio.test.Assertion.equalTo(
+                Chunk(
+                  Entry.Definition("New definition 1", "en"),
+                  Entry.Definition("New definition 2", "fr")
+                )
+              )
+            ) &&
+            assert(result._2.get.headword)(
+              zio.test.Assertion.equalTo(Entry.Headword("Word", "en"))
+            )
+        },
+        test("update tags") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                // Create tags first
+                tag1 = Tag("tag1", 1L.identifier[User.Student])
+                tag2 = Tag("tag2", 1L.identifier[User.Student])
+                tagId1 <- tagRepo.create(tag1)
+                tagId2 <- tagRepo.create(tag2)
+                // Create entry
+                entry = Entry(
+                  Entry.Headword("Word", "en"),
+                  Chunk(Entry.Definition("Definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                entryId <- repo.create(entry)
+                // Update with new tags
+                updated <- repo.update(
+                  entryId,
+                  None,
+                  None,
+                  Some(Chunk(tagId1, tagId2))
+                )
+                // Get entry with tags through the search method
+                entries <- repo.get(tagIds = Chunk(tagId1))
+              } yield (updated, entries)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2.size)(zio.test.Assertion.equalTo(1))
+        },
+        test("update all fields") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                // Create a tag
+                tag = Tag("testtag", 1L.identifier[User.Student])
+                tagId <- tagRepo.create(tag)
+                // Create initial entry
+                entry = Entry(
+                  Entry.Headword("Original", "en"),
+                  Chunk(Entry.Definition("Old definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                entryId <- repo.create(entry)
+                // Update everything
+                updated <- repo.update(
+                  entryId,
+                  Some(Entry.Headword("Updated", "fr")),
+                  Some(Chunk(Entry.Definition("New definition", "fr"))),
+                  Some(Chunk(tagId))
+                )
+                entryOpt <- repo.get(entryId)
+                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+              } yield (updated, entryOpt, entriesWithTag)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2.get.headword)(
+              zio.test.Assertion.equalTo(Entry.Headword("Updated", "fr"))
+            ) &&
+            assert(result._2.get.definitions)(
+              zio.test.Assertion.equalTo(
+                Chunk(Entry.Definition("New definition", "fr"))
+              )
+            ) &&
+            assert(result._3.size)(zio.test.Assertion.equalTo(1))
+        },
+        test("update with no changes returns false") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                entry = Entry(
+                  Entry.Headword("Word", "en"),
+                  Chunk(Entry.Definition("Definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                id <- repo.create(entry)
+                updated <- repo.update(id, None, None, None)
+              } yield updated
+            }
+          } yield assert(result)(zio.test.Assertion.isFalse)
+        },
+        test("update tags to empty list removes all tags") {
+          for {
+            transactionManager <- ZIO.service[TransactionManagerPg]
+            result <- transactionManager.transaction {
+              for {
+                repo <- ZIO.service[EntryRepositoryPg]
+                tagRepo <- ZIO.service[TagRepositoryPg]
+                // Create a tag
+                tag = Tag("testtag", 1L.identifier[User.Student])
+                tagId <- tagRepo.create(tag)
+                // Create entry with tag
+                entry = Entry(
+                  Entry.Headword("Word", "en"),
+                  Chunk(Entry.Definition("Definition", "en")),
+                  1L.identifier[User.Student]
+                )
+                entryId <- repo.create(entry)
+                _ <- repo.update(entryId, None, None, Some(Chunk(tagId)))
+                // Update to empty tag list
+                updated <- repo.update(
+                  entryId,
+                  None,
+                  None,
+                  Some(Chunk.empty)
+                )
+                entriesWithTag <- repo.get(tagIds = Chunk(tagId))
+              } yield (updated, entriesWithTag)
+            }
+          } yield assert(result._1)(zio.test.Assertion.isTrue) &&
+            assert(result._2)(zio.test.Assertion.isEmpty)
+        }
       )
     ).provideLayer(
-      consoleColorTraceLogger >>> layerWithClearDb >>> Fixture.layerWithEntryRepository
+      consoleColorTraceLogger >>> layerWithClearDb >>> (Fixture.layerWithEntryRepository ++ Fixture.layerWithTagRepository)
     ) @@ TestAspect.before(
       Fixture.testSystem
     ) @@ TestAspect.sequential // @@ TestAspect.ignore

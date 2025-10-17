@@ -6,20 +6,16 @@ import org.slf4j.LoggerFactory
 import solutions.s4y.infra.pgsql.DataSourcePg
 import solutions.s4y.infra.pgsql.composite.Patterns
 import solutions.s4y.infra.pgsql.tx.TransactionContextPg
-import solutions.s4y.infra.pgsql.wrappers.{
-  pgDeleteOne,
-  pgInsertWithId,
-  pgSelectMany,
-  pgSelectOne
-}
+import solutions.s4y.infra.pgsql.wrappers.*
 import solutions.s4y.vocabla.app.repo.EntryRepository
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.domain.Entry.{Definition, Headword}
-import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.identity.Identifier.identifier
+import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
 import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import zio.{Chunk, IO, ZIO, ZLayer}
 
+import java.sql.PreparedStatement
 import scala.util.Using
 
 class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
@@ -192,6 +188,70 @@ class EntryRepositoryPg extends EntryRepository[TransactionContextPg]:
     (whereClause, joinClause)
   }
 
+  override def update[R](
+      entryId: Identifier[Entry],
+      headword: Option[Entry.Headword],
+      definitions: Option[Chunk[Entry.Definition]],
+      tagIds: Option[Chunk[Identifier[Tag]]]
+  )(using TransactionContextPg): IO[InfraFailure, Boolean] =
+    val updates = scala.collection.mutable.ListBuffer[String]()
+    val params =
+      scala.collection.mutable.ListBuffer[PreparedStatement => Unit]()
+
+    headword.foreach { hw =>
+      updates += "word = ?, langCode = ?"
+      params += (st => { st.setString(1, hw.word) })
+      params += (st => { st.setString(2, hw.langCode) })
+    }
+
+    definitions.foreach { defs =>
+      updates += "definitions = ?"
+      params += (st => {
+        val defsArray = defs.map { defn =>
+          val obj = new PGobject()
+          obj.setType("definition")
+          obj.setValue(s"(${defn.definition},${defn.langCode})")
+          obj.asInstanceOf[Object]
+        }.toArray
+        st.setArray(1, st.getConnection.createArrayOf("definition", defsArray))
+      })
+    }
+
+    if updates.isEmpty then ZIO.succeed(false)
+    else
+      val setClause = updates.mkString(", ")
+      val sql = s"UPDATE entries SET $setClause WHERE id = ?"
+
+      val combinedParams: PreparedStatement => Unit = st => {
+        var paramIndex = 1
+        params.foreach { param =>
+          param(st)
+          paramIndex += 1
+        }
+        st.setLong(paramIndex, entryId.as[Long])
+      }
+
+      for {
+        updated <- pgUpdateOne(sql, combinedParams)
+        _ <- tagIds match
+          case Some(tags) =>
+            pgUpdateOne(
+              "DELETE FROM tag_entry_associations WHERE entry_id = ?",
+              st => st.setLong(1, entryId.as[Long])
+            ) *>
+              ZIO.when(tags.nonEmpty) {
+                pgUpdateOne(
+                  "INSERT INTO tag_entry_associations (tag_id, entry_id) VALUES (?, ?)",
+                  st =>
+                    tags.foreach { tagId =>
+                      st.setLong(1, tagId.as[Long])
+                      st.setLong(2, entryId.as[Long])
+                      st.addBatch()
+                    }
+                )
+              }
+          case None => ZIO.unit
+      } yield updated
 end EntryRepositoryPg
 
 object EntryRepositoryPg:
