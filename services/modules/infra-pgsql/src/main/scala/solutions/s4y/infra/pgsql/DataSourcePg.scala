@@ -30,7 +30,7 @@ object DataSourcePg {
           val hc = new HikariConfig()
           hc.setDriverClassName("org.postgresql.Driver")
           // hc.setLeakDetectionThreshold(2000) // TODO: test only
-          hc.setMaximumPoolSize(1) // TODO: adjust pool size as needed
+          // hc.setMaximumPoolSize(1) // TODO: adjust pool size as needed
           hc.setJdbcUrl(config.url)
           hc.setUsername(config.user)
           hc.setPassword(config.password)
@@ -51,7 +51,9 @@ object DataSourcePg {
           }.orDie <* ZIO.logDebug("DataSourcePg initialized")
         )(ds =>
           ZIO.logDebug("Closing DataSourcePg") *>
-            ZIO.attemptBlocking(ds.close()).orDie
+            ds.close().orDieWith { error =>
+              new RuntimeException(s"Uncategorized failure while closing connection: $error")
+            }
             <* ZIO.logDebug("DataSourcePg closed")
         )
       } yield ds
