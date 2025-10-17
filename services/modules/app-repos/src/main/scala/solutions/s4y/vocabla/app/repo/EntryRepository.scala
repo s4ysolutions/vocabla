@@ -2,8 +2,8 @@ package solutions.s4y.vocabla.app.repo
 
 import solutions.s4y.vocabla.app.repo.error.InfraFailure
 import solutions.s4y.vocabla.app.repo.tx.TransactionContext
-import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import solutions.s4y.vocabla.domain.identity.{Identified, Identifier}
+import solutions.s4y.vocabla.domain.{Entry, Lang, Tag, User}
 import zio.{Chunk, ZIO}
 
 trait EntryRepository[TX <: TransactionContext]:
@@ -22,6 +22,13 @@ trait EntryRepository[TX <: TransactionContext]:
       text: Option[String] = None,
       limit: Int = 100
   )(using TX): ZIO[R, InfraFailure, Chunk[Identified[Entry]]]
+
+  def update[R](
+      entryId: Identifier[Entry],
+      headword: Option[Entry.Headword],
+      definitions: Option[Chunk[Entry.Definition]],
+      tagIds: Option[Chunk[Identifier[Tag]]]
+  )(using TX): ZIO[R, InfraFailure, Boolean]
 
   def delete[R](
       entryId: Identifier[Entry]
